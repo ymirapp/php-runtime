@@ -1,0 +1,63 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Placeholder PHP Runtime.
+ *
+ * (c) Carl Alexander <contact@carlalexander.ca>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+use Aws\Lambda\LambdaClient;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::create(__DIR__);
+$dotenv->load();
+
+$layers = [
+    'php-72' => 'Placeholder PHP 7.2',
+    'php-73' => 'Placeholder PHP 7.3',
+];
+$regions = [
+    'us-east-1',
+];
+
+if (empty($argv[1])) {
+    throw new Exception('Must pass a layer to publish');
+} elseif (!isset($layers[$argv[1]])) {
+    throw new Exception("\"{$argv[1]}\" layer doesn't exist");
+}
+
+$description = $layers[$argv[1]];
+$layer = $argv[1];
+
+foreach ($regions as $region) {
+    $layerName = 'placeholder-' . $layer;
+    $lambda = new LambdaClient([
+        'region' => 'us-east-1',
+        'version' => '2015-03-31',
+    ]);
+
+    $response = $lambda->publishLayerVersion([
+        'LayerName' => $layerName,
+        'Description' => $description,
+        'Content' => [
+            'ZipFile' => file_get_contents(__DIR__ . "/../build/{$layer}.zip"),
+        ],
+    ]);
+
+    $lambda->addLayerVersionPermission([
+        'Action' => 'lambda:GetLayerVersion',
+        'LayerName' => $layerName,
+        'Principal' => '*',
+        'StatementId' => (string) time(),
+        'VersionNumber' => (string) $response->get('Version'),
+    ]);
+
+    echo '[' . $region . ']: ' . $response->get('LayerVersionArn') . PHP_EOL;
+}
