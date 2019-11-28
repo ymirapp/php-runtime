@@ -16,7 +16,7 @@
         "ext-json": "*",
         "ext-posix": "*",
         "hollodotme/fast-cgi-client": "^3.0",
-        "symfony/process": "^4.0"
+        "symfony/process": "^4.4"
     },
     "require-dev": {
         "aws/aws-sdk-php": "^3.121",
