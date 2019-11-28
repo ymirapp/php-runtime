@@ -51,10 +51,10 @@ class FastCgiRequest implements ProvidesRequestData
     {
         $content = $event->getRequestBody();
         $headers = $event->getRequestHeaders();
-        $host = $headers['host'] ?? 'localhost';
+        $host = $headers['host'][0] ?? 'localhost';
         $method = strtoupper($event->getRequestMethod());
         $path = $uri = $event->getRequestPath();
-        $port = $headers['x-forwarded-port'] ?? 80;
+        $port = $headers['x-forwarded-port'][0] ?? 80;
         $queryString = $event->getRequestQueryString();
 
         if (!empty($queryString)) {
@@ -77,24 +77,24 @@ class FastCgiRequest implements ProvidesRequestData
             'SERVER_SOFTWARE' => 'placeholder',
         ];
 
-        if (isset($headers['x-forwarded-proto']) && 'https' == strtolower($headers['x-forwarded-proto'])) {
+        if (isset($headers['x-forwarded-proto'][0]) && 'https' == strtolower($headers['x-forwarded-proto'][0])) {
             $parameters['HTTPS'] = 'on';
         }
 
-        if (isset($headers['content-length'])) {
-            $parameters['CONTENT_LENGTH'] = $headers['content-length'];
+        if (isset($headers['content-length'][0])) {
+            $parameters['CONTENT_LENGTH'] = $headers['content-length'][0];
         } elseif ('TRACE' === $method) {
             $parameters['CONTENT_LENGTH'] = strlen($content);
         }
 
-        if (isset($headers['content-type'])) {
-            $parameters['CONTENT_TYPE'] = $headers['content-type'];
+        if (isset($headers['content-type'][0])) {
+            $parameters['CONTENT_TYPE'] = $headers['content-type'][0];
         } elseif ('POST' === $method) {
             $parameters['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
         }
 
         foreach ($headers as $header => $value) {
-            $parameters['HTTP_'.strtoupper(str_replace('-', '_', $header))] = $value;
+            $parameters['HTTP_'.strtoupper(str_replace('-', '_', $header))] = $value[0];
         }
 
         return new self($content, $parameters);
