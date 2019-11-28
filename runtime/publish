@@ -1,4 +1,4 @@
-#!/usr/bin/env php
+#!/usr/bin/env php -d memory_limit=-1
 <?php
 
 declare(strict_types=1);
