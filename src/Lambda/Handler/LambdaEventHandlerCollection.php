@@ -65,6 +65,8 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
             throw new \Exception('No handler found to handle the event');
         }
 
+        fwrite(STDERR, sprintf('"%s" handler selected for the event'.PHP_EOL, get_class($handler)));
+
         return $handler->handle($event);
     }
 
