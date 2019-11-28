@@ -22,7 +22,7 @@ use Placeholder\Runtime\Lambda\LambdaInvocationEvent;
 class PhpScriptLambdaEventHandler extends AbstractPhpFpmLambdaEventHandler
 {
     /**
-     * The file name of the PHP script that this event handler uses.
+     * The path to the PHP script that this event handler uses.
      *
      * @var string
      */
