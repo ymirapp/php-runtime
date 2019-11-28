@@ -47,7 +47,7 @@ abstract class AbstractPhpFpmLambdaEventHandler extends AbstractLambdaEventHandl
     protected function createLambdaEventResponse(LambdaInvocationEvent $event): LambdaResponse
     {
         return new FastCgiLambdaResponse(
-            $this->process->handle(FastCgiRequest::createFromInvocationEvent($event, $this->getScriptFilename($event)))
+            $this->process->handle(FastCgiRequest::createFromInvocationEvent($event, $this->getScriptFilePath($event)))
         );
     }
 
@@ -60,7 +60,7 @@ abstract class AbstractPhpFpmLambdaEventHandler extends AbstractLambdaEventHandl
     }
 
     /**
-     * Get the script filename to pass to PHP-FPM based on the Lambda invocation event.
+     * Get the path to script file to pass to PHP-FPM based on the Lambda invocation event.
      */
-    abstract protected function getScriptFilename(LambdaInvocationEvent $event): string;
+    abstract protected function getScriptFilePath(LambdaInvocationEvent $event): string;
 }

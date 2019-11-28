@@ -31,7 +31,7 @@ class WordPressLambdaEventHandler extends AbstractPhpFpmLambdaEventHandler
     /**
      * {@inheritdoc}
      */
-    protected function getScriptFilename(LambdaInvocationEvent $event): string
+    protected function getScriptFilePath(LambdaInvocationEvent $event): string
     {
         $filePath = $this->getEventFilePath($event);
 
