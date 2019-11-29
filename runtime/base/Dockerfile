@@ -349,6 +349,26 @@ RUN set -xe; \
 RUN set -xe; \
     make install
 
+###############################################################################
+# Bison Build
+# This library is outdated with PHP 7.4
+# https://ftp.gnu.org/gnu/bison
+# Needs:
+#
+# Needed by:
+#   - php
+ENV VERSION_BISON=3.4.2
+ENV BISON_BUILD_DIR=${BUILD_DIR}/bison
+RUN set -xe; \
+    mkdir -p ${BISON_BUILD_DIR}; \
+    curl -Ls https://ftp.gnu.org/gnu/bison/bison-${VERSION_BISON}.tar.gz \
+    | tar xzC ${BISON_BUILD_DIR} --strip-components=1
+WORKDIR  ${BISON_BUILD_DIR}/
+RUN set -xe; \
+    ./configure --prefix=${INSTALL_DIR}; \
+    make -j $(nproc); \
+    make install
+
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
 # gettext-devel : needed for the --with-gettext flag
@@ -357,4 +377,6 @@ RUN set -xe; \
 # libjpeg-devel : needed for gd
 # libxslt-devel : needed for the XSL extension
 # ImageMagick-devel : needed for the imagick extension
-RUN LD_LIBRARY_PATH= yum install -y readline-devel gettext-devel libicu-devel libpng-devel libjpeg-devel libxslt-devel ImageMagick-devel
+# sqlite-devel : needed for PHP 7.4
+# re2c : needed for PHP 7.4
+RUN LD_LIBRARY_PATH= yum install -y re2c readline-devel gettext-devel libicu-devel libpng-devel libjpeg-devel libxslt-devel ImageMagick-devel sqlite-devel

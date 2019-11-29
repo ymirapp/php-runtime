@@ -20,8 +20,10 @@ $dotenv = Dotenv\Dotenv::create(__DIR__);
 $dotenv->load();
 
 $layers = [
+    'php-71' => 'Placeholder PHP 7.1',
     'php-72' => 'Placeholder PHP 7.2',
     'php-73' => 'Placeholder PHP 7.3',
+    'php-74' => 'Placeholder PHP 7.4',
 ];
 $regions = [
     'us-east-1',

@@ -1,26 +1,11 @@
-# The container we build here contains everything needed to compile PHP + PHP.
-#
-# It can be used as a base to compile extra extensions.
-
-# PHP Build
-# https://github.com/php/php-src/releases
-# Needs:
-#   - zlib
-#   - libxml2
-#   - openssl
-#   - readline
-#   - sodium
-
 FROM placeholder/runtime/base as php-build
 
-ARG PHP_VERSION
-ENV VERSION_PHP=${PHP_VERSION}
 
 ENV PHP_BUILD_DIR=${BUILD_DIR}/php
 RUN set -xe; \
     mkdir -p ${PHP_BUILD_DIR}; \
 # Download and upack the source code
-    curl -Ls https://github.com/php/php-src/archive/php-${VERSION_PHP}.tar.gz \
+    curl -Ls https://github.com/php/php-src/archive/php-7.2.24.tar.gz \
   | tar xzC ${PHP_BUILD_DIR} --strip-components=1
 # Move into the unpackaged code directory
 WORKDIR  ${PHP_BUILD_DIR}/
@@ -115,11 +100,6 @@ RUN ln -s /opt/placeholder/sbin/* /opt/bin
 # Remove extra files to make the layers as slim as possible
 COPY clean.sh /tmp
 RUN /tmp/clean.sh && rm /tmp/clean.sh
-
-# Add bootstrap and runtime
-COPY bootstrap /opt
-COPY runtime.php /opt
-RUN chmod 0555 /opt/bootstrap /opt/runtime.php
 
 # Copy config files
 COPY php.ini ${INSTALL_DIR}/etc/php/conf.d
