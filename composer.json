@@ -14,8 +14,10 @@
         "php": ">=7.1",
         "ext-curl": "*",
         "ext-json": "*",
+        "ext-pcntl": "*",
         "ext-posix": "*",
         "hollodotme/fast-cgi-client": "^3.0",
+        "monolog/monolog": "^1.0",
         "symfony/process": "^4.4"
     },
     "require-dev": {

@@ -48,6 +48,13 @@ class Runtime
     private $invocations;
 
     /**
+     * The logger that sends logs to CloudWatch.
+     *
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * The maximum number of invocations.
      *
      * @var int
@@ -64,11 +71,12 @@ class Runtime
     /**
      * Constructor.
      */
-    public function __construct(LambdaRuntimeApiClient $client, LambdaEventHandlerInterface $handler, PhpFpmProcess $phpFpmProcess, int $maxInvocations = 100)
+    public function __construct(LambdaRuntimeApiClient $client, LambdaEventHandlerInterface $handler, Logger $logger, PhpFpmProcess $phpFpmProcess, int $maxInvocations = 100)
     {
         $this->client = $client;
         $this->handler = $handler;
         $this->invocations = 0;
+        $this->logger = $logger;
         $this->maxInvocations = $maxInvocations;
         $this->phpFpmProcess = $phpFpmProcess;
     }
@@ -79,7 +87,8 @@ class Runtime
     public static function createFromEnvironmentVariable(): self
     {
         $apiUrl = getenv('AWS_LAMBDA_RUNTIME_API');
-        $phpFpmProcess = PhpFpmProcess::createForConfig();
+        $logger = new Logger();
+        $phpFpmProcess = PhpFpmProcess::createForConfig($logger);
         $rootDirectory = getenv('LAMBDA_TASK_ROOT');
 
         if (!is_string($apiUrl)) {
@@ -90,11 +99,12 @@ class Runtime
 
         return new self(
             new LambdaRuntimeApiClient($apiUrl),
-            new LambdaEventHandlerCollection([
+            new LambdaEventHandlerCollection($logger, [
                 new PingLambdaEventHandler(),
                 new WordPressLambdaEventHandler($phpFpmProcess, $rootDirectory),
                 new PhpScriptLambdaEventHandler($phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
             ]),
+            $logger,
             $phpFpmProcess
         );
     }
@@ -115,14 +125,14 @@ class Runtime
 
             ++$this->invocations;
         } catch (\Throwable $exception) {
-            $this->logException($exception);
+            $this->logger->exception($exception);
             $this->client->sendEventError($event, $exception);
 
             exit(1);
         }
 
         if ($this->invocations >= $this->maxInvocations) {
-            echo sprintf('Killing Lambda container. Container has processed %s invocation events. (%s)', $this->maxInvocations, $event->getId());
+            $this->logger->info(sprintf('Killing Lambda container. Container has processed %s invocation events. (%s)', $this->maxInvocations, $event->getId()));
             exit(0);
         }
     }
@@ -135,30 +145,10 @@ class Runtime
         try {
             $this->phpFpmProcess->start();
         } catch (\Throwable $exception) {
-            $this->logException($exception);
+            $this->logger->exception($exception);
             $this->client->sendInitializationError($exception);
 
             exit(1);
         }
-    }
-
-    /**
-     * Logs exceptions so that CloudWatch can get them.
-     */
-    private function logException(\Throwable $exception)
-    {
-        $errorMessage = $exception->getMessage();
-
-        if ($exception instanceof \Exception) {
-            $errorMessage = 'Uncaught '.get_class($exception).': '.$errorMessage;
-        }
-
-        fwrite(STDERR, sprintf(
-            "Fatal error: %s in %s:%d\nStack trace:\n%s",
-            $errorMessage,
-            $exception->getFile(),
-            $exception->getLine(),
-            $exception->getTraceAsString()
-        ));
     }
 }

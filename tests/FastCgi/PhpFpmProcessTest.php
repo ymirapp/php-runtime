@@ -15,15 +15,19 @@ namespace Placeholder\Runtime\Tests\FastCgi;
 
 use PHPUnit\Framework\TestCase;
 use Placeholder\Runtime\FastCgi\PhpFpmProcess;
+use Placeholder\Runtime\Tests\Mock\LoggerMockTrait;
 
 /**
  * @covers \Placeholder\Runtime\FastCgi\PhpFpmProcess
  */
 class PhpFpmProcessTest extends TestCase
 {
+    use LoggerMockTrait;
+
     public function testCreateForConfigWithDefault()
     {
-        $phpFpmProcess = PhpFpmProcess::createForConfig();
+        $logger = $this->getLoggerMock();
+        $phpFpmProcess = PhpFpmProcess::createForConfig($logger);
         $reflection = new \ReflectionObject($phpFpmProcess);
 
         $processProperty = $reflection->getProperty('process');
@@ -35,7 +39,8 @@ class PhpFpmProcessTest extends TestCase
 
     public function testCreateForConfigWithCustomValue()
     {
-        $phpFpmProcess = PhpFpmProcess::createForConfig('/foo/bar');
+        $logger = $this->getLoggerMock();
+        $phpFpmProcess = PhpFpmProcess::createForConfig($logger, '/foo/bar');
         $reflection = new \ReflectionObject($phpFpmProcess);
 
         $processProperty = $reflection->getProperty('process');

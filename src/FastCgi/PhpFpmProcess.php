@@ -15,6 +15,7 @@ namespace Placeholder\Runtime\FastCgi;
 
 use hollodotme\FastCGI\Interfaces\ProvidesRequestData;
 use hollodotme\FastCGI\Interfaces\ProvidesResponseData;
+use Placeholder\Runtime\Logger;
 use Symfony\Component\Process\Process;
 
 /**
@@ -51,6 +52,13 @@ class PhpFpmProcess
     private $client;
 
     /**
+     * The CloudWatch logger.
+     *
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * The PHP-FPM process.
      *
      * @var Process
@@ -60,9 +68,10 @@ class PhpFpmProcess
     /**
      * Constructor.
      */
-    public function __construct(FastCgiServerClient $client, Process $process)
+    public function __construct(FastCgiServerClient $client, Logger $logger, Process $process)
     {
         $this->client = $client;
+        $this->logger = $logger;
         $this->process = $process;
     }
 
@@ -77,10 +86,11 @@ class PhpFpmProcess
     /**
      * Create a new PHP-FPM process for the given configuration file.
      */
-    public static function createForConfig(string $configPath = self::DEFAULT_CONFIG_PATH): self
+    public static function createForConfig(Logger $logger, string $configPath = self::DEFAULT_CONFIG_PATH): self
     {
         return new self(
             FastCgiServerClient::createFromSocketPath(self::SOCKET_PATH),
+            $logger,
             new Process(['php-fpm', '--nodaemonize', '--force-stderr', '--fpm-config', $configPath])
         );
     }
@@ -106,11 +116,11 @@ class PhpFpmProcess
             mkdir(dirname(self::SOCKET_PATH));
         }
 
-        fwrite(STDERR, 'Starting PHP-FPM process'.PHP_EOL);
+        $this->logger->info('Starting PHP-FPM process');
 
         $this->process->setTimeout(null);
         $this->process->start(function ($type, $output) {
-            fwrite(STDERR, $output);
+            $this->logger->info($output);
         });
 
         $this->wait(function () {
@@ -127,7 +137,7 @@ class PhpFpmProcess
      */
     private function killExistingProcess()
     {
-        fwrite(STDERR, 'Killing existing PHP-FPM process'.PHP_EOL);
+        $this->logger->info('Killing existing PHP-FPM process');
 
         if (!file_exists(self::PID_PATH)) {
             unlink(self::SOCKET_PATH);

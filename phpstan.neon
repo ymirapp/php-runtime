@@ -1,0 +1,5 @@
+parameters:
+    ignoreErrors:
+        - '#Constant SIGTERM not found#'
+        - message: '#PHPUnit\\Framework\\MockObject\\MockObject given#'
+          path: *Test.php

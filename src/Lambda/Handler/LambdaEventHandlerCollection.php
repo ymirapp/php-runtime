@@ -15,6 +15,7 @@ namespace Placeholder\Runtime\Lambda\Handler;
 
 use Placeholder\Runtime\Lambda\LambdaInvocationEvent;
 use Placeholder\Runtime\Lambda\LambdaResponse;
+use Placeholder\Runtime\Logger;
 
 /**
  * A collection of Lambda invocation event handlers.
@@ -29,10 +30,19 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
     private $handlers;
 
     /**
+     * The logger that sends logs to CloudWatch.
+     *
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * Constructor.
      */
-    public function __construct(array $handlers = [])
+    public function __construct(Logger $logger, array $handlers = [])
     {
+        $this->logger = $logger;
+
         foreach ($handlers as $handler) {
             $this->addHandler($handler);
         }
@@ -65,7 +75,7 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
             throw new \Exception('No handler found to handle the event');
         }
 
-        fwrite(STDERR, sprintf('"%s" handler selected for the event'.PHP_EOL, get_class($handler)));
+        $this->logger->info(sprintf('"%s" handler selected for the event', get_class($handler)));
 
         return $handler->handle($event);
     }
