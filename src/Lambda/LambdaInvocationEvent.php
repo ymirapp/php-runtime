@@ -177,4 +177,12 @@ class LambdaInvocationEvent
 
         return http_build_query($queryParameters);
     }
+
+    /**
+     * Checks if this is a ping event.
+     */
+    public function isPing(): bool
+    {
+        return isset($this->event['ping']) && true === $this->event['ping'];
+    }
 }

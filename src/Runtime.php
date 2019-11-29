@@ -17,6 +17,7 @@ use Placeholder\Runtime\FastCgi\PhpFpmProcess;
 use Placeholder\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
 use Placeholder\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
 use Placeholder\Runtime\Lambda\Handler\PhpScriptLambdaEventHandler;
+use Placeholder\Runtime\Lambda\Handler\PingLambdaEventHandler;
 use Placeholder\Runtime\Lambda\Handler\WordPressLambdaEventHandler;
 use Placeholder\Runtime\Lambda\LambdaRuntimeApiClient;
 
@@ -90,6 +91,7 @@ class Runtime
         return new self(
             new LambdaRuntimeApiClient($apiUrl),
             new LambdaEventHandlerCollection([
+                new PingLambdaEventHandler(),
                 new WordPressLambdaEventHandler($phpFpmProcess, $rootDirectory),
                 new PhpScriptLambdaEventHandler($phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
             ]),
