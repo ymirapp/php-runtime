@@ -51,7 +51,7 @@ class FastCgiRequest implements ProvidesRequestData
     {
         $content = $event->getRequestBody();
         $headers = $event->getRequestHeaders();
-        $host = $headers['host'][0] ?? 'localhost';
+        $host = $headers['x-forwarded-host'][0] ?? $headers['host'][0] ?? 'localhost';
         $method = strtoupper($event->getRequestMethod());
         $path = $uri = $event->getRequestPath();
         $port = $headers['x-forwarded-port'][0] ?? 80;
@@ -96,6 +96,9 @@ class FastCgiRequest implements ProvidesRequestData
         foreach ($headers as $header => $value) {
             $parameters['HTTP_'.strtoupper(str_replace('-', '_', $header))] = $value[0];
         }
+
+        // Force "HTTP_HOST" and "SERVER_NAME" to match because of the "X_FORWARDED_HOST" header.
+        $parameters['HTTP_HOST'] = $parameters['SERVER_NAME'];
 
         return new self($content, $parameters);
     }
