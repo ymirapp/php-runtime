@@ -54,7 +54,7 @@ class LambdaResponse
         return [
             'isBase64Encoded' => false,
             'statusCode' => $this->statusCode,
-            'headers' => empty($this->headers) ? new \stdClass() : $this->headers,
+            'multiValueHeaders' => empty($this->headers) ? new \stdClass() : $this->headers,
             'body' => $this->body,
         ];
     }
@@ -68,10 +68,7 @@ class LambdaResponse
 
         foreach ($headers as $name => $values) {
             $name = str_replace(' ', '-', ucwords(str_replace('-', ' ', $name)));
-
-            foreach ($values as $value) {
-                $formattedHeaders[$name] = $value;
-            }
+            $formattedHeaders[$name] = is_array($values) ? array_values($values) : [$values];
         }
 
         if (!isset($formattedHeaders['Content-Type'])) {

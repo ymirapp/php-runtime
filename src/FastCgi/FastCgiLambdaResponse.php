@@ -26,7 +26,7 @@ class FastCgiLambdaResponse extends LambdaResponse
      */
     public function __construct(ProvidesResponseData $response)
     {
-        $headers = $this->parseHeaders($response);
+        $headers = array_change_key_case($response->getHeaders(), CASE_LOWER);
         $statusCode = 200;
 
         if (isset($headers['status'][0])) {
@@ -36,25 +36,5 @@ class FastCgiLambdaResponse extends LambdaResponse
         unset($headers['status']);
 
         parent::__construct($response->getBody(), $headers, $statusCode);
-    }
-
-    /**
-     * Parse the HTTP headers from the FastCGI server response.
-     */
-    private function parseHeaders(ProvidesResponseData $response): array
-    {
-        $headers = [];
-
-        foreach (explode(PHP_EOL, $response->getOutput()) as $line) {
-            if (preg_match('#^([^\:]+):(.*)$#', $line, $matches)) {
-                $headers[trim($matches[1])][] = trim($matches[2]);
-
-                continue;
-            }
-
-            break;
-        }
-
-        return array_change_key_case($headers, CASE_LOWER);
     }
 }
