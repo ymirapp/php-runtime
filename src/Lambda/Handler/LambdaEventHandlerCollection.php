@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Placeholder\Runtime\Lambda\Handler;
 
 use Placeholder\Runtime\Lambda\LambdaInvocationEvent;
-use Placeholder\Runtime\Lambda\LambdaResponse;
+use Placeholder\Runtime\Lambda\LambdaResponseInterface;
 use Placeholder\Runtime\Logger;
 
 /**
@@ -67,7 +67,7 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function handle(LambdaInvocationEvent $event): LambdaResponse
+    public function handle(LambdaInvocationEvent $event): LambdaResponseInterface
     {
         $handler = $this->getHandlerForEvent($event);
 

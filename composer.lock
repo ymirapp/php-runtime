@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eaacec0052caf13c137f676e7c4657c7",
+    "content-hash": "0b0bb589212096c206c9f61c73081bf5",
     "packages": [
         {
             "name": "hollodotme/fast-cgi-client",
@@ -5022,6 +5022,7 @@
     "platform": {
         "php": ">=7.1",
         "ext-curl": "*",
+        "ext-fileinfo": "*",
         "ext-json": "*",
         "ext-pcntl": "*",
         "ext-posix": "*"

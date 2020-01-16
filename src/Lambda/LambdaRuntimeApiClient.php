@@ -87,7 +87,7 @@ class LambdaRuntimeApiClient
     /**
      * Send a response to the Lambda runtime API for the given event.
      */
-    public function sendResponse(LambdaInvocationEvent $event, LambdaResponse $response)
+    public function sendResponse(LambdaInvocationEvent $event, LambdaResponseInterface $response)
     {
         $this->sendData($response->getResponseData(), "invocation/{$event->getId()}/response");
     }

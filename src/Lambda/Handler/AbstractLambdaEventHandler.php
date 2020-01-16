@@ -15,6 +15,8 @@ namespace Placeholder\Runtime\Lambda\Handler;
 
 use Placeholder\Runtime\Lambda\LambdaInvocationEvent;
 use Placeholder\Runtime\Lambda\LambdaResponse;
+use Placeholder\Runtime\Lambda\LambdaResponseInterface;
+use Placeholder\Runtime\Lambda\StaticFileLambdaResponse;
 
 /**
  * Base Lambda invocation event handler.
@@ -39,11 +41,11 @@ abstract class AbstractLambdaEventHandler implements LambdaEventHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function handle(LambdaInvocationEvent $event): LambdaResponse
+    public function handle(LambdaInvocationEvent $event): LambdaResponseInterface
     {
         $filePath = $this->getEventFilePath($event);
 
-        return $this->isStaticFile($filePath) ? $this->createStaticFileResponse($filePath) : $this->createLambdaEventResponse($event);
+        return $this->isStaticFile($filePath) ? new StaticFileLambdaResponse($filePath) : $this->createLambdaEventResponse($event);
     }
 
     /**
@@ -66,18 +68,4 @@ abstract class AbstractLambdaEventHandler implements LambdaEventHandlerInterface
      * Create the Lambda response for the given Lambda invocation event.
      */
     abstract protected function createLambdaEventResponse(LambdaInvocationEvent $event): LambdaResponse;
-
-    /**
-     * Create a Lambda response for the given static file.
-     */
-    private function createStaticFileResponse(string $filePath): LambdaResponse
-    {
-        $body = file_get_contents($filePath);
-
-        if (!is_string($body)) {
-            throw new \Exception("Unable to get the contents of \"$filePath\"");
-        }
-
-        return new LambdaResponse($body);
-    }
 }

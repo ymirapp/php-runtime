@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Placeholder\Runtime\Lambda;
 
-class LambdaResponse
+class LambdaResponse implements LambdaResponseInterface
 {
     /**
      * The body of the Lambda response.
@@ -47,7 +47,7 @@ class LambdaResponse
     }
 
     /**
-     * Get the response data to send back to the Lambda runtime API.
+     * {@inheritdoc}
      */
     public function getResponseData(): array
     {

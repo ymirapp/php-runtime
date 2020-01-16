@@ -15,6 +15,7 @@ namespace Placeholder\Runtime\Lambda\Handler;
 
 use Placeholder\Runtime\Lambda\LambdaInvocationEvent;
 use Placeholder\Runtime\Lambda\LambdaResponse;
+use Placeholder\Runtime\Lambda\LambdaResponseInterface;
 
 /**
  * Lambda invocation event handler for pings.
@@ -32,7 +33,7 @@ class PingLambdaEventHandler implements LambdaEventHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function handle(LambdaInvocationEvent $event): LambdaResponse
+    public function handle(LambdaInvocationEvent $event): LambdaResponseInterface
     {
         usleep(50 * 1000);
 
