@@ -73,6 +73,8 @@ RUN set -xe; \
 # Install extensions
 # We can install extensions manually or using `pecl`
 RUN pecl install redis
+RUN pecl install APCu
+RUN pecl install imagick
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --install-dir=${INSTALL_DIR}/bin/ --filename=composer
