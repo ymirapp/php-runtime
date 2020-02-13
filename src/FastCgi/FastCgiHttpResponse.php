@@ -14,12 +14,12 @@ declare(strict_types=1);
 namespace Placeholder\Runtime\FastCgi;
 
 use hollodotme\FastCGI\Interfaces\ProvidesResponseData;
-use Placeholder\Runtime\Lambda\LambdaResponse;
+use Placeholder\Runtime\Lambda\Response\HttpResponse;
 
 /**
  * A Lambda response from a FastCGI server.
  */
-class FastCgiLambdaResponse extends LambdaResponse
+class FastCgiHttpResponse extends HttpResponse
 {
     /**
      * {@inheritdoc}

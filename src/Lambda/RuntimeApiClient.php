@@ -15,11 +15,12 @@ namespace Placeholder\Runtime\Lambda;
 
 use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
 use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
+use Placeholder\Runtime\Lambda\Response\ResponseInterface;
 
 /**
  * Client for interacting with the AWS Lambda runtime API.
  */
-class LambdaRuntimeApiClient
+class RuntimeApiClient
 {
     /**
      * The URL of the Lambda runtime API.
@@ -90,7 +91,7 @@ class LambdaRuntimeApiClient
     /**
      * Send a response to the Lambda runtime API for the given event.
      */
-    public function sendResponse(InvocationEventInterface $event, LambdaResponseInterface $response)
+    public function sendResponse(InvocationEventInterface $event, ResponseInterface $response)
     {
         $this->sendData($response->getResponseData(), "invocation/{$event->getId()}/response");
     }

@@ -19,7 +19,7 @@ use Placeholder\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
 use Placeholder\Runtime\Lambda\Handler\PhpScriptLambdaEventHandler;
 use Placeholder\Runtime\Lambda\Handler\PingLambdaEventHandler;
 use Placeholder\Runtime\Lambda\Handler\WordPressLambdaEventHandler;
-use Placeholder\Runtime\Lambda\LambdaRuntimeApiClient;
+use Placeholder\Runtime\Lambda\RuntimeApiClient;
 
 /**
  * The [Placeholder] runtime.
@@ -29,7 +29,7 @@ class Runtime
     /**
      * The Lambda runtime API client.
      *
-     * @var LambdaRuntimeApiClient
+     * @var RuntimeApiClient
      */
     private $client;
 
@@ -71,7 +71,7 @@ class Runtime
     /**
      * Constructor.
      */
-    public function __construct(LambdaRuntimeApiClient $client, LambdaEventHandlerInterface $handler, Logger $logger, PhpFpmProcess $phpFpmProcess, int $maxInvocations = 100)
+    public function __construct(RuntimeApiClient $client, LambdaEventHandlerInterface $handler, Logger $logger, PhpFpmProcess $phpFpmProcess, int $maxInvocations = 100)
     {
         $this->client = $client;
         $this->handler = $handler;
@@ -98,7 +98,7 @@ class Runtime
         }
 
         return new self(
-            new LambdaRuntimeApiClient($apiUrl),
+            new RuntimeApiClient($apiUrl),
             new LambdaEventHandlerCollection($logger, [
                 new PingLambdaEventHandler(),
                 new WordPressLambdaEventHandler($phpFpmProcess, $rootDirectory),

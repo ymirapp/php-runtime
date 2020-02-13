@@ -11,12 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Placeholder\Runtime\Lambda;
+namespace Placeholder\Runtime\Lambda\Response;
 
 /**
  * A response sent back to the Lambda runtime API.
  */
-interface LambdaResponseInterface
+interface ResponseInterface
 {
     /**
      * Get the response data to send back to the Lambda runtime API.

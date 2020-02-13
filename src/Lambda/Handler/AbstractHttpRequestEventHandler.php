@@ -15,9 +15,9 @@ namespace Placeholder\Runtime\Lambda\Handler;
 
 use Placeholder\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
-use Placeholder\Runtime\Lambda\LambdaResponse;
-use Placeholder\Runtime\Lambda\LambdaResponseInterface;
-use Placeholder\Runtime\Lambda\StaticFileLambdaResponse;
+use Placeholder\Runtime\Lambda\Response\HttpResponse;
+use Placeholder\Runtime\Lambda\Response\ResponseInterface;
+use Placeholder\Runtime\Lambda\Response\StaticFileResponse;
 
 /**
  * Base handler for HTTP request events.
@@ -50,7 +50,7 @@ abstract class AbstractHttpRequestEventHandler implements LambdaEventHandlerInte
     /**
      * {@inheritdoc}
      */
-    public function handle(InvocationEventInterface $event): LambdaResponseInterface
+    public function handle(InvocationEventInterface $event): ResponseInterface
     {
         if (!$event instanceof HttpRequestEvent) {
             throw new \InvalidArgumentException(sprintf('"%s" can only handle HTTP request events', self::class));
@@ -58,7 +58,7 @@ abstract class AbstractHttpRequestEventHandler implements LambdaEventHandlerInte
 
         $filePath = $this->getEventFilePath($event);
 
-        return $this->isStaticFile($filePath) ? new StaticFileLambdaResponse($filePath) : $this->createLambdaEventResponse($event);
+        return $this->isStaticFile($filePath) ? new StaticFileResponse($filePath) : $this->createLambdaEventResponse($event);
     }
 
     /**
@@ -80,5 +80,5 @@ abstract class AbstractHttpRequestEventHandler implements LambdaEventHandlerInte
     /**
      * Create the Lambda response for the given Lambda invocation event.
      */
-    abstract protected function createLambdaEventResponse(HttpRequestEvent $event): LambdaResponse;
+    abstract protected function createLambdaEventResponse(HttpRequestEvent $event): HttpResponse;
 }

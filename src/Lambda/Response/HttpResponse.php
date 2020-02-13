@@ -11,9 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Placeholder\Runtime\Lambda;
+namespace Placeholder\Runtime\Lambda\Response;
 
-class LambdaResponse implements LambdaResponseInterface
+/**
+ * An HTTP lambda response.
+ */
+class HttpResponse implements ResponseInterface
 {
     /**
      * The body of the Lambda response.

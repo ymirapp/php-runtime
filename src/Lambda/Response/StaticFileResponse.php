@@ -11,9 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Placeholder\Runtime\Lambda;
+namespace Placeholder\Runtime\Lambda\Response;
 
-class StaticFileLambdaResponse implements LambdaResponseInterface
+/**
+ * A Lambda response for a static file.
+ */
+class StaticFileResponse implements ResponseInterface
 {
     /**
      * The path to the file that we're sending back to the Lambda runtime API.

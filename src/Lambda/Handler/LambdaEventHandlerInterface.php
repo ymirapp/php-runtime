@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Placeholder\Runtime\Lambda\Handler;
 
 use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
-use Placeholder\Runtime\Lambda\LambdaResponseInterface;
+use Placeholder\Runtime\Lambda\Response\ResponseInterface;
 
 /**
  * Event handlers take a Lambda invocation event and convert it to a response
@@ -31,5 +31,5 @@ interface LambdaEventHandlerInterface
      * Handles the given Lambda invocation event and returns the response
      * to send back to the Lambda runtime API.
      */
-    public function handle(InvocationEventInterface $event): LambdaResponseInterface;
+    public function handle(InvocationEventInterface $event): ResponseInterface;
 }

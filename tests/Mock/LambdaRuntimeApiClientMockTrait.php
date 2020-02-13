@@ -14,16 +14,16 @@ declare(strict_types=1);
 namespace Placeholder\Runtime\Tests\Mock;
 
 use PHPUnit\Framework\MockObject\MockObject;
-use Placeholder\Runtime\Lambda\LambdaRuntimeApiClient;
+use Placeholder\Runtime\Lambda\RuntimeApiClient;
 
 trait LambdaRuntimeApiClientMockTrait
 {
     /**
-     * Get a mock of a LambdaRuntimeApiClient object.
+     * Get a mock of a RuntimeApiClient object.
      */
     private function getLambdaRuntimeApiClientMock(): MockObject
     {
-        return $this->getMockBuilder(LambdaRuntimeApiClient::class)
+        return $this->getMockBuilder(RuntimeApiClient::class)
                     ->disableOriginalConstructor()
                     ->getMock();
     }

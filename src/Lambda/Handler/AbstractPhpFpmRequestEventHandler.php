@@ -13,11 +13,11 @@ declare(strict_types=1);
 
 namespace Placeholder\Runtime\Lambda\Handler;
 
-use Placeholder\Runtime\FastCgi\FastCgiLambdaResponse;
+use Placeholder\Runtime\FastCgi\FastCgiHttpResponse;
 use Placeholder\Runtime\FastCgi\FastCgiRequest;
 use Placeholder\Runtime\FastCgi\PhpFpmProcess;
 use Placeholder\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
-use Placeholder\Runtime\Lambda\LambdaResponse;
+use Placeholder\Runtime\Lambda\Response\HttpResponse;
 
 /**
  * Base Lambda invocation event handler for handlers that use PHP-FPM.
@@ -44,9 +44,9 @@ abstract class AbstractPhpFpmRequestEventHandler extends AbstractHttpRequestEven
     /**
      * {@inheritdoc}
      */
-    protected function createLambdaEventResponse(HttpRequestEvent $event): LambdaResponse
+    protected function createLambdaEventResponse(HttpRequestEvent $event): HttpResponse
     {
-        return new FastCgiLambdaResponse(
+        return new FastCgiHttpResponse(
             $this->process->handle(FastCgiRequest::createFromInvocationEvent($event, $this->getScriptFilePath($event)))
         );
     }
