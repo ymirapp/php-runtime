@@ -14,12 +14,13 @@ declare(strict_types=1);
 namespace Placeholder\Runtime\Lambda\Handler;
 
 use Placeholder\Runtime\FastCgi\PhpFpmProcess;
-use Placeholder\Runtime\Lambda\LambdaInvocationEvent;
+use Placeholder\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
+use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 
 /**
  * Lambda invocation event handler for a specific PHP script.
  */
-class PhpScriptLambdaEventHandler extends AbstractPhpFpmLambdaEventHandler
+class PhpScriptLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
 {
     /**
      * The path to the PHP script that this event handler uses.
@@ -41,15 +42,17 @@ class PhpScriptLambdaEventHandler extends AbstractPhpFpmLambdaEventHandler
     /**
      * {@inheritdoc}
      */
-    public function canHandle(LambdaInvocationEvent $event): bool
+    public function canHandle(InvocationEventInterface $event): bool
     {
-        return false !== stripos($this->scriptFilePath, '.php') && file_exists($this->scriptFilePath);
+        return parent::canHandle($event)
+            && false !== stripos($this->scriptFilePath, '.php')
+            && file_exists($this->scriptFilePath);
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function getScriptFilePath(LambdaInvocationEvent $event): string
+    protected function getScriptFilePath(HttpRequestEvent $event): string
     {
         return $this->scriptFilePath;
     }

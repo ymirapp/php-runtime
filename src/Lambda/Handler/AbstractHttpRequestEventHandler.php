@@ -13,15 +13,16 @@ declare(strict_types=1);
 
 namespace Placeholder\Runtime\Lambda\Handler;
 
-use Placeholder\Runtime\Lambda\LambdaInvocationEvent;
+use Placeholder\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
+use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Placeholder\Runtime\Lambda\LambdaResponse;
 use Placeholder\Runtime\Lambda\LambdaResponseInterface;
 use Placeholder\Runtime\Lambda\StaticFileLambdaResponse;
 
 /**
- * Base Lambda invocation event handler.
+ * Base handler for HTTP request events.
  */
-abstract class AbstractLambdaEventHandler implements LambdaEventHandlerInterface
+abstract class AbstractHttpRequestEventHandler implements LambdaEventHandlerInterface
 {
     /**
      * The Lambda root directory.
@@ -41,8 +42,20 @@ abstract class AbstractLambdaEventHandler implements LambdaEventHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function handle(LambdaInvocationEvent $event): LambdaResponseInterface
+    public function canHandle(InvocationEventInterface $event): bool
     {
+        return $event instanceof HttpRequestEvent;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function handle(InvocationEventInterface $event): LambdaResponseInterface
+    {
+        if (!$event instanceof HttpRequestEvent) {
+            throw new \InvalidArgumentException(sprintf('"%s" can only handle HTTP request events', self::class));
+        }
+
         $filePath = $this->getEventFilePath($event);
 
         return $this->isStaticFile($filePath) ? new StaticFileLambdaResponse($filePath) : $this->createLambdaEventResponse($event);
@@ -51,9 +64,9 @@ abstract class AbstractLambdaEventHandler implements LambdaEventHandlerInterface
     /**
      * Get the file path requested by the given Lambda invocation event.
      */
-    protected function getEventFilePath(LambdaInvocationEvent $event): string
+    protected function getEventFilePath(HttpRequestEvent $event): string
     {
-        return $this->rootDirectory.'/'.ltrim($event->getRequestPath(), '/');
+        return $this->rootDirectory.'/'.ltrim($event->getPath(), '/');
     }
 
     /**
@@ -67,5 +80,5 @@ abstract class AbstractLambdaEventHandler implements LambdaEventHandlerInterface
     /**
      * Create the Lambda response for the given Lambda invocation event.
      */
-    abstract protected function createLambdaEventResponse(LambdaInvocationEvent $event): LambdaResponse;
+    abstract protected function createLambdaEventResponse(HttpRequestEvent $event): LambdaResponse;
 }

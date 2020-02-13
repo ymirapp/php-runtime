@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Placeholder\Runtime\Lambda\Handler;
 
-use Placeholder\Runtime\Lambda\LambdaInvocationEvent;
+use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Placeholder\Runtime\Lambda\LambdaResponseInterface;
 use Placeholder\Runtime\Logger;
 
@@ -59,7 +59,7 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function canHandle(LambdaInvocationEvent $event): bool
+    public function canHandle(InvocationEventInterface $event): bool
     {
         return $this->getHandlerForEvent($event) instanceof LambdaEventHandlerInterface;
     }
@@ -67,7 +67,7 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function handle(LambdaInvocationEvent $event): LambdaResponseInterface
+    public function handle(InvocationEventInterface $event): LambdaResponseInterface
     {
         $handler = $this->getHandlerForEvent($event);
 
@@ -87,7 +87,7 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
     /**
      * Get the Lambda invocation event handler than can handle the given Lambda invocation event.
      */
-    private function getHandlerForEvent(LambdaInvocationEvent $event): ?LambdaEventHandlerInterface
+    private function getHandlerForEvent(InvocationEventInterface $event): ?LambdaEventHandlerInterface
     {
         return array_reduce($this->handlers, function ($found, LambdaEventHandlerInterface $handler) use ($event) {
             return null === $found && $handler->canHandle($event) ? $handler : $found;

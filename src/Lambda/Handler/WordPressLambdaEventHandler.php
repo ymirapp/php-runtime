@@ -13,25 +13,28 @@ declare(strict_types=1);
 
 namespace Placeholder\Runtime\Lambda\Handler;
 
-use Placeholder\Runtime\Lambda\LambdaInvocationEvent;
+use Placeholder\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
+use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 
 /**
  * Lambda invocation event handler for a regular WordPress installation.
  */
-class WordPressLambdaEventHandler extends AbstractPhpFpmLambdaEventHandler
+class WordPressLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
 {
     /**
      * {@inheritdoc}
      */
-    public function canHandle(LambdaInvocationEvent $event): bool
+    public function canHandle(InvocationEventInterface $event): bool
     {
-        return file_exists($this->rootDirectory.'/index.php') && file_exists($this->rootDirectory.'/wp-config.php');
+        return parent::canHandle($event)
+            && file_exists($this->rootDirectory.'/index.php')
+            && file_exists($this->rootDirectory.'/wp-config.php');
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function getScriptFilePath(LambdaInvocationEvent $event): string
+    protected function getScriptFilePath(HttpRequestEvent $event): string
     {
         $filePath = $this->getEventFilePath($event);
 

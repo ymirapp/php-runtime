@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Placeholder\Runtime\Lambda;
 
+use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
+use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
+
 /**
  * Client for interacting with the AWS Lambda runtime API.
  */
@@ -63,15 +66,15 @@ class LambdaRuntimeApiClient
      *
      * This call is blocking because the Lambda runtime API is blocking.
      */
-    public function getNextEvent(): LambdaInvocationEvent
+    public function getNextEvent(): InvocationEventInterface
     {
-        return LambdaInvocationEvent::createFromApi($this->nextInvocationHandle);
+        return InvocationEventFactory::createFromApi($this->nextInvocationHandle);
     }
 
     /**
      * Send an error back to the Lambda runtime API for the given event.
      */
-    public function sendEventError(LambdaInvocationEvent $event, \Throwable $error)
+    public function sendEventError(InvocationEventInterface $event, \Throwable $error)
     {
         $this->sendData($this->getErrorData($error), "invocation/{$event->getId()}/error");
     }
@@ -87,7 +90,7 @@ class LambdaRuntimeApiClient
     /**
      * Send a response to the Lambda runtime API for the given event.
      */
-    public function sendResponse(LambdaInvocationEvent $event, LambdaResponseInterface $response)
+    public function sendResponse(InvocationEventInterface $event, LambdaResponseInterface $response)
     {
         $this->sendData($response->getResponseData(), "invocation/{$event->getId()}/response");
     }

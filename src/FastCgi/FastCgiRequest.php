@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Placeholder\Runtime\FastCgi;
 
 use hollodotme\FastCGI\Interfaces\ProvidesRequestData;
-use Placeholder\Runtime\Lambda\LambdaInvocationEvent;
+use Placeholder\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 
 /**
  * A request sent to a FastCGI server.
@@ -47,15 +47,15 @@ class FastCgiRequest implements ProvidesRequestData
     /**
      * Create new FastCGI request from a Lambda invocation event.
      */
-    public static function createFromInvocationEvent(LambdaInvocationEvent $event, string $scriptFilename): self
+    public static function createFromInvocationEvent(HttpRequestEvent $event, string $scriptFilename): self
     {
-        $content = $event->getRequestBody();
-        $headers = $event->getRequestHeaders();
+        $content = $event->getBody();
+        $headers = $event->getHeaders();
         $host = $headers['x-forwarded-host'][0] ?? $headers['host'][0] ?? 'localhost';
-        $method = strtoupper($event->getRequestMethod());
-        $path = $uri = $event->getRequestPath();
+        $method = strtoupper($event->getMethod());
+        $path = $uri = $event->getPath();
         $port = $headers['x-forwarded-port'][0] ?? 80;
-        $queryString = $event->getRequestQueryString();
+        $queryString = $event->getQueryString();
 
         if (!empty($queryString)) {
             $uri = $uri.'?'.$queryString;
@@ -73,7 +73,7 @@ class FastCgiRequest implements ProvidesRequestData
             'SERVER_ADDR' => '127.0.0.1',
             'SERVER_NAME' => $host,
             'SERVER_PORT' => $port,
-            'SERVER_PROTOCOL' => $event->getRequestProtocol(),
+            'SERVER_PROTOCOL' => $event->getProtocol(),
             'SERVER_SOFTWARE' => 'placeholder',
         ];
 

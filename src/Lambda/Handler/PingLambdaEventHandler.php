@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace Placeholder\Runtime\Lambda\Handler;
 
-use Placeholder\Runtime\Lambda\LambdaInvocationEvent;
+use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
+use Placeholder\Runtime\Lambda\InvocationEvent\PingEvent;
 use Placeholder\Runtime\Lambda\LambdaResponse;
 use Placeholder\Runtime\Lambda\LambdaResponseInterface;
 
@@ -25,15 +26,15 @@ class PingLambdaEventHandler implements LambdaEventHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function canHandle(LambdaInvocationEvent $event): bool
+    public function canHandle(InvocationEventInterface $event): bool
     {
-        return $event->isPing();
+        return $event instanceof PingEvent;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function handle(LambdaInvocationEvent $event): LambdaResponseInterface
+    public function handle(InvocationEventInterface $event): LambdaResponseInterface
     {
         usleep(50 * 1000);
 

@@ -16,13 +16,13 @@ namespace Placeholder\Runtime\Lambda\Handler;
 use Placeholder\Runtime\FastCgi\FastCgiLambdaResponse;
 use Placeholder\Runtime\FastCgi\FastCgiRequest;
 use Placeholder\Runtime\FastCgi\PhpFpmProcess;
-use Placeholder\Runtime\Lambda\LambdaInvocationEvent;
+use Placeholder\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Placeholder\Runtime\Lambda\LambdaResponse;
 
 /**
  * Base Lambda invocation event handler for handlers that use PHP-FPM.
  */
-abstract class AbstractPhpFpmLambdaEventHandler extends AbstractLambdaEventHandler
+abstract class AbstractPhpFpmRequestEventHandler extends AbstractHttpRequestEventHandler
 {
     /**
      * The PHP-FPM process.
@@ -44,7 +44,7 @@ abstract class AbstractPhpFpmLambdaEventHandler extends AbstractLambdaEventHandl
     /**
      * {@inheritdoc}
      */
-    protected function createLambdaEventResponse(LambdaInvocationEvent $event): LambdaResponse
+    protected function createLambdaEventResponse(HttpRequestEvent $event): LambdaResponse
     {
         return new FastCgiLambdaResponse(
             $this->process->handle(FastCgiRequest::createFromInvocationEvent($event, $this->getScriptFilePath($event)))
@@ -62,5 +62,5 @@ abstract class AbstractPhpFpmLambdaEventHandler extends AbstractLambdaEventHandl
     /**
      * Get the path to script file to pass to PHP-FPM based on the Lambda invocation event.
      */
-    abstract protected function getScriptFilePath(LambdaInvocationEvent $event): string;
+    abstract protected function getScriptFilePath(HttpRequestEvent $event): string;
 }
