@@ -77,10 +77,14 @@ class InvocationEventFactory
     {
         $invocationEvent = null;
 
-        if (isset($event['ping']) && true === $event['ping']) {
-            $invocationEvent = new PingEvent($requestId, $event);
+        if (isset($event['command'])) {
+            $invocationEvent = new ConsoleCommandEvent($requestId, $event);
         } elseif (isset($event['httpMethod'])) {
             $invocationEvent = new HttpRequestEvent($requestId, $event);
+        } elseif (isset($event['ping']) && true === $event['ping']) {
+            $invocationEvent = new PingEvent($requestId, $event);
+        } elseif (isset($event['php'])) {
+            $invocationEvent = new PhpConsoleCommandEvent($requestId, $event);
         }
 
         if (!$invocationEvent instanceof InvocationEventInterface) {
