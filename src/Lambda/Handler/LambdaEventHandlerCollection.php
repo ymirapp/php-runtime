@@ -77,7 +77,11 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
 
         $this->logger->info(sprintf('"%s" handler selected for the event', get_class($handler)));
 
-        return $handler->handle($event);
+        $response = $handler->handle($event);
+
+        $this->logger->info(sprintf('"%s" handler response:', get_class($handler)), $response->getResponseData());
+
+        return $response;
     }
 
     /**
