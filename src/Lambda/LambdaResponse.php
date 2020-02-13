@@ -51,12 +51,20 @@ class LambdaResponse implements LambdaResponseInterface
      */
     public function getResponseData(): array
     {
-        return [
+        $data = [
             'isBase64Encoded' => false,
             'statusCode' => $this->statusCode,
-            'multiValueHeaders' => empty($this->headers) ? new \stdClass() : $this->headers,
-            'body' => $this->body,
         ];
+
+        // API Gateway generates an error when sending 304 responses with a body and headers.
+        if (304 === $this->statusCode) {
+            return $data;
+        }
+
+        $data['body'] = $this->body;
+        $data['multiValueHeaders'] = empty($this->headers) ? new \stdClass() : $this->headers;
+
+        return $data;
     }
 
     /**
