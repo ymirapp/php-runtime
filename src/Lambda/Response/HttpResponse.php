@@ -55,7 +55,7 @@ class HttpResponse implements ResponseInterface
     public function getResponseData(): array
     {
         $data = [
-            'isBase64Encoded' => false,
+            'isBase64Encoded' => true,
             'statusCode' => $this->statusCode,
         ];
 
@@ -64,7 +64,7 @@ class HttpResponse implements ResponseInterface
             return $data;
         }
 
-        $data['body'] = $this->body;
+        $data['body'] = base64_encode($this->body);
         $data['multiValueHeaders'] = empty($this->headers) ? new \stdClass() : $this->headers;
 
         return $data;
