@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Placeholder\Runtime\Lambda\InvocationEvent;
 
+use Placeholder\Runtime\Logger;
+
 /**
  * Factory that creates Lambda invocation events from the runtime API.
  */
@@ -23,7 +25,7 @@ class InvocationEventFactory
      *
      * This call is blocking because the Lambda runtime API is blocking.
      */
-    public static function createFromApi($handle): InvocationEventInterface
+    public static function createFromApi($handle, Logger $logger): InvocationEventInterface
     {
         if (!is_resource($handle)) {
             throw new \RuntimeException('The given "handle" must be a resource');
@@ -66,6 +68,8 @@ class InvocationEventFactory
         if (!is_array($event)) {
             throw new \Exception('Unable to decode the Lambda runtime API response');
         }
+
+        $logger->info('Lambda event received:', $event);
 
         return self::createInvocationEvent($requestId, $event);
     }

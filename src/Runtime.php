@@ -99,7 +99,7 @@ class Runtime
         }
 
         return new self(
-            new RuntimeApiClient($apiUrl),
+            new RuntimeApiClient($apiUrl, $logger),
             new LambdaEventHandlerCollection($logger, [
                 new PingLambdaEventHandler(),
                 new ConsoleCommandEventHandler(),

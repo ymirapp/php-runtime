@@ -16,6 +16,7 @@ namespace Placeholder\Runtime\Lambda;
 use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
 use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Placeholder\Runtime\Lambda\Response\ResponseInterface;
+use Placeholder\Runtime\Logger;
 
 /**
  * Client for interacting with the AWS Lambda runtime API.
@@ -30,6 +31,13 @@ class RuntimeApiClient
     private $apiUrl;
 
     /**
+     * The logger that sends logs to CloudWatch.
+     *
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * The cURL handle for the Lambda next invocation API.
      *
      * @var resource
@@ -39,7 +47,7 @@ class RuntimeApiClient
     /**
      * Constructor.
      */
-    public function __construct(string $apiUrl)
+    public function __construct(string $apiUrl, Logger $logger)
     {
         $handle = curl_init("http://$apiUrl/2018-06-01/runtime/invocation/next");
 
@@ -51,6 +59,7 @@ class RuntimeApiClient
         curl_setopt($handle, CURLOPT_FAILONERROR, true);
 
         $this->apiUrl = $apiUrl;
+        $this->logger = $logger;
         $this->nextInvocationHandle = $handle;
     }
 
@@ -69,7 +78,7 @@ class RuntimeApiClient
      */
     public function getNextEvent(): InvocationEventInterface
     {
-        return InvocationEventFactory::createFromApi($this->nextInvocationHandle);
+        return InvocationEventFactory::createFromApi($this->nextInvocationHandle, $this->logger);
     }
 
     /**
