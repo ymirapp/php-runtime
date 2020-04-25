@@ -116,7 +116,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getContentLength(): int
     {
-        return (int) $this->parameters['CONTENT_LENGTH'] ?? 0;
+        return $this->parameters['CONTENT_LENGTH'] ?? 0;
     }
 
     /**
