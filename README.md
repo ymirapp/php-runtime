@@ -1,4 +1,4 @@
-# PHP Runtime
+# Ymir PHP Runtime
 
 PHP runtime for [AWS Lambda][1]
 

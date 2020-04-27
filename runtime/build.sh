@@ -7,7 +7,7 @@ set -x
 cd /opt
 
 # Copy over all the runtime layer code
-cp -R /placeholder/composer.json /placeholder/composer.lock /placeholder/runtime/bootstrap /placeholder/runtime/runtime.php /placeholder/src ./
+cp -R /ymir/composer.json /ymir/composer.lock /ymir/runtime/bootstrap /ymir/runtime/runtime.php /ymir/src ./
 
 # Set permissions
 chmod 0555 /opt/bootstrap /opt/runtime.php
@@ -16,4 +16,4 @@ chmod 0555 /opt/bootstrap /opt/runtime.php
 composer install --no-dev
 
 # Create layer zip
-zip --quiet --recurse-paths /placeholder/build/${ARCHIVE_FILENAME}.zip .
+zip --quiet --recurse-paths /ymir/build/${ARCHIVE_FILENAME}.zip .

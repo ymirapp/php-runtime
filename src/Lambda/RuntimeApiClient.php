@@ -3,20 +3,20 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Placeholder PHP Runtime.
+ * This file is part of Ymir PHP Runtime.
  *
- * (c) Carl Alexander <contact@carlalexander.ca>
+ * (c) Carl Alexander <support@ymirapp.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace Placeholder\Runtime\Lambda;
+namespace Ymir\Runtime\Lambda;
 
-use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
-use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
-use Placeholder\Runtime\Lambda\Response\ResponseInterface;
-use Placeholder\Runtime\Logger;
+use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
+use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
+use Ymir\Runtime\Lambda\Response\ResponseInterface;
+use Ymir\Runtime\Logger;
 
 /**
  * Client for interacting with the AWS Lambda runtime API.

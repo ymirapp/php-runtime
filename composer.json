@@ -1,13 +1,14 @@
 {
-    "name": "carlalexander/php-runtime",
-    "description": "PHP runtime for AWS Lambda",
-    "keywords" : [ "aws", "lambda", "php" ],
-    "type" : "project",
+    "name": "ymirapp/php-runtime",
+    "description": "Ymir PHP runtime",
+    "keywords": ["aws", "lambda", "php"],
+    "type": "project",
+    "license": "MIT",
     "authors" : [
         {
             "name": "Carl Alexander",
-            "email": "contact@carlalexander.ca",
-            "homepage": "https://carlalexander.ca"
+            "email": "support@ymirapp.com",
+            "homepage": "https://ymirapp.com"
         }
     ],
     "require": {
@@ -39,12 +40,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Placeholder\\Runtime\\": "src"
+            "Ymir\\Runtime\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Placeholder\\Runtime\\Tests\\": "tests"
+            "Ymir\\Runtime\\Tests\\": "tests"
         }
     },
     "prefer-stable": true

@@ -3,25 +3,25 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Placeholder PHP Runtime.
+ * This file is part of Ymir PHP Runtime.
  *
- * (c) Carl Alexander <contact@carlalexander.ca>
+ * (c) Carl Alexander <support@ymirapp.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace Placeholder\Runtime\Tests;
+namespace Ymir\Runtime\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Placeholder\Runtime\Runtime;
-use Placeholder\Runtime\Tests\Mock\LambdaEventHandlerInterfaceMockTrait;
-use Placeholder\Runtime\Tests\Mock\LambdaRuntimeApiClientMockTrait;
-use Placeholder\Runtime\Tests\Mock\LoggerMockTrait;
-use Placeholder\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
+use Ymir\Runtime\Runtime;
+use Ymir\Runtime\Tests\Mock\LambdaEventHandlerInterfaceMockTrait;
+use Ymir\Runtime\Tests\Mock\LambdaRuntimeApiClientMockTrait;
+use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
+use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
 /**
- * @covers \Placeholder\Runtime\Runtime
+ * @covers \Ymir\Runtime\Runtime
  */
 class RuntimeTest extends TestCase
 {

@@ -3,18 +3,18 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Placeholder PHP Runtime.
+ * This file is part of Ymir PHP Runtime.
  *
- * (c) Carl Alexander <contact@carlalexander.ca>
+ * (c) Carl Alexander <support@ymirapp.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace Placeholder\Runtime\Tests\Mock;
+namespace Ymir\Runtime\Tests\Mock;
 
 use PHPUnit\Framework\MockObject\MockObject;
-use Placeholder\Runtime\Lambda\RuntimeApiClient;
+use Ymir\Runtime\Lambda\RuntimeApiClient;
 
 trait LambdaRuntimeApiClientMockTrait
 {

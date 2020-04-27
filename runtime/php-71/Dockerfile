@@ -1,4 +1,4 @@
-FROM placeholder/runtime/base as php-build
+FROM ymir/runtime/base as php-build
 
 
 ENV PHP_BUILD_DIR=${BUILD_DIR}/php
@@ -81,8 +81,8 @@ RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --ins
 
 # Symlink all our binaries into /opt/bin so that Lambda sees them in the path.
 RUN mkdir -p /opt/bin
-RUN ln -s /opt/placeholder/bin/* /opt/bin
-RUN ln -s /opt/placeholder/sbin/* /opt/bin
+RUN ln -s /opt/ymir/bin/* /opt/bin
+RUN ln -s /opt/ymir/sbin/* /opt/bin
 
 # Remove extra files to make the layers as slim as possible
 COPY clean.sh /tmp
@@ -97,7 +97,7 @@ COPY php-fpm.conf ${INSTALL_DIR}/etc/php-fpm.d
 # that might have created intermediate layers for docker) by copying online the /opt directory.
 FROM amazonlinux:2018.03
 ENV PATH="/opt/bin:${PATH}" \
-    LD_LIBRARY_PATH="/opt/placeholder/lib64:/opt/placeholder/lib"
+    LD_LIBRARY_PATH="/opt/ymir/lib64:/opt/ymir/lib"
 
 # Copy everything we built above into the same dir on the base AmazonLinux container.
 COPY --from=php-build /opt /opt

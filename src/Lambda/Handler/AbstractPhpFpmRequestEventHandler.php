@@ -3,21 +3,21 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Placeholder PHP Runtime.
+ * This file is part of Ymir PHP Runtime.
  *
- * (c) Carl Alexander <contact@carlalexander.ca>
+ * (c) Carl Alexander <support@ymirapp.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace Placeholder\Runtime\Lambda\Handler;
+namespace Ymir\Runtime\Lambda\Handler;
 
-use Placeholder\Runtime\FastCgi\FastCgiHttpResponse;
-use Placeholder\Runtime\FastCgi\FastCgiRequest;
-use Placeholder\Runtime\FastCgi\PhpFpmProcess;
-use Placeholder\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
-use Placeholder\Runtime\Lambda\Response\HttpResponse;
+use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
+use Ymir\Runtime\FastCgi\FastCgiRequest;
+use Ymir\Runtime\FastCgi\PhpFpmProcess;
+use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
+use Ymir\Runtime\Lambda\Response\HttpResponse;
 
 /**
  * Base Lambda invocation event handler for handlers that use PHP-FPM.

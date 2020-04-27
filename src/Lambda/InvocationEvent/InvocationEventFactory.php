@@ -3,17 +3,17 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Placeholder PHP Runtime.
+ * This file is part of Ymir PHP Runtime.
  *
- * (c) Carl Alexander <contact@carlalexander.ca>
+ * (c) Carl Alexander <support@ymirapp.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace Placeholder\Runtime\Lambda\InvocationEvent;
+namespace Ymir\Runtime\Lambda\InvocationEvent;
 
-use Placeholder\Runtime\Logger;
+use Ymir\Runtime\Logger;
 
 /**
  * Factory that creates Lambda invocation events from the runtime API.

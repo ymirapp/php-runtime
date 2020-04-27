@@ -54,7 +54,7 @@ ENV BUILD_DIR="/tmp/build"
 
 # We need a base path for the builds to install to. This path must
 # match the path that bref will be unpackaged to in Lambda.
-ENV INSTALL_DIR="/opt/placeholder"
+ENV INSTALL_DIR="/opt/ymir"
 
 # Apply stack smash protection to functions using local buffers and alloca()
 # ## # Enable size optimization (-Os)

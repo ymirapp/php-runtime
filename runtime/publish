@@ -4,9 +4,9 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Placeholder PHP Runtime.
+ * This file is part of Ymir PHP Runtime.
  *
- * (c) Carl Alexander <contact@carlalexander.ca>
+ * (c) Carl Alexander <support@ymirapp.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -20,10 +20,10 @@ $dotenv = Dotenv\Dotenv::create(__DIR__);
 $dotenv->load();
 
 $layers = [
-    'php-71' => 'Placeholder PHP 7.1',
-    'php-72' => 'Placeholder PHP 7.2',
-    'php-73' => 'Placeholder PHP 7.3',
-    'php-74' => 'Placeholder PHP 7.4',
+    'php-71' => 'Ymir PHP 7.1',
+    'php-72' => 'Ymir PHP 7.2',
+    'php-73' => 'Ymir PHP 7.3',
+    'php-74' => 'Ymir PHP 7.4',
 ];
 $regions = [
     'us-east-1',
@@ -39,7 +39,7 @@ $description = $layers[$argv[1]];
 $layer = $argv[1];
 
 foreach ($regions as $region) {
-    $layerName = 'placeholder-' . $layer;
+    $layerName = 'ymir-' . $layer;
     $lambda = new LambdaClient([
         'region' => 'us-east-1',
         'version' => '2015-03-31',

@@ -3,20 +3,20 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Placeholder PHP Runtime.
+ * This file is part of Ymir PHP Runtime.
  *
- * (c) Carl Alexander <contact@carlalexander.ca>
+ * (c) Carl Alexander <support@ymirapp.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace Placeholder\Runtime\FastCgi;
+namespace Ymir\Runtime\FastCgi;
 
 use hollodotme\FastCGI\Interfaces\ProvidesRequestData;
 use hollodotme\FastCGI\Interfaces\ProvidesResponseData;
-use Placeholder\Runtime\Logger;
 use Symfony\Component\Process\Process;
+use Ymir\Runtime\Logger;
 
 /**
  * The PHP-FPM process that handles Lambda requests using FastCGI.
@@ -28,21 +28,21 @@ class PhpFpmProcess
      *
      * @var string
      */
-    private const DEFAULT_CONFIG_PATH = '/opt/placeholder/etc/php-fpm.d/php-fpm.conf';
+    private const DEFAULT_CONFIG_PATH = '/opt/ymir/etc/php-fpm.d/php-fpm.conf';
 
     /**
      * Path to the PHP-FPM PID file.
      *
      * @var string
      */
-    private const PID_PATH = '/tmp/.placeholder/php-fpm.pid';
+    private const PID_PATH = '/tmp/.ymir/php-fpm.pid';
 
     /**
      * Path to the PHP-FPM socket file.
      *
      * @var string
      */
-    private const SOCKET_PATH = '/tmp/.placeholder/php-fpm.sock';
+    private const SOCKET_PATH = '/tmp/.ymir/php-fpm.sock';
 
     /**
      * The FastCGI server client used to connect to the PHP-FPM process.

@@ -3,15 +3,15 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Placeholder PHP Runtime.
+ * This file is part of Ymir PHP Runtime.
  *
- * (c) Carl Alexander <contact@carlalexander.ca>
+ * (c) Carl Alexander <support@ymirapp.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace Placeholder\Runtime;
+namespace Ymir\Runtime;
 
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\StreamHandler;
@@ -27,7 +27,7 @@ class Logger extends MonologLogger
      */
     public function __construct($stream = STDERR)
     {
-        parent::__construct('placeholder', [
+        parent::__construct('ymir', [
             (new StreamHandler($stream))->setFormatter(new JsonFormatter()),
         ]);
     }

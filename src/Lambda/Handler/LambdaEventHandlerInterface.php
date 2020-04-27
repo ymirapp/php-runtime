@@ -3,18 +3,18 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Placeholder PHP Runtime.
+ * This file is part of Ymir PHP Runtime.
  *
- * (c) Carl Alexander <contact@carlalexander.ca>
+ * (c) Carl Alexander <support@ymirapp.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace Placeholder\Runtime\Lambda\Handler;
+namespace Ymir\Runtime\Lambda\Handler;
 
-use Placeholder\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
-use Placeholder\Runtime\Lambda\Response\ResponseInterface;
+use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
+use Ymir\Runtime\Lambda\Response\ResponseInterface;
 
 /**
  * Event handlers take a Lambda invocation event and convert it to a response

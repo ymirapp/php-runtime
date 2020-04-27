@@ -3,27 +3,27 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Placeholder PHP Runtime.
+ * This file is part of Ymir PHP Runtime.
  *
- * (c) Carl Alexander <contact@carlalexander.ca>
+ * (c) Carl Alexander <support@ymirapp.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace Placeholder\Runtime;
+namespace Ymir\Runtime;
 
-use Placeholder\Runtime\FastCgi\PhpFpmProcess;
-use Placeholder\Runtime\Lambda\Handler\ConsoleCommandEventHandler;
-use Placeholder\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
-use Placeholder\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
-use Placeholder\Runtime\Lambda\Handler\PhpScriptLambdaEventHandler;
-use Placeholder\Runtime\Lambda\Handler\PingLambdaEventHandler;
-use Placeholder\Runtime\Lambda\Handler\WordPressLambdaEventHandler;
-use Placeholder\Runtime\Lambda\RuntimeApiClient;
+use Ymir\Runtime\FastCgi\PhpFpmProcess;
+use Ymir\Runtime\Lambda\Handler\ConsoleCommandEventHandler;
+use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
+use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
+use Ymir\Runtime\Lambda\Handler\PhpScriptLambdaEventHandler;
+use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
+use Ymir\Runtime\Lambda\Handler\WordPressLambdaEventHandler;
+use Ymir\Runtime\Lambda\RuntimeApiClient;
 
 /**
- * The [Placeholder] runtime.
+ * The Ymir PHP runtime.
  */
 class Runtime
 {
