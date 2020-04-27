@@ -62,6 +62,11 @@ abstract class AbstractHttpRequestEventHandler implements LambdaEventHandlerInte
     }
 
     /**
+     * Create the Lambda response for the given Lambda invocation event.
+     */
+    abstract protected function createLambdaEventResponse(HttpRequestEvent $event): HttpResponse;
+
+    /**
      * Get the file path requested by the given Lambda invocation event.
      */
     protected function getEventFilePath(HttpRequestEvent $event): string
@@ -76,9 +81,4 @@ abstract class AbstractHttpRequestEventHandler implements LambdaEventHandlerInte
     {
         return !is_dir($path) && file_exists($path);
     }
-
-    /**
-     * Create the Lambda response for the given Lambda invocation event.
-     */
-    abstract protected function createLambdaEventResponse(HttpRequestEvent $event): HttpResponse;
 }

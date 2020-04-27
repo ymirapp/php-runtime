@@ -133,6 +133,16 @@ class PhpFpmProcess
     }
 
     /**
+     * Checks if the PHP-FPM process is started.
+     */
+    private function isStarted(): bool
+    {
+        clearstatcache(false, self::SOCKET_PATH);
+
+        return file_exists(self::SOCKET_PATH);
+    }
+
+    /**
      * Kill an existing PHP-FPM process.
      */
     private function killExistingProcess()
@@ -166,16 +176,6 @@ class PhpFpmProcess
         }, 'Timeout while waiting for PHP-FPM process to stop', 1000000);
 
         $this->removeProcessFiles();
-    }
-
-    /**
-     * Checks if the PHP-FPM process is started.
-     */
-    private function isStarted(): bool
-    {
-        clearstatcache(false, self::SOCKET_PATH);
-
-        return file_exists(self::SOCKET_PATH);
     }
 
     /**

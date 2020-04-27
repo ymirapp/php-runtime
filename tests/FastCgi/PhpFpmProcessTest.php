@@ -24,19 +24,6 @@ class PhpFpmProcessTest extends TestCase
 {
     use LoggerMockTrait;
 
-    public function testCreateForConfigWithDefault()
-    {
-        $logger = $this->getLoggerMock();
-        $phpFpmProcess = PhpFpmProcess::createForConfig($logger);
-        $reflection = new \ReflectionObject($phpFpmProcess);
-
-        $processProperty = $reflection->getProperty('process');
-        $processProperty->setAccessible(true);
-        $process = $processProperty->getValue($phpFpmProcess);
-
-        $this->assertSame("'php-fpm' '--nodaemonize' '--force-stderr' '--fpm-config' '/opt/placeholder/etc/php-fpm.d/php-fpm.conf'", $process->getCommandLine());
-    }
-
     public function testCreateForConfigWithCustomValue()
     {
         $logger = $this->getLoggerMock();
@@ -48,5 +35,18 @@ class PhpFpmProcessTest extends TestCase
         $process = $processProperty->getValue($phpFpmProcess);
 
         $this->assertSame("'php-fpm' '--nodaemonize' '--force-stderr' '--fpm-config' '/foo/bar'", $process->getCommandLine());
+    }
+
+    public function testCreateForConfigWithDefault()
+    {
+        $logger = $this->getLoggerMock();
+        $phpFpmProcess = PhpFpmProcess::createForConfig($logger);
+        $reflection = new \ReflectionObject($phpFpmProcess);
+
+        $processProperty = $reflection->getProperty('process');
+        $processProperty->setAccessible(true);
+        $process = $processProperty->getValue($phpFpmProcess);
+
+        $this->assertSame("'php-fpm' '--nodaemonize' '--force-stderr' '--fpm-config' '/opt/placeholder/etc/php-fpm.d/php-fpm.conf'", $process->getCommandLine());
     }
 }

@@ -178,17 +178,17 @@ class FastCgiRequest implements ProvidesRequestData
     /**
      * {@inheritdoc}
      */
-    public function getRequestMethod(): string
+    public function getRemotePort(): int
     {
-        return $this->parameters['REQUEST_METHOD'];
+        return (int) $this->parameters['SERVER_PORT'];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getRemotePort(): int
+    public function getRequestMethod(): string
     {
-        return (int) $this->parameters['SERVER_PORT'];
+        return $this->parameters['REQUEST_METHOD'];
     }
 
     /**

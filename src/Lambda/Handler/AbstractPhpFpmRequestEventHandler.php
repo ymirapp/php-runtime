@@ -52,15 +52,15 @@ abstract class AbstractPhpFpmRequestEventHandler extends AbstractHttpRequestEven
     }
 
     /**
+     * Get the path to script file to pass to PHP-FPM based on the Lambda invocation event.
+     */
+    abstract protected function getScriptFilePath(HttpRequestEvent $event): string;
+
+    /**
      * {@inheritdoc}
      */
     protected function isStaticFile(string $path): bool
     {
         return parent::isStaticFile($path) && false === stripos($path, '.php');
     }
-
-    /**
-     * Get the path to script file to pass to PHP-FPM based on the Lambda invocation event.
-     */
-    abstract protected function getScriptFilePath(HttpRequestEvent $event): string;
 }
