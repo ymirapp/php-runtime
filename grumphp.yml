@@ -29,4 +29,12 @@ parameters:
       level: max
     phpunit:
       always_execute: true
-
+  testsuites:
+    code_quality:
+      tasks:
+        - composer
+        - phpcpd
+        - phpcsfixer2
+        - phplint
+        - phpmd
+        - phpstan
