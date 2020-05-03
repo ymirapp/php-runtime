@@ -1,5 +1,8 @@
 parameters:
+    checkMissingIterableValueType: false
     ignoreErrors:
         - '#Constant SIGTERM not found#'
         - message: '#PHPUnit\\Framework\\MockObject\\MockObject given#'
           path: *Test.php
+        - '#Method [^\s]* has no return typehint specified.#'
+        - '#Method [^\s]* has parameter \$[^\s]* with no typehint specified.#'
