@@ -71,13 +71,13 @@ class InvocationEventFactory
 
         $logger->info('Lambda event received:', $event);
 
-        return self::createInvocationEvent($requestId, $event);
+        return self::createFromInvocationEvent($requestId, $event);
     }
 
     /**
      * Creates a new invocation event object based on the given event information from the Lambda runtime API.
      */
-    private static function createInvocationEvent($requestId, array $event): InvocationEventInterface
+    public static function createFromInvocationEvent(string $requestId, array $event): InvocationEventInterface
     {
         $invocationEvent = null;
 
@@ -92,7 +92,7 @@ class InvocationEventFactory
         }
 
         if (!$invocationEvent instanceof InvocationEventInterface) {
-            throw new \Exception('Unknown Lambda event type');
+            throw new \InvalidArgumentException('Unknown Lambda event type');
         }
 
         return $invocationEvent;

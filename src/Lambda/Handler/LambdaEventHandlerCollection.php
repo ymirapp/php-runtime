@@ -72,7 +72,7 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
         $handler = $this->getHandlerForEvent($event);
 
         if (!$handler instanceof LambdaEventHandlerInterface) {
-            throw new \Exception('No handler found to handle the event');
+            throw new \RuntimeException('No handler found to handle the event');
         }
 
         $this->logger->info(sprintf('"%s" handler selected for the event', get_class($handler)));

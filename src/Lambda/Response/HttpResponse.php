@@ -83,7 +83,7 @@ class HttpResponse implements ResponseInterface
         }
 
         if (!isset($formattedHeaders['Content-Type'])) {
-            $formattedHeaders['Content-Type'] = 'text/html';
+            $formattedHeaders['Content-Type'] = ['text/html'];
         }
 
         return $formattedHeaders;

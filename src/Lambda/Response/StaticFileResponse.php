@@ -41,7 +41,7 @@ class StaticFileResponse implements ResponseInterface
         $file = file_get_contents($this->filePath);
 
         if (!is_string($file)) {
-            throw new \Exception(sprintf('Unable to get the contents of "%s"', $this->filePath));
+            throw new \RuntimeException(sprintf('Unable to get the contents of "%s"', $this->filePath));
         }
 
         return [

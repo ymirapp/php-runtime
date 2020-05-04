@@ -36,6 +36,10 @@ class PingLambdaEventHandler implements LambdaEventHandlerInterface
      */
     public function handle(InvocationEventInterface $event): ResponseInterface
     {
+        if (!$event instanceof PingEvent) {
+            throw new \InvalidArgumentException('PingLambdaEventHandler can only handle PingEvent objects');
+        }
+
         usleep(50 * 1000);
 
         return new HttpResponse('Pong');

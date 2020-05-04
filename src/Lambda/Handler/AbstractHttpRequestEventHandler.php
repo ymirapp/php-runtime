@@ -52,8 +52,8 @@ abstract class AbstractHttpRequestEventHandler implements LambdaEventHandlerInte
      */
     public function handle(InvocationEventInterface $event): ResponseInterface
     {
-        if (!$event instanceof HttpRequestEvent) {
-            throw new \InvalidArgumentException(sprintf('"%s" can only handle HTTP request events', self::class));
+        if (!$event instanceof HttpRequestEvent || !$this->canHandle($event)) {
+            throw new \InvalidArgumentException(sprintf('%s cannot handle the given invocation event object', (new \ReflectionClass(static::class))->getShortName()));
         }
 
         $filePath = $this->getEventFilePath($event);

@@ -87,7 +87,6 @@ class HttpRequestEvent extends AbstractEvent
 
         $queryParameters = [];
 
-        // TODO: Test this
         foreach ($this->event['multiValueQueryStringParameters'] as $parameter => $value) {
             $matches = [];
             preg_match('/([^[]*)(\[([^]]*)\])?/', $parameter, $matches);

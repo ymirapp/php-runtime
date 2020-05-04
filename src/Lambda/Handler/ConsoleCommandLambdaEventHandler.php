@@ -39,7 +39,7 @@ class ConsoleCommandLambdaEventHandler implements LambdaEventHandlerInterface
     public function handle(InvocationEventInterface $event): ResponseInterface
     {
         if (!$event instanceof ConsoleCommandEvent) {
-            throw new \InvalidArgumentException(sprintf('"%s" can only handle console command events', self::class));
+            throw new \InvalidArgumentException('ConsoleCommandLambdaEventHandler can only handle ConsoleCommandEvent objects');
         }
 
         $process = Process::fromShellCommandline("{$event->getCommand()} 2>&1");

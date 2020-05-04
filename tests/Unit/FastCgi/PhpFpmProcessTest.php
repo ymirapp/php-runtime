@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Tests\FastCgi;
+namespace Ymir\Runtime\Tests\Unit\FastCgi;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
