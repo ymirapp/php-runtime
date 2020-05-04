@@ -23,7 +23,7 @@ use Ymir\Runtime\Lambda\Response\ResponseInterface;
 /**
  * Lambda invocation event handler for console commands.
  */
-class ConsoleCommandEventHandler implements LambdaEventHandlerInterface
+class ConsoleCommandLambdaEventHandler implements LambdaEventHandlerInterface
 {
     /**
      * {@inheritdoc}

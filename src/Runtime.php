@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime;
 
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
-use Ymir\Runtime\Lambda\Handler\ConsoleCommandEventHandler;
+use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
 use Ymir\Runtime\Lambda\Handler\PhpScriptLambdaEventHandler;
@@ -102,7 +102,7 @@ class Runtime
             new RuntimeApiClient($apiUrl, $logger),
             new LambdaEventHandlerCollection($logger, [
                 new PingLambdaEventHandler(),
-                new ConsoleCommandEventHandler(),
+                new ConsoleCommandLambdaEventHandler(),
                 new WordPressLambdaEventHandler($phpFpmProcess, $rootDirectory),
                 new PhpScriptLambdaEventHandler($phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
             ]),
