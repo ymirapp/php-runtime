@@ -38,10 +38,10 @@ class FastCgiRequest implements ProvidesRequestData
     /**
      * Constructor.
      */
-    public function __construct(string $content, array $parameters)
+    public function __construct(string $content = '', array $parameters = [])
     {
         $this->content = $content;
-        $this->parameters = $parameters;
+        $this->parameters = array_change_key_case($parameters, CASE_UPPER);
     }
 
     /**
@@ -116,7 +116,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getContentLength(): int
     {
-        return $this->parameters['CONTENT_LENGTH'] ?? 0;
+        return (int) ($this->parameters['CONTENT_LENGTH'] ?? 0);
     }
 
     /**
@@ -124,7 +124,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getContentType(): string
     {
-        return $this->parameters['CONTENT_TYPE'];
+        return (string) ($this->parameters['CONTENT_TYPE'] ?? 'application/x-www-form-urlencoded');
     }
 
     /**
@@ -148,7 +148,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getGatewayInterface(): string
     {
-        return $this->parameters['GATEWAY_INTERFACE'] ?? 'FastCGI/1.0';
+        return (string) ($this->parameters['GATEWAY_INTERFACE'] ?? 'FastCGI/1.0');
     }
 
     /**
@@ -172,7 +172,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getRemoteAddress(): string
     {
-        return $this->parameters['REMOTE_ADDR'];
+        return (string) ($this->parameters['REMOTE_ADDR'] ?? '192.168.0.1');
     }
 
     /**
@@ -180,7 +180,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getRemotePort(): int
     {
-        return (int) $this->parameters['SERVER_PORT'];
+        return (int) ($this->parameters['REMOTE_PORT'] ?? 9985);
     }
 
     /**
@@ -188,7 +188,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getRequestMethod(): string
     {
-        return $this->parameters['REQUEST_METHOD'];
+        return strtoupper((string) ($this->parameters['REQUEST_METHOD'] ?? 'GET'));
     }
 
     /**
@@ -196,7 +196,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getRequestUri(): string
     {
-        return $this->parameters['REQUEST_URI'];
+        return (string) ($this->parameters['REQUEST_URI'] ?? '');
     }
 
     /**
@@ -212,7 +212,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getScriptFilename(): string
     {
-        return $this->parameters['SCRIPT_FILENAME'];
+        return (string) ($this->parameters['SCRIPT_FILENAME'] ?? '');
     }
 
     /**
@@ -220,7 +220,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getServerAddress(): string
     {
-        return $this->parameters['SERVER_ADDR'];
+        return (string) ($this->parameters['SERVER_ADDR'] ?? '127.0.0.1');
     }
 
     /**
@@ -228,7 +228,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getServerName(): string
     {
-        return $this->parameters['SERVER_NAME'];
+        return (string) ($this->parameters['SERVER_NAME'] ?? 'localhost');
     }
 
     /**
@@ -236,7 +236,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getServerPort(): int
     {
-        return (int) $this->parameters['SERVER_PORT'];
+        return (int) ($this->parameters['SERVER_PORT'] ?? 80);
     }
 
     /**
@@ -244,7 +244,7 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getServerProtocol(): string
     {
-        return $this->parameters['SERVER_PROTOCOL'];
+        return (string) ($this->parameters['SERVER_PROTOCOL'] ?? 'HTTP/1.1');
     }
 
     /**
@@ -252,6 +252,6 @@ class FastCgiRequest implements ProvidesRequestData
      */
     public function getServerSoftware(): string
     {
-        return $this->parameters['SERVER_SOFTWARE'];
+        return (string) ($this->parameters['SERVER_SOFTWARE'] ?? 'ymir');
     }
 }

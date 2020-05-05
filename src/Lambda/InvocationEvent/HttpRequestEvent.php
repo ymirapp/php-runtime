@@ -23,7 +23,7 @@ class HttpRequestEvent extends AbstractEvent
      */
     public function getBody(): string
     {
-        $body = $this->event['body'] ?? '';
+        $body = (string) ($this->event['body'] ?? '');
 
         if (!empty($this->event['isBase64Encoded'])) {
             $body = base64_decode($body);
@@ -55,7 +55,7 @@ class HttpRequestEvent extends AbstractEvent
      */
     public function getMethod(): string
     {
-        return $this->event['httpMethod'] ?? 'GET';
+        return strtoupper((string) ($this->event['httpMethod'] ?? 'GET'));
     }
 
     /**
@@ -63,7 +63,7 @@ class HttpRequestEvent extends AbstractEvent
      */
     public function getPath(): string
     {
-        return $this->event['path'] ?? '/';
+        return (string) ($this->event['path'] ?? '/');
     }
 
     /**
@@ -71,7 +71,7 @@ class HttpRequestEvent extends AbstractEvent
      */
     public function getProtocol(): string
     {
-        return $this->event['requestContext']['protocol'] ?? 'HTTP/1.1';
+        return (string) ($this->event['requestContext']['protocol'] ?? 'HTTP/1.1');
     }
 
     /**
