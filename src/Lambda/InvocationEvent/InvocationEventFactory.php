@@ -82,13 +82,13 @@ class InvocationEventFactory
         $invocationEvent = null;
 
         if (isset($event['command'])) {
-            $invocationEvent = new ConsoleCommandEvent($requestId, $event);
+            $invocationEvent = new ConsoleCommandEvent($requestId, (string) $event['command']);
         } elseif (isset($event['httpMethod'])) {
             $invocationEvent = new HttpRequestEvent($requestId, $event);
         } elseif (isset($event['ping']) && true === $event['ping']) {
-            $invocationEvent = new PingEvent($requestId, $event);
+            $invocationEvent = new PingEvent($requestId);
         } elseif (isset($event['php'])) {
-            $invocationEvent = new PhpConsoleCommandEvent($requestId, $event);
+            $invocationEvent = new PhpConsoleCommandEvent($requestId, (string) $event['php']);
         }
 
         if (!$invocationEvent instanceof InvocationEventInterface) {

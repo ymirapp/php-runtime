@@ -21,18 +21,8 @@ use Ymir\Runtime\Lambda\InvocationEvent\ConsoleCommandEvent;
  */
 class ConsoleCommandEventTest extends TestCase
 {
-    public function testGetCommandCastsValue()
+    public function testGetCommand()
     {
-        $this->assertSame('1', (new ConsoleCommandEvent('id', ['command' => 1]))->getCommand());
-    }
-
-    public function testGetCommandDefaultValue()
-    {
-        $this->assertSame('', (new ConsoleCommandEvent('id'))->getCommand());
-    }
-
-    public function testGetCommandWithValue()
-    {
-        $this->assertSame('foo', (new ConsoleCommandEvent('id', ['command' => 'foo']))->getCommand());
+        $this->assertSame('foo', (new ConsoleCommandEvent('id', 'foo'))->getCommand());
     }
 }

@@ -19,10 +19,10 @@ namespace Ymir\Runtime\Lambda\InvocationEvent;
 class PhpConsoleCommandEvent extends ConsoleCommandEvent
 {
     /**
-     * Get the command that the event wants to run.
+     * Constructor.
      */
-    public function getCommand(): string
+    public function __construct(string $id, string $command)
     {
-        return sprintf('/opt/bin/php %s', $this->event['php'] ?? '');
+        parent::__construct($id, sprintf('/opt/bin/php %s', $command));
     }
 }

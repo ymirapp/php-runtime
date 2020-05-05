@@ -19,6 +19,23 @@ namespace Ymir\Runtime\Lambda\InvocationEvent;
 class HttpRequestEvent extends AbstractEvent
 {
     /**
+     * The Lambda event details.
+     *
+     * @var array
+     */
+    private $event;
+
+    /**
+     * Constructor.
+     */
+    public function __construct(string $id, array $event = [])
+    {
+        parent::__construct($id);
+
+        $this->event = $event;
+    }
+
+    /**
      * Get the body of the invocation request.
      */
     public function getBody(): string

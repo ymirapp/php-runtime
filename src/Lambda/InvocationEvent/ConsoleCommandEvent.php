@@ -19,10 +19,27 @@ namespace Ymir\Runtime\Lambda\InvocationEvent;
 class ConsoleCommandEvent extends AbstractEvent
 {
     /**
+     * The console command to perform.
+     *
+     * @var string
+     */
+    private $command;
+
+    /**
+     * Constructor.
+     */
+    public function __construct(string $id, string $command)
+    {
+        parent::__construct($id);
+
+        $this->command = $command;
+    }
+
+    /**
      * Get the command that the event wants to run.
      */
     public function getCommand(): string
     {
-        return $this->event['command'] ?? '';
+        return $this->command;
     }
 }
