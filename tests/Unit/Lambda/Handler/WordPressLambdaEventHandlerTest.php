@@ -33,41 +33,45 @@ class WordPressLambdaEventHandlerTest extends TestCase
     public function testCanHandleWithWithIndexAndWpConfigPresent()
     {
         $process = $this->getPhpFpmProcessMock();
-        $tempDir = sprintf('%s%s%s', sys_get_temp_dir(), 'ymir_', mt_rand(100000, mt_getrandmax()));
+        $tempDir = sys_get_temp_dir();
 
         $handler = new WordPressLambdaEventHandler($process, $tempDir);
 
-        mkdir($tempDir);
         touch($tempDir.'/index.php');
         touch($tempDir.'/wp-config.php');
 
         $this->assertTrue($handler->canHandle($this->getHttpRequestEventMock()));
+
+        unlink($tempDir.'/index.php');
+        unlink($tempDir.'/wp-config.php');
     }
 
     public function testCanHandleWithWithMissingIndex()
     {
         $process = $this->getPhpFpmProcessMock();
-        $tempDir = sprintf('%s%s%s', sys_get_temp_dir(), 'ymir_', mt_rand(100000, mt_getrandmax()));
+        $tempDir = sys_get_temp_dir();
 
         $handler = new WordPressLambdaEventHandler($process, $tempDir);
 
-        mkdir($tempDir);
         touch($tempDir.'/wp-config.php');
 
         $this->assertFalse($handler->canHandle($this->getHttpRequestEventMock()));
+
+        unlink($tempDir.'/wp-config.php');
     }
 
     public function testCanHandleWithWithMissingWpConfig()
     {
         $process = $this->getPhpFpmProcessMock();
-        $tempDir = sprintf('%s%s%s', sys_get_temp_dir(), 'ymir_', mt_rand(100000, mt_getrandmax()));
+        $tempDir = sys_get_temp_dir();
 
         $handler = new WordPressLambdaEventHandler($process, $tempDir);
 
-        mkdir($tempDir);
         touch($tempDir.'/index.php');
 
         $this->assertFalse($handler->canHandle($this->getHttpRequestEventMock()));
+
+        unlink($tempDir.'/index.php');
     }
 
     public function testCanHandleWrongEventType()
@@ -83,7 +87,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
     {
         $event = $this->getHttpRequestEventMock();
         $process = $this->getPhpFpmProcessMock();
-        $tempDir = sprintf('%s%s%s', sys_get_temp_dir(), 'ymir_', mt_rand(100000, mt_getrandmax()));
+        $tempDir = sys_get_temp_dir();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
@@ -95,10 +99,12 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         $handler = new WordPressLambdaEventHandler($process, $tempDir);
 
-        mkdir($tempDir);
         touch($tempDir.'/index.php');
         touch($tempDir.'/wp-config.php');
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
+
+        unlink($tempDir.'/index.php');
+        unlink($tempDir.'/wp-config.php');
     }
 }
