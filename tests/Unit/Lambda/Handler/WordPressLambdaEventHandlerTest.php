@@ -30,48 +30,58 @@ class WordPressLambdaEventHandlerTest extends TestCase
     use InvocationEventInterfaceMockTrait;
     use PhpFpmProcessMockTrait;
 
+    /**
+     * @var string
+     */
+    private $tempDir;
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function setUp()
+    {
+        $this->tempDir = sys_get_temp_dir();
+    }
+
     public function testCanHandleWithWithIndexAndWpConfigPresent()
     {
         $process = $this->getPhpFpmProcessMock();
-        $tempDir = sys_get_temp_dir();
 
-        $handler = new WordPressLambdaEventHandler($process, $tempDir);
+        $handler = new WordPressLambdaEventHandler($process, $this->tempDir);
 
-        touch($tempDir.'/index.php');
-        touch($tempDir.'/wp-config.php');
+        touch($this->tempDir.'/index.php');
+        touch($this->tempDir.'/wp-config.php');
 
         $this->assertTrue($handler->canHandle($this->getHttpRequestEventMock()));
 
-        unlink($tempDir.'/index.php');
-        unlink($tempDir.'/wp-config.php');
+        unlink($this->tempDir.'/index.php');
+        unlink($this->tempDir.'/wp-config.php');
     }
 
     public function testCanHandleWithWithMissingIndex()
     {
         $process = $this->getPhpFpmProcessMock();
-        $tempDir = sys_get_temp_dir();
 
-        $handler = new WordPressLambdaEventHandler($process, $tempDir);
+        $handler = new WordPressLambdaEventHandler($process, $this->tempDir);
 
-        touch($tempDir.'/wp-config.php');
+        touch($this->tempDir.'/wp-config.php');
 
         $this->assertFalse($handler->canHandle($this->getHttpRequestEventMock()));
 
-        unlink($tempDir.'/wp-config.php');
+        unlink($this->tempDir.'/wp-config.php');
     }
 
     public function testCanHandleWithWithMissingWpConfig()
     {
         $process = $this->getPhpFpmProcessMock();
-        $tempDir = sys_get_temp_dir();
 
-        $handler = new WordPressLambdaEventHandler($process, $tempDir);
+        $handler = new WordPressLambdaEventHandler($process, $this->tempDir);
 
-        touch($tempDir.'/index.php');
+        touch($this->tempDir.'/index.php');
 
         $this->assertFalse($handler->canHandle($this->getHttpRequestEventMock()));
 
-        unlink($tempDir.'/index.php');
+        unlink($this->tempDir.'/index.php');
     }
 
     public function testCanHandleWrongEventType()
@@ -87,7 +97,6 @@ class WordPressLambdaEventHandlerTest extends TestCase
     {
         $event = $this->getHttpRequestEventMock();
         $process = $this->getPhpFpmProcessMock();
-        $tempDir = sys_get_temp_dir();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
@@ -97,14 +106,14 @@ class WordPressLambdaEventHandlerTest extends TestCase
                 ->method('handle')
                 ->with($this->isInstanceOf(FastCgiRequest::class));
 
-        $handler = new WordPressLambdaEventHandler($process, $tempDir);
+        $handler = new WordPressLambdaEventHandler($process, $this->tempDir);
 
-        touch($tempDir.'/index.php');
-        touch($tempDir.'/wp-config.php');
+        touch($this->tempDir.'/index.php');
+        touch($this->tempDir.'/wp-config.php');
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
 
-        unlink($tempDir.'/index.php');
-        unlink($tempDir.'/wp-config.php');
+        unlink($this->tempDir.'/index.php');
+        unlink($this->tempDir.'/wp-config.php');
     }
 }

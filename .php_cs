@@ -49,6 +49,7 @@ return PhpCsFixer\Config::create()
                 'property_private',
                 'construct',
                 'destruct',
+                'phpunit',
                 'magic',
                 'method_public_static',
                 'method_public',
