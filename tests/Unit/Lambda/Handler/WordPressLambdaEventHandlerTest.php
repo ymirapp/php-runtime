@@ -41,6 +41,10 @@ class WordPressLambdaEventHandlerTest extends TestCase
     protected function setUp()
     {
         $this->tempDir = sys_get_temp_dir();
+
+        if (!file_exists($this->tempDir.'/tmp')) {
+            mkdir($this->tempDir.'/tmp');
+        }
     }
 
     public function testCanHandleWithIndexAndWpConfigPresent()
@@ -85,7 +89,33 @@ class WordPressLambdaEventHandlerTest extends TestCase
         $this->assertFalse((new WordPressLambdaEventHandler($process, ''))->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
-    public function testHandleCreatesFastCgiHttpResponse()
+    public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExists()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $event->expects($this->exactly(3))
+              ->method('getPath')
+              ->willReturn('tmp/');
+
+        $process->expects($this->once())
+                ->method('handle')
+                ->with($this->callback(function (FastCgiRequest $request) {
+                    return $request->getScriptFilename() === $this->tempDir.'/tmp/index.php';
+                }));
+
+        touch($this->tempDir.'/index.php');
+        touch($this->tempDir.'/wp-config.php');
+        touch($this->tempDir.'/tmp/index.php');
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
+
+        unlink($this->tempDir.'/index.php');
+        unlink($this->tempDir.'/wp-config.php');
+        unlink($this->tempDir.'/tmp/index.php');
+    }
+
+    public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefault()
     {
         $event = $this->getHttpRequestEventMock();
         $process = $this->getPhpFpmProcessMock();
@@ -96,7 +126,9 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         $process->expects($this->once())
                 ->method('handle')
-                ->with($this->isInstanceOf(FastCgiRequest::class));
+                ->with($this->callback(function (FastCgiRequest $request) {
+                    return $request->getScriptFilename() === $this->tempDir.'/index.php';
+                }));
 
         touch($this->tempDir.'/index.php');
         touch($this->tempDir.'/wp-config.php');

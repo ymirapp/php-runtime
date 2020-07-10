@@ -38,14 +38,10 @@ class WordPressLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
     {
         $filePath = $this->getEventFilePath($event);
 
-        if (false === stripos($filePath, '.php')) {
-            $filePath .= 'index.php';
+        if (is_dir($filePath)) {
+            $filePath = rtrim($filePath, '/').'/index.php';
         }
 
-        if (file_exists($filePath)) {
-            return $filePath;
-        }
-
-        return $this->rootDirectory.'/index.php';
+        return file_exists($filePath) ? $filePath : $this->rootDirectory.'/index.php';
     }
 }
