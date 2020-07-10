@@ -47,12 +47,10 @@ class WordPressLambdaEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        $handler = new WordPressLambdaEventHandler($process, $this->tempDir);
-
         touch($this->tempDir.'/index.php');
         touch($this->tempDir.'/wp-config.php');
 
-        $this->assertTrue($handler->canHandle($this->getHttpRequestEventMock()));
+        $this->assertTrue((new WordPressLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
         unlink($this->tempDir.'/index.php');
         unlink($this->tempDir.'/wp-config.php');
@@ -62,11 +60,9 @@ class WordPressLambdaEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        $handler = new WordPressLambdaEventHandler($process, $this->tempDir);
-
         touch($this->tempDir.'/wp-config.php');
 
-        $this->assertFalse($handler->canHandle($this->getHttpRequestEventMock()));
+        $this->assertFalse((new WordPressLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
         unlink($this->tempDir.'/wp-config.php');
     }
@@ -75,11 +71,9 @@ class WordPressLambdaEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        $handler = new WordPressLambdaEventHandler($process, $this->tempDir);
-
         touch($this->tempDir.'/index.php');
 
-        $this->assertFalse($handler->canHandle($this->getHttpRequestEventMock()));
+        $this->assertFalse((new WordPressLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
         unlink($this->tempDir.'/index.php');
     }
@@ -88,9 +82,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        $handler = $handler = new WordPressLambdaEventHandler($process, '');
-
-        $this->assertFalse($handler->canHandle($this->getInvocationEventInterfaceMock()));
+        $this->assertFalse((new WordPressLambdaEventHandler($process, ''))->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
     public function testHandleCreatesFastCgiHttpResponse()
@@ -106,12 +98,10 @@ class WordPressLambdaEventHandlerTest extends TestCase
                 ->method('handle')
                 ->with($this->isInstanceOf(FastCgiRequest::class));
 
-        $handler = new WordPressLambdaEventHandler($process, $this->tempDir);
-
         touch($this->tempDir.'/index.php');
         touch($this->tempDir.'/wp-config.php');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
 
         unlink($this->tempDir.'/index.php');
         unlink($this->tempDir.'/wp-config.php');
