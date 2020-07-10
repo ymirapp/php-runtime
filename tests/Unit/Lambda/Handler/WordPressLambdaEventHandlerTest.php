@@ -43,7 +43,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
         $this->tempDir = sys_get_temp_dir();
     }
 
-    public function testCanHandleWithWithIndexAndWpConfigPresent()
+    public function testCanHandleWithIndexAndWpConfigPresent()
     {
         $process = $this->getPhpFpmProcessMock();
 
@@ -58,7 +58,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
         unlink($this->tempDir.'/wp-config.php');
     }
 
-    public function testCanHandleWithWithMissingIndex()
+    public function testCanHandleWithMissingIndex()
     {
         $process = $this->getPhpFpmProcessMock();
 
@@ -71,7 +71,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
         unlink($this->tempDir.'/wp-config.php');
     }
 
-    public function testCanHandleWithWithMissingWpConfig()
+    public function testCanHandleWithMissingWpConfig()
     {
         $process = $this->getPhpFpmProcessMock();
 
