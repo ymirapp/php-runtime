@@ -25,7 +25,9 @@ parameters:
     phplint: ~
     phpmd:
       ruleset: ['phpmd.xml']
-      exclude: ['tests']
+      exclude:
+        - 'Runtime.php'
+        - 'tests'
     phpstan:
       level: max
       ignore_patterns:

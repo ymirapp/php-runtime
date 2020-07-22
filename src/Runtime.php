@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime;
 
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
+use Ymir\Runtime\Lambda\Handler\BedrockLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
@@ -104,6 +105,7 @@ class Runtime
                 new PingLambdaEventHandler(),
                 new ConsoleCommandLambdaEventHandler(),
                 new WordPressLambdaEventHandler($phpFpmProcess, $rootDirectory),
+                new BedrockLambdaEventHandler($phpFpmProcess, $rootDirectory),
                 new PhpScriptLambdaEventHandler($phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
             ]),
             $logger,
