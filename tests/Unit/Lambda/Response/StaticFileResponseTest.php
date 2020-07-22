@@ -21,7 +21,25 @@ use Ymir\Runtime\Lambda\Response\StaticFileResponse;
  */
 class StaticFileResponseTest extends TestCase
 {
-    public function testGetResponseData()
+    public function testGetResponseDataWithCorrectFileExtensionMimeType()
+    {
+        $filePath = stream_get_meta_data(tmpfile())['uri'].'.png';
+
+        file_put_contents($filePath, 'foo');
+
+        $response = new StaticFileResponse($filePath);
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'headers' => [
+                'Content-Type' => 'image/png',
+            ],
+            'body' => 'Zm9v',
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFileWithNoExtension()
     {
         $filePath = stream_get_meta_data(tmpfile())['uri'];
 

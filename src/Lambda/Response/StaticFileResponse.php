@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Lambda\Response;
 
+use Mimey\MimeTypes;
+use Mimey\MimeTypesInterface;
+
 /**
  * A Lambda response for a static file.
  */
@@ -26,11 +29,19 @@ class StaticFileResponse implements ResponseInterface
     private $filePath;
 
     /**
+     * MIME type handling library.
+     *
+     * @var MimeTypesInterface
+     */
+    private $mimeTypes;
+
+    /**
      * Constructor.
      */
-    public function __construct(string $filePath)
+    public function __construct(string $filePath, ?MimeTypesInterface $mimeTypes = null)
     {
         $this->filePath = $filePath;
+        $this->mimeTypes = $mimeTypes ?? new MimeTypes();
     }
 
     /**
@@ -44,10 +55,17 @@ class StaticFileResponse implements ResponseInterface
             throw new \RuntimeException(sprintf('Unable to get the contents of "%s"', $this->filePath));
         }
 
+        $contentType = null;
+        $extension = pathinfo($this->filePath, PATHINFO_EXTENSION);
+
+        if (is_string($extension)) {
+            $contentType = $this->mimeTypes->getMimeType($extension);
+        }
+
         return [
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'headers' => ['Content-Type' => mime_content_type($this->filePath)],
+            'headers' => ['Content-Type' => $contentType ?? 'text/plain'],
             'body' => base64_encode($file),
         ];
     }

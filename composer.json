@@ -20,6 +20,7 @@
         "ext-posix": "*",
         "hollodotme/fast-cgi-client": "^3.0",
         "monolog/monolog": "^1.0",
+        "ralouphie/mimey": "^2.1",
         "symfony/process": "^4.4"
     },
     "require-dev": {
