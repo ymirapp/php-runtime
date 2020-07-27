@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
 
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Process\Exception\ProcessFailedException;
 use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
 use Ymir\Runtime\Lambda\Response\ProcessResponse;
 use Ymir\Runtime\Tests\Mock\ConsoleCommandEventMockTrait;
@@ -51,13 +50,16 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
               ->method('getCommand')
               ->willReturn('ls -la');
 
-        $this->assertInstanceOf(ProcessResponse::class, $handler->handle($event));
+        $response = $handler->handle($event);
+        $responseData = $response->getResponseData();
+
+        $this->assertInstanceOf(ProcessResponse::class, $response);
+        $this->assertArrayHasKey('exitCode', $responseData);
+        $this->assertSame(0, $responseData['exitCode']);
     }
 
     public function testHandleWithUnsuccessfulCommand()
     {
-        $this->expectException(ProcessFailedException::class);
-
         $event = $this->getConsoleCommandEventMock();
         $handler = new ConsoleCommandLambdaEventHandler();
 
@@ -65,7 +67,12 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
               ->method('getCommand')
               ->willReturn('foo');
 
-        $handler->handle($event);
+        $response = $handler->handle($event);
+        $responseData = $response->getResponseData();
+
+        $this->assertInstanceOf(ProcessResponse::class, $response);
+        $this->assertArrayHasKey('exitCode', $responseData);
+        $this->assertNotSame(0, $responseData['exitCode']);
     }
 
     public function testHandleWithWrongEventType()

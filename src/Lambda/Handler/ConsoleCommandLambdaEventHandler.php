@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Lambda\Handler;
 
-use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use Ymir\Runtime\Lambda\InvocationEvent\ConsoleCommandEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
@@ -45,10 +44,6 @@ class ConsoleCommandLambdaEventHandler implements LambdaEventHandlerInterface
         $process = Process::fromShellCommandline("{$event->getCommand()} 2>&1");
         $process->setTimeout(null);
         $process->run();
-
-        if (!$process->isSuccessful()) {
-            throw new ProcessFailedException($process);
-        }
 
         return new ProcessResponse($process);
     }
