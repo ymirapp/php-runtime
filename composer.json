@@ -21,7 +21,8 @@
         "hollodotme/fast-cgi-client": "^3.0",
         "monolog/monolog": "^1.0",
         "ralouphie/mimey": "^2.1",
-        "symfony/process": "^4.4"
+        "symfony/process": "^4.4",
+        "tightenco/collect": "^7.19"
     },
     "require-dev": {
         "aws/aws-sdk-php": "^3.121",
