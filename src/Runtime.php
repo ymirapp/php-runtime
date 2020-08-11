@@ -131,8 +131,6 @@ class Runtime
         } catch (\Throwable $exception) {
             $this->logger->exception($exception);
             $this->client->sendEventError($event, $exception);
-
-            exit(1);
         }
 
         if ($this->invocations >= $this->maxInvocations) {
