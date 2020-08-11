@@ -89,7 +89,7 @@ class Runtime
     public static function createFromEnvironmentVariable(): self
     {
         $apiUrl = getenv('AWS_LAMBDA_RUNTIME_API');
-        $logger = new Logger();
+        $logger = new Logger(getenv('YMIR_RUNTIME_LOG_LEVEL') ?: Logger::INFO);
         $phpFpmProcess = PhpFpmProcess::createForConfig($logger);
         $rootDirectory = getenv('LAMBDA_TASK_ROOT');
 

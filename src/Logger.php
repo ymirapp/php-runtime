@@ -25,10 +25,10 @@ class Logger extends MonologLogger
     /**
      * Constructor.
      */
-    public function __construct($stream = STDERR)
+    public function __construct($level, $stream = STDERR)
     {
         parent::__construct('ymir', [
-            (new StreamHandler($stream))->setFormatter(new JsonFormatter()),
+            (new StreamHandler($stream, $level))->setFormatter(new JsonFormatter()),
         ]);
     }
 
