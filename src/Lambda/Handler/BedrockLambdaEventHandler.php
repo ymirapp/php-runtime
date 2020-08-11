@@ -36,13 +36,19 @@ class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
      */
     protected function getEventFilePath(HttpRequestEvent $event): string
     {
-        $path = ltrim($event->getPath(), '/');
+        $matches = [];
+        $path = $event->getPath();
 
-        if (0 === stripos($path, 'wp/')) {
-            $path = 'web/'.$path;
+        if ((1 === preg_match('/^\/(wp-.*.php)$/', $path, $matches) || 1 === preg_match('/\/(wp-(content|admin|includes).*)/', $path, $matches))
+            && !empty($matches[1])) {
+            $path = 'wp/'.ltrim($matches[1], '/');
         }
 
-        return $this->rootDirectory.'/'.$path;
+        if (0 === stripos($path, 'wp/')) {
+            $path = 'web/'.ltrim($path, '/');
+        }
+
+        return $this->rootDirectory.'/'.ltrim($path, '/');
     }
 
     /**
