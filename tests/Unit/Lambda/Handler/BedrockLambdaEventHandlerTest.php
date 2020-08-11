@@ -139,11 +139,13 @@ class BedrockLambdaEventHandlerTest extends TestCase
                     return $request->getScriptFilename() === $this->tempDir.'/tmp/index.php';
                 }));
 
+        touch($this->tempDir.'/config/application.php');
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         touch($this->tempDir.'/tmp/index.php');
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
 
+        unlink($this->tempDir.'/config/application.php');
         unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         unlink($this->tempDir.'/tmp/index.php');
     }
@@ -163,10 +165,12 @@ class BedrockLambdaEventHandlerTest extends TestCase
                     return $request->getScriptFilename() === $this->tempDir.'/web/index.php';
                 }));
 
+        touch($this->tempDir.'/config/application.php');
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
 
+        unlink($this->tempDir.'/config/application.php');
         unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
     }
 
@@ -185,11 +189,13 @@ class BedrockLambdaEventHandlerTest extends TestCase
                     return $request->getScriptFilename() === $this->tempDir.'/web/wp/tmp/index.php';
                 }));
 
+        touch($this->tempDir.'/config/application.php');
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         touch($this->tempDir.'/web/wp/tmp/index.php');
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
 
+        unlink($this->tempDir.'/config/application.php');
         unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         unlink($this->tempDir.'/web/wp/tmp/index.php');
     }
@@ -209,11 +215,41 @@ class BedrockLambdaEventHandlerTest extends TestCase
                     return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-admin/index.php';
                 }));
 
+        touch($this->tempDir.'/config/application.php');
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         touch($this->tempDir.'/web/wp/wp-admin/index.php');
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
 
+        unlink($this->tempDir.'/config/application.php');
+        unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
+        unlink($this->tempDir.'/web/wp/wp-admin/index.php');
+    }
+
+    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisite()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $event->expects($this->exactly(3))
+              ->method('getPath')
+              ->willReturn('/subdirectory/wp-admin/');
+
+        $process->expects($this->once())
+                ->method('handle')
+                ->with($this->callback(function (FastCgiRequest $request) {
+                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-admin/index.php';
+                }));
+
+        touch($this->tempDir.'/config/application.php');
+        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
+        touch($this->tempDir.'/web/wp/wp-admin/index.php');
+
+        file_put_contents($this->tempDir.'/config/application.php', 'Config::define(\'MULTISITE\', true);');
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
+
+        unlink($this->tempDir.'/config/application.php');
         unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         unlink($this->tempDir.'/web/wp/wp-admin/index.php');
     }
@@ -224,20 +260,50 @@ class BedrockLambdaEventHandlerTest extends TestCase
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
-            ->method('getPath')
-            ->willReturn('/wp-login.php');
+              ->method('getPath')
+              ->willReturn('/wp-login.php');
 
         $process->expects($this->once())
-            ->method('handle')
-            ->with($this->callback(function (FastCgiRequest $request) {
-                return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-login.php';
-            }));
+                ->method('handle')
+                ->with($this->callback(function (FastCgiRequest $request) {
+                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-login.php';
+                }));
 
+        touch($this->tempDir.'/config/application.php');
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         touch($this->tempDir.'/web/wp/wp-login.php');
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
 
+        unlink($this->tempDir.'/config/application.php');
+        unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
+        unlink($this->tempDir.'/web/wp/wp-login.php');
+    }
+
+    public function testHandleRewritesWpLoginUrlWithSubdirectoryMultisite()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $event->expects($this->exactly(3))
+              ->method('getPath')
+              ->willReturn('/subdirectory/wp-login.php');
+
+        $process->expects($this->once())
+                ->method('handle')
+                ->with($this->callback(function (FastCgiRequest $request) {
+                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-login.php';
+                }));
+
+        touch($this->tempDir.'/config/application.php');
+        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
+        touch($this->tempDir.'/web/wp/wp-login.php');
+
+        file_put_contents($this->tempDir.'/config/application.php', 'Config::define(\'MULTISITE\', true);');
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
+
+        unlink($this->tempDir.'/config/application.php');
         unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         unlink($this->tempDir.'/web/wp/wp-login.php');
     }

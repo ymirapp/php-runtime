@@ -34,6 +34,21 @@ class WordPressLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
     /**
      * {@inheritdoc}
      */
+    protected function getEventFilePath(HttpRequestEvent $event): string
+    {
+        $matches = [];
+        $path = $event->getPath();
+
+        if ($this->isMultisite() && (1 === preg_match('/^(.*)?(\/wp-(content|admin|includes).*)/', $path, $matches) || 1 === preg_match('/^(.*)?(\/.*\.php)$/', $path, $matches)) && !empty($matches[2])) {
+            $path = $matches[2];
+        }
+
+        return $this->rootDirectory.'/'.ltrim($path, '/');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected function getScriptFilePath(HttpRequestEvent $event): string
     {
         $filePath = $this->getEventFilePath($event);
@@ -43,5 +58,15 @@ class WordPressLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
         }
 
         return file_exists($filePath) ? $filePath : $this->rootDirectory.'/index.php';
+    }
+
+    /**
+     * Checks if we're dealing with a multisite installation or not.
+     */
+    private function isMultisite(): bool
+    {
+        $wpConfig = file_get_contents($this->rootDirectory.'/wp-config.php');
+
+        return is_string($wpConfig) && 1 === preg_match('/define\(\s*(\'|\")MULTISITE\1\s*,\s*true\s*\)/', $wpConfig);
     }
 }

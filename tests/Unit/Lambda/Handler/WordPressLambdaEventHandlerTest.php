@@ -42,6 +42,9 @@ class WordPressLambdaEventHandlerTest extends TestCase
     {
         $this->tempDir = sys_get_temp_dir();
 
+        if (!file_exists($this->tempDir.'/wp-admin')) {
+            mkdir($this->tempDir.'/wp-admin');
+        }
         if (!file_exists($this->tempDir.'/tmp')) {
             mkdir($this->tempDir.'/tmp');
         }
@@ -137,5 +140,61 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         unlink($this->tempDir.'/index.php');
         unlink($this->tempDir.'/wp-config.php');
+    }
+
+    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisite()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $event->expects($this->exactly(3))
+              ->method('getPath')
+              ->willReturn('/subdirectory/wp-admin/');
+
+        $process->expects($this->once())
+                ->method('handle')
+                ->with($this->callback(function (FastCgiRequest $request) {
+                    return $request->getScriptFilename() === $this->tempDir.'/wp-admin/index.php';
+                }));
+
+        touch($this->tempDir.'/index.php');
+        touch($this->tempDir.'/wp-config.php');
+        touch($this->tempDir.'/wp-admin/index.php');
+
+        file_put_contents($this->tempDir.'/wp-config.php', 'define(\'MULTISITE\', true);');
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
+
+        unlink($this->tempDir.'/index.php');
+        unlink($this->tempDir.'/wp-config.php');
+        unlink($this->tempDir.'/wp-admin/index.php');
+    }
+
+    public function testHandleRewritesWpLoginUrlWithMultisite()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $event->expects($this->exactly(3))
+              ->method('getPath')
+              ->willReturn('/subdirectory/wp-login.php');
+
+        $process->expects($this->once())
+                ->method('handle')
+                ->with($this->callback(function (FastCgiRequest $request) {
+                    return $request->getScriptFilename() === $this->tempDir.'/wp-login.php';
+                }));
+
+        touch($this->tempDir.'/index.php');
+        touch($this->tempDir.'/wp-config.php');
+        touch($this->tempDir.'/wp-login.php');
+
+        file_put_contents($this->tempDir.'/wp-config.php', 'define(\'MULTISITE\', true);');
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
+
+        unlink($this->tempDir.'/index.php');
+        unlink($this->tempDir.'/wp-config.php');
+        unlink($this->tempDir.'/wp-login.php');
     }
 }

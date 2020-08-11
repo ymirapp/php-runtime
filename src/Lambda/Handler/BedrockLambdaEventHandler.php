@@ -39,7 +39,11 @@ class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
         $matches = [];
         $path = $event->getPath();
 
-        if ((1 === preg_match('/^\/(wp-.*.php)$/', $path, $matches) || 1 === preg_match('/\/(wp-(content|admin|includes).*)/', $path, $matches))
+        if ($this->isMultisite()
+            && (1 === preg_match('/^(.*)?(\/wp-(content|admin|includes).*)/', $path, $matches) || 1 === preg_match('/^(.*)?(\/.*\.php)$/', $path, $matches))
+            && !empty($matches[2])) {
+            $path = 'wp/'.ltrim($matches[2], '/');
+        } elseif ((1 === preg_match('/^\/(wp-.*.php)$/', $path, $matches) || 1 === preg_match('/\/(wp-(content|admin|includes).*)/', $path, $matches))
             && !empty($matches[1])) {
             $path = 'wp/'.ltrim($matches[1], '/');
         }
@@ -63,5 +67,15 @@ class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
         }
 
         return file_exists($filePath) ? $filePath : $this->rootDirectory.'/web/index.php';
+    }
+
+    /**
+     * Checks if we're dealing with a multisite installation or not.
+     */
+    private function isMultisite(): bool
+    {
+        $application = file_get_contents($this->rootDirectory.'/config/application.php');
+
+        return is_string($application) && 1 === preg_match('/Config::define\(\s*(\'|\")MULTISITE\1\s*,\s*true\s*\)/', $application);
     }
 }
