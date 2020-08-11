@@ -101,7 +101,7 @@ class LambdaEventHandlerCollectionTest extends TestCase
                  ->willReturn([]);
 
         $logger->expects($this->exactly(2))
-               ->method('info')
+               ->method('debug')
                ->withConsecutive(
                    [$this->matchesRegularExpression('/"[^"]*" handler selected for the event/')],
                    [$this->matchesRegularExpression('/"[^"]*" handler response:/'), $this->identicalTo([])]

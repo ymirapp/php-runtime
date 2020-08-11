@@ -75,11 +75,11 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
             throw new \RuntimeException('No handler found to handle the event');
         }
 
-        $this->logger->info(sprintf('"%s" handler selected for the event', get_class($handler)));
+        $this->logger->debug(sprintf('"%s" handler selected for the event', get_class($handler)));
 
         $response = $handler->handle($event);
 
-        $this->logger->info(sprintf('"%s" handler response:', get_class($handler)), $response->getResponseData());
+        $this->logger->debug(sprintf('"%s" handler response:', get_class($handler)), $response->getResponseData());
 
         return $response;
     }

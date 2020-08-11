@@ -69,7 +69,7 @@ class InvocationEventFactory
             throw new \Exception('Unable to decode the Lambda runtime API response');
         }
 
-        $logger->info('Lambda event received:', $event);
+        $logger->debug('Lambda event received:', $event);
 
         return self::createFromInvocationEvent($requestId, $event);
     }
