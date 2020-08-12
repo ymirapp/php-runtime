@@ -70,6 +70,14 @@ class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
     }
 
     /**
+     * {@inheritdoc}
+     */
+    protected function isPubliclyAccessible(string $filePath): bool
+    {
+        return 1 !== preg_match('/(composer\.(json|lock)|composer\/installed\.json|wp-cli\.local\.yml|wp-cli\.yml)$/', $filePath);
+    }
+
+    /**
      * Checks if we're dealing with a multisite installation or not.
      */
     private function isMultisite(): bool

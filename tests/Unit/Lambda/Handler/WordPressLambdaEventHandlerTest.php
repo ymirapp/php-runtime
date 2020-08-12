@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\WordPressLambdaEventHandler;
+use Ymir\Runtime\Lambda\Response\NotFoundHttpResponse;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
@@ -50,6 +51,17 @@ class WordPressLambdaEventHandlerTest extends TestCase
         }
     }
 
+    public function inaccessibleFilesProvider(): array
+    {
+        return [
+            ['/wp-config.php'],
+            ['/readme.html'],
+            ['/license.txt'],
+            ['/wp-cli.local.yml'],
+            ['/wp-cli.yml'],
+        ];
+    }
+
     public function testCanHandleWithIndexAndWpConfigPresent()
     {
         $process = $this->getPhpFpmProcessMock();
@@ -59,8 +71,8 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         $this->assertTrue((new WordPressLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
-        unlink($this->tempDir.'/index.php');
-        unlink($this->tempDir.'/wp-config.php');
+        @unlink($this->tempDir.'/index.php');
+        @unlink($this->tempDir.'/wp-config.php');
     }
 
     public function testCanHandleWithMissingIndex()
@@ -71,7 +83,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         $this->assertFalse((new WordPressLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
-        unlink($this->tempDir.'/wp-config.php');
+        @unlink($this->tempDir.'/wp-config.php');
     }
 
     public function testCanHandleWithMissingWpConfig()
@@ -82,7 +94,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         $this->assertFalse((new WordPressLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
-        unlink($this->tempDir.'/index.php');
+        @unlink($this->tempDir.'/index.php');
     }
 
     public function testCanHandleWrongEventType()
@@ -113,9 +125,9 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
 
-        unlink($this->tempDir.'/index.php');
-        unlink($this->tempDir.'/wp-config.php');
-        unlink($this->tempDir.'/tmp/index.php');
+        @unlink($this->tempDir.'/index.php');
+        @unlink($this->tempDir.'/wp-config.php');
+        @unlink($this->tempDir.'/tmp/index.php');
     }
 
     public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefault()
@@ -138,8 +150,31 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
 
-        unlink($this->tempDir.'/index.php');
-        unlink($this->tempDir.'/wp-config.php');
+        @unlink($this->tempDir.'/index.php');
+        @unlink($this->tempDir.'/wp-config.php');
+    }
+
+    /**
+     * @dataProvider inaccessibleFilesProvider
+     */
+    public function testHandleReturnsNotFoundHttpResponseForInaccessibleFiles(string $filePath)
+    {
+        $event = $this->getHttpRequestEventMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $event->expects($this->exactly(1))
+              ->method('getPath')
+              ->willReturn($filePath);
+
+        touch($this->tempDir.'/index.php');
+        touch($this->tempDir.'/wp-config.php');
+        touch($this->tempDir.$filePath);
+
+        $this->assertInstanceOf(NotFoundHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
+
+        @unlink($this->tempDir.'/index.php');
+        @unlink($this->tempDir.'/wp-config.php');
+        @unlink($this->tempDir.$filePath);
     }
 
     public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisite()
@@ -165,9 +200,9 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
 
-        unlink($this->tempDir.'/index.php');
-        unlink($this->tempDir.'/wp-config.php');
-        unlink($this->tempDir.'/wp-admin/index.php');
+        @unlink($this->tempDir.'/index.php');
+        @unlink($this->tempDir.'/wp-config.php');
+        @unlink($this->tempDir.'/wp-admin/index.php');
     }
 
     public function testHandleRewritesWpLoginUrlWithMultisite()
@@ -193,8 +228,8 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
 
-        unlink($this->tempDir.'/index.php');
-        unlink($this->tempDir.'/wp-config.php');
-        unlink($this->tempDir.'/wp-login.php');
+        @unlink($this->tempDir.'/index.php');
+        @unlink($this->tempDir.'/wp-config.php');
+        @unlink($this->tempDir.'/wp-login.php');
     }
 }

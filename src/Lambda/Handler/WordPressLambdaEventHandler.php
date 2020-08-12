@@ -61,6 +61,14 @@ class WordPressLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
     }
 
     /**
+     * {@inheritdoc}
+     */
+    protected function isPubliclyAccessible(string $filePath): bool
+    {
+        return 1 !== preg_match('/(wp-config\.php|readme\.html|license\.txt|wp-cli\.local\.yml|wp-cli\.yml)$/', $filePath);
+    }
+
+    /**
      * Checks if we're dealing with a multisite installation or not.
      */
     private function isMultisite(): bool
