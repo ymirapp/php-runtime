@@ -20,7 +20,6 @@ $dotenv = Dotenv\Dotenv::create(__DIR__);
 $dotenv->load();
 
 $layers = [
-    'php-71' => 'Ymir PHP 7.1',
     'php-72' => 'Ymir PHP 7.2',
     'php-73' => 'Ymir PHP 7.3',
     'php-74' => 'Ymir PHP 7.4',
