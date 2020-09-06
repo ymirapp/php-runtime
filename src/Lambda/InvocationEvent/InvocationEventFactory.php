@@ -89,6 +89,8 @@ class InvocationEventFactory
             $invocationEvent = new PingEvent($requestId);
         } elseif (isset($event['php'])) {
             $invocationEvent = new PhpConsoleCommandEvent($requestId, (string) $event['php']);
+        } elseif (isset($event['warmup'])) {
+            $invocationEvent = new WarmUpEvent($requestId, (int) $event['warmup']);
         }
 
         if (!$invocationEvent instanceof InvocationEventInterface) {

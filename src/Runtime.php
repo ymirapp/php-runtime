@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime;
 
+use AsyncAws\Lambda\LambdaClient;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\Handler\BedrockLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
@@ -20,6 +21,7 @@ use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
 use Ymir\Runtime\Lambda\Handler\PhpScriptLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
+use Ymir\Runtime\Lambda\Handler\WarmUpEventHandler;
 use Ymir\Runtime\Lambda\Handler\WordPressLambdaEventHandler;
 use Ymir\Runtime\Lambda\RuntimeApiClient;
 
@@ -103,6 +105,7 @@ class Runtime
             new RuntimeApiClient($apiUrl, $logger),
             new LambdaEventHandlerCollection($logger, [
                 new PingLambdaEventHandler(),
+                new WarmUpEventHandler(new LambdaClient(['region' => getenv('AWS_REGION')])),
                 new ConsoleCommandLambdaEventHandler(),
                 new WordPressLambdaEventHandler($phpFpmProcess, $rootDirectory),
                 new BedrockLambdaEventHandler($phpFpmProcess, $rootDirectory),

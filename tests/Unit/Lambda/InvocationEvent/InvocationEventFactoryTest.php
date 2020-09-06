@@ -19,6 +19,7 @@ use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
 use Ymir\Runtime\Lambda\InvocationEvent\PhpConsoleCommandEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\PingEvent;
+use Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent;
 
 /**
  * @covers \Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory
@@ -51,5 +52,10 @@ class InvocationEventFactoryTest extends TestCase
     public function testCreatesPingEvent()
     {
         $this->assertInstanceOf(PingEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['ping' => true]));
+    }
+
+    public function testCreatesWarmUpEvent()
+    {
+        $this->assertInstanceOf(WarmUpEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['warmup' => '5']));
     }
 }

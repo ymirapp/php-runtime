@@ -18,15 +18,18 @@
         "ext-json": "*",
         "ext-pcntl": "*",
         "ext-posix": "*",
+        "async-aws/lambda": "^1.0",
         "hollodotme/fast-cgi-client": "^3.0",
         "monolog/monolog": "^1.0",
         "ralouphie/mimey": "^2.1",
+        "symfony/http-client": "^4.4",
         "symfony/process": "^4.4",
         "tightenco/collect": "^7.19"
     },
     "require-dev": {
         "aws/aws-sdk-php": "^3.121",
         "friendsofphp/php-cs-fixer": "^2.16",
+        "php-mock/php-mock-phpunit": "^2.6",
         "php-parallel-lint/php-parallel-lint": "^1.1",
         "phpmd/phpmd": "^2.7",
         "phpro/grumphp": "^0.16.2",
