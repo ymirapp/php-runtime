@@ -32,7 +32,6 @@ RUN set -xe \
         --build=x86_64-pc-linux-gnu \
         --prefix=${INSTALL_DIR} \
         --enable-option-checking=fatal \
-        --enable-maintainer-zts \
         --enable-sockets \
         --with-config-file-path=${INSTALL_DIR}/etc/php \
         --with-config-file-scan-dir=${INSTALL_DIR}/etc/php/conf.d:/var/task/php/conf.d \
@@ -76,20 +75,6 @@ RUN set -xe; \
 RUN pecl install redis
 RUN pecl install APCu
 RUN pecl install imagick
-
-# pthreads
-ENV PTHREADS_BUILD_DIR=${BUILD_DIR}/pthreads
-# Build from master because there are no pthreads release compatible with PHP 7.3
-RUN set -xe; \
-    mkdir -p ${PTHREADS_BUILD_DIR}/bin; \
-    curl -Ls https://github.com/krakjoe/pthreads/archive/master.tar.gz \
-    | tar xzC ${PTHREADS_BUILD_DIR} --strip-components=1
-WORKDIR  ${PTHREADS_BUILD_DIR}/
-RUN set -xe; \
-    phpize \
- && ./configure \
- && make \
- && make install
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --install-dir=${INSTALL_DIR}/bin/ --filename=composer
