@@ -48,11 +48,13 @@ class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
             $path = 'wp/'.ltrim($matches[1], '/');
         }
 
+        $path = ltrim($path, '/');
+
         if (0 === stripos($path, 'wp/')) {
-            $path = 'web/'.ltrim($path, '/');
+            $path = 'web/'.$path;
         }
 
-        return $this->rootDirectory.'/'.ltrim($path, '/');
+        return $this->rootDirectory.'/'.$path;
     }
 
     /**
