@@ -359,15 +359,110 @@ RUN set -xe; \
 #   - php
 ENV VERSION_BISON=3.4.2
 ENV BISON_BUILD_DIR=${BUILD_DIR}/bison
+
 RUN set -xe; \
     mkdir -p ${BISON_BUILD_DIR}; \
     curl -Ls https://ftp.gnu.org/gnu/bison/bison-${VERSION_BISON}.tar.gz \
     | tar xzC ${BISON_BUILD_DIR} --strip-components=1
+
 WORKDIR  ${BISON_BUILD_DIR}/
+
 RUN set -xe; \
     ./configure --prefix=${INSTALL_DIR}; \
     make -j $(nproc); \
     make install
+
+###############################################################################
+# libwebp Build
+# https://github.com/webmproject/libwebp/releases
+# Needs:
+#
+# Needed by:
+#   - imagick
+ENV LIBWEBP_BUILD_DIR=${BUILD_DIR}/libwebp
+ENV VERSION_LIBWEBP=1.1.0
+
+RUN set -xe; \
+    mkdir -p ${LIBWEBP_BUILD_DIR}; \
+    curl -Ls https://github.com/webmproject/libwebp/archive/v${VERSION_LIBWEBP}.tar.gz \
+    | tar xzC ${LIBWEBP_BUILD_DIR} --strip-components=1
+
+WORKDIR ${LIBWEBP_BUILD_DIR}
+
+RUN set -xe; \
+    ./autogen.sh; \
+    ./configure --prefix ${INSTALL_DIR} --exec-prefix ${INSTALL_DIR}; \
+    make -j $(nproc); \
+    make install
+
+###############################################################################
+# libde265 Build
+# https://github.com/strukturag/libde265/releases
+# Needs:
+#
+# Needed by:
+#   - imagick
+ENV LIBDE265_BUILD_DIR=${BUILD_DIR}/libde265
+ENV VERSION_LIBDE265=1.0.5
+
+RUN set -xe; \
+    mkdir -p ${LIBDE265_BUILD_DIR}; \
+    curl -Ls https://github.com/strukturag/libde265/releases/download/v${VERSION_LIBDE265}/libde265-${VERSION_LIBDE265}.tar.gz \
+    | tar xzC ${LIBDE265_BUILD_DIR} --strip-components=1
+
+WORKDIR ${LIBDE265_BUILD_DIR}
+
+RUN set -xe; \
+    ./configure --prefix ${INSTALL_DIR} --exec-prefix ${INSTALL_DIR}; \
+    make -j $(nproc); \
+    make install
+
+###############################################################################
+# libheif Build
+# https://github.com/strukturag/libheif/releases
+# Needs:
+#
+# Needed by:
+#   - imagick
+ENV LIBHEIF_BUILD_DIR=${BUILD_DIR}/libheif
+ENV VERSION_LIBHEIF=1.6.2
+
+RUN set -xe; \
+    mkdir -p ${LIBHEIF_BUILD_DIR}; \
+    curl -Ls https://github.com/strukturag/libheif/releases/download/v${VERSION_LIBHEIF}/libheif-${VERSION_LIBHEIF}.tar.gz \
+    | tar xzC ${LIBHEIF_BUILD_DIR} --strip-components=1
+
+WORKDIR ${LIBHEIF_BUILD_DIR}
+
+RUN set -xe; \
+    ./configure --prefix ${INSTALL_DIR} --exec-prefix ${INSTALL_DIR}; \
+    make -j $(nproc); \
+    make install
+
+
+###############################################################################
+# Imagick Build
+# https://github.com/ImageMagick/ImageMagick6/releases
+# Needs:
+#
+# Needed by:
+#   - php
+ENV IMAGICK_BUILD_DIR=${BUILD_DIR}/imagick
+ENV VERSION_IMAGICK=6.9.11-22
+ENV VERSION_IMAGICK_EXTENSION=3.4.4
+
+RUN set -xe; \
+    mkdir -p ${IMAGICK_BUILD_DIR}; \
+    curl -Ls https://github.com/ImageMagick/ImageMagick6/archive/${VERSION_IMAGICK}.tar.gz \
+    | tar xzC ${IMAGICK_BUILD_DIR} --strip-components=1
+
+WORKDIR ${IMAGICK_BUILD_DIR}
+
+RUN set -xe; \
+    ./configure --prefix ${INSTALL_DIR} --exec-prefix ${INSTALL_DIR} --with-webp --with-heic --disable-static; \
+    make -j $(nproc); \
+    make install
+
 
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
@@ -376,7 +471,6 @@ RUN set -xe; \
 # libpng-devel : needed for gd
 # libjpeg-devel : needed for gd
 # libxslt-devel : needed for the XSL extension
-# ImageMagick-devel : needed for the imagick extension
 # sqlite-devel : needed for PHP 7.4
 # re2c : needed for PHP 7.4
-RUN LD_LIBRARY_PATH= yum install -y re2c readline-devel gettext-devel libicu-devel libpng-devel libjpeg-devel libxslt-devel ImageMagick-devel sqlite-devel
+RUN LD_LIBRARY_PATH= yum install -y re2c readline-devel gettext-devel libicu-devel libpng-devel libjpeg-devel libxslt-devel sqlite-devel

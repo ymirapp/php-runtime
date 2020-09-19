@@ -91,11 +91,21 @@ RUN set -xe; \
  make clean; \
  cp php.ini-production ${INSTALL_DIR}/etc/php/php.ini
 
-# Install extensions
-# We can install extensions manually or using `pecl`
+# Install extensions using pecl
 RUN pecl install redis
 RUN pecl install APCu
-RUN pecl install imagick
+
+# Build extensions
+WORKDIR ${IMAGICK_BUILD_DIR}
+RUN set -xe; \
+    pecl download imagick; \
+    tar xzf imagick-${VERSION_IMAGICK_EXTENSION}.tgz
+WORKDIR ${IMAGICK_BUILD_DIR}/imagick-${VERSION_IMAGICK_EXTENSION}
+RUN set -xe; \
+    phpize; \
+    ./configure --with-imagick=${INSTALL_DIR}; \
+    make -j $(nproc); \
+    make install;
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --install-dir=${INSTALL_DIR}/bin/ --filename=composer
