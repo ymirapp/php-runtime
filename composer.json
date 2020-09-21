@@ -19,6 +19,7 @@
         "ext-pcntl": "*",
         "ext-posix": "*",
         "async-aws/lambda": "^1.0",
+        "async-aws/ssm": "^1.0",
         "hollodotme/fast-cgi-client": "^3.0",
         "monolog/monolog": "^1.0",
         "ralouphie/mimey": "^2.1",

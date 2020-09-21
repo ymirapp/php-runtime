@@ -14,6 +14,10 @@ declare(strict_types=1);
 namespace Ymir\Runtime;
 
 use AsyncAws\Lambda\LambdaClient;
+use AsyncAws\Ssm\Input\GetParametersByPathRequest;
+use AsyncAws\Ssm\SsmClient;
+use AsyncAws\Ssm\ValueObject\Parameter;
+use Tightenco\Collect\Support\Arr;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\Handler\BedrockLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
@@ -93,19 +97,24 @@ class Runtime
         $apiUrl = getenv('AWS_LAMBDA_RUNTIME_API');
         $logger = new Logger(getenv('YMIR_RUNTIME_LOG_LEVEL') ?: Logger::INFO);
         $phpFpmProcess = PhpFpmProcess::createForConfig($logger);
+        $region = getenv('AWS_REGION');
         $rootDirectory = getenv('LAMBDA_TASK_ROOT');
 
         if (!is_string($apiUrl)) {
             throw new \Exception('The "AWS_LAMBDA_RUNTIME_API" environment variable is missing');
         } elseif (!is_string($rootDirectory)) {
             throw new \Exception('The "LAMBDA_TASK_ROOT" environment variable is missing');
+        } elseif (!is_string($region)) {
+            throw new \Exception('The "AWS_REGION" environment variable is missing');
         }
+
+        self::injectSecretEnvironmentVariables($logger, $region);
 
         return new self(
             new RuntimeApiClient($apiUrl, $logger),
             new LambdaEventHandlerCollection($logger, [
                 new PingLambdaEventHandler(),
-                new WarmUpEventHandler(new LambdaClient(['region' => getenv('AWS_REGION')])),
+                new WarmUpEventHandler(new LambdaClient(['region' => $region])),
                 new ConsoleCommandLambdaEventHandler(),
                 new WordPressLambdaEventHandler($phpFpmProcess, $rootDirectory),
                 new BedrockLambdaEventHandler($phpFpmProcess, $rootDirectory),
@@ -155,5 +164,27 @@ class Runtime
 
             exit(1);
         }
+    }
+
+    /**
+     * Inject the secret environment variables into the runtime.
+     */
+    private static function injectSecretEnvironmentVariables(Logger $logger, string $region)
+    {
+        $secretsPath = getenv('YMIR_SECRETS_PATH');
+
+        if (!is_string($secretsPath)) {
+            return;
+        }
+
+        collect((new SsmClient(['region' => $region]))->getParametersByPath(new GetParametersByPathRequest([
+            'Path' => $secretsPath,
+            'WithDecryption' => true,
+        ])))->mapWithKeys(function (Parameter $parameter) {
+            return [Arr::last(explode('/', (string) $parameter->getName())) => (string) $parameter->getValue()];
+        })->filter()->each(function ($value, $name) use ($logger) {
+            $logger->debug(sprintf('Injecting [%s] secret environment variable into runtime', $name));
+            $_ENV[$name] = $value;
+        });
     }
 }
