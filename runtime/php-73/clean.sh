@@ -11,6 +11,8 @@ set -u
 # Strip all the unneeded symbols from shared libraries to reduce size.
 find /opt/ymir -type f -name "*.so*" -exec strip --strip-unneeded {} \;
 find /opt/ymir -type f -name "*.a"|xargs rm
+find /opt/ymir -type f -name "*.la"|xargs rm
+find /opt/ymir -type f -name "*.dist"|xargs rm
 find /opt/ymir -type f -executable -exec sh -c "file -i '{}' | grep -q 'x-executable; charset=binary'" \; -print|xargs strip --strip-all
 
 # Cleanup all the binaries we don't want.
@@ -21,9 +23,7 @@ find /opt/bin -mindepth 1 -maxdepth 1 ! -name "composer" ! -name "php" ! -name "
 # Cleanup all the files we don't want either
 # We do not support running pear functions in Lambda
 rm -rf /opt/ymir/lib/php/PEAR
-rm -rf /opt/ymir/share/doc
-rm -rf /opt/ymir/share/man
-rm -rf /opt/ymir/share/gtk-doc
+rm -rf /opt/ymir/share
 rm -rf /opt/ymir/include
 rm -rf /opt/ymir/{lib,lib64}/pkgconfig
 rm -rf /opt/ymir/{lib,lib64}/cmake
@@ -37,7 +37,7 @@ rm -rf /opt/ymir/tests
 rm -rf /opt/ymir/doc
 rm -rf /opt/ymir/docs
 rm -rf /opt/ymir/man
-rm -rf /opt/ymir/php/man
+rm -rf /opt/ymir/php
 rm -rf /opt/ymir/www
 rm -rf /opt/ymir/cfg
 rm -rf /opt/ymir/libexec

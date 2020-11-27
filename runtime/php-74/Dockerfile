@@ -80,8 +80,6 @@ RUN set -xe \
         --enable-intl=shared \
         --enable-soap \
         --with-xsl=${INSTALL_DIR} \
-        --enable-gd \
-        --with-jpeg=${INSTALL_DIR} \
         --with-pear
 RUN make -j $(nproc)
 # Run `make install` and override PEAR's PHAR URL because pear.php.net is down
@@ -111,9 +109,10 @@ RUN set -xe; \
 RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --install-dir=${INSTALL_DIR}/bin/ --filename=composer
 
 # Symlink all our binaries into /opt/bin so that Lambda sees them in the path.
-RUN mkdir -p /opt/bin
-RUN ln -s /opt/ymir/bin/* /opt/bin
-RUN ln -s /opt/ymir/sbin/* /opt/bin
+RUN mkdir -p /opt/bin \
+ && cd /opt/bin \
+ && ln -s ../ymir/bin/* . \
+ && ln -s ../ymir/sbin/* .
 
 # Remove extra files to make the layers as slim as possible
 COPY clean.sh /tmp
@@ -126,7 +125,7 @@ COPY php-fpm.conf ${INSTALL_DIR}/etc/php-fpm.d
 # Now we start back from a clean image.
 # We get rid of everything that is unnecessary (build tools, source code, and anything else
 # that might have created intermediate layers for docker) by copying online the /opt directory.
-FROM amazonlinux:2018.03
+FROM lambci/lambda:build-provided.al2
 ENV PATH="/opt/bin:${PATH}" \
     LD_LIBRARY_PATH="/opt/ymir/lib64:/opt/ymir/lib"
 

@@ -1,12 +1,12 @@
 # The container we build here contains everything needed to compile PHP.
 
 
-# Lambda instances use the amzn-ami-hvm-2018.03.0.20181129-x86_64-gp2 AMI, as
+# Lambda instances use a custom AMI named Amazon Linux 2, as
 # documented under the AWS Lambda Runtimes.
 # https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html
 # AWS provides it a Docker image that we use here:
-# https://github.com/aws/amazon-linux-docker-images/tree/2018.03
-FROM amazonlinux:2018.03
+# https://github.com/amazonlinux/container-images/tree/amzn2
+FROM amazonlinux:2
 
 
 # Move to /tmp to compile everything in there.
@@ -14,36 +14,23 @@ WORKDIR /tmp
 
 
 # Lambda is based on 2018.03. Lock YUM to that release version.
-RUN sed -i 's/releasever=latest/releaserver=2018.03/' /etc/yum.conf
+RUN sed -i 's/releasever=latest/releaserver=amzn2/' /etc/yum.conf
 
 
 RUN set -xe \
     # Download yum repository data to cache
  && yum makecache \
     # Default Development Tools
- && yum groupinstall -y "Development Tools" --setopt=group_package_types=mandatory,default \
-    # PHP will use gcc 7.2 (installed because of `kernel-devel`) to compile itself.
-    # But the intl extension is C++ code. Since gcc-c++ 7.2 is not installed by default, gcc-c++ 4 will be used.
-    # The mismatch breaks the build, see https://github.com/brefphp/bref/pull/373
-    # To fix this, we install gcc-c++ 7.2. We also install gcc 7.2 explicitly to make sure we keep the same
-    # version in the future.
- && yum install -y gcc72 gcc72-c++
+ && yum groupinstall -y "Development Tools" --setopt=group_package_types=mandatory,default
 
 
-# The version of cmake we can get from the yum repo is 2.8.12. We need cmake to build a few of
-# our libraries, and at least one library requires a version of cmake greater than the one
-# provided in the repo.
+# The default version of cmake we can get from the yum repo is 2.8.12. We need cmake to build a few of
+# our libraries, and at least one library requires a version of cmake greater than that.
 #
 # Needed to build:
 # - libzip: minimum required CMAKE version 3.0.2
-RUN set -xe \
- && mkdir -p /tmp/cmake \
- && cd /tmp/cmake \
- && curl -Ls  https://github.com/Kitware/CMake/releases/download/v3.13.2/cmake-3.13.2.tar.gz \
-    | tar xzC /tmp/cmake --strip-components=1 \
- && ./bootstrap --prefix=/usr/local \
- && make -j $(nproc) \
- && make install
+RUN LD_LIBRARY_PATH= yum install -y cmake3
+RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
 
 # Use the bash shell, instead of /bin/sh
 # Why? We need to document this.
@@ -53,7 +40,7 @@ SHELL ["/bin/bash", "-c"]
 ENV BUILD_DIR="/tmp/build"
 
 # We need a base path for the builds to install to. This path must
-# match the path that bref will be unpackaged to in Lambda.
+# match the path that ymir will be unpackaged to in Lambda.
 ENV INSTALL_DIR="/opt/ymir"
 
 # Apply stack smash protection to functions using local buffers and alloca()
@@ -130,7 +117,7 @@ RUN set -xe; \
 # Needed by:
 #   - curl
 #   - php
-ENV VERSION_OPENSSL=1.1.1a
+ENV VERSION_OPENSSL=1.1.1g
 ENV OPENSSL_BUILD_DIR=${BUILD_DIR}/xml2
 ENV CA_BUNDLE_SOURCE="https://curl.haxx.se/ca/cacert.pem"
 ENV CA_BUNDLE="${INSTALL_DIR}/ssl/cert.pem"
@@ -171,7 +158,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_LIBSSH2=1.8.0
+ENV VERSION_LIBSSH2=1.8.2
 ENV LIBSSH2_BUILD_DIR=${BUILD_DIR}/libssh2
 
 RUN set -xe; \
@@ -199,15 +186,44 @@ RUN set -xe; \
     cmake  --build . --target install
 
 ###############################################################################
+# LIBNGHTTP2 Build
+# This adds support for HTTP 2 requests in curl.
+# Needs:
+#   - zlib
+#   - OpenSSL
+# Needed by:
+#   - curl
+ENV VERSION_NGHTTP2=1.41.0
+ENV NGHTTP2_BUILD_DIR=${BUILD_DIR}/nghttp2
+
+RUN set -xe; \
+    mkdir -p ${NGHTTP2_BUILD_DIR}; \
+    curl -Ls https://github.com/nghttp2/nghttp2/releases/download/v${VERSION_NGHTTP2}/nghttp2-${VERSION_NGHTTP2}.tar.gz \
+    | tar xzC ${NGHTTP2_BUILD_DIR} --strip-components=1
+
+WORKDIR  ${NGHTTP2_BUILD_DIR}/
+
+RUN set -xe; \
+    CFLAGS="" \
+    CPPFLAGS="-I${INSTALL_DIR}/include  -I/usr/include" \
+    LDFLAGS="-L${INSTALL_DIR}/lib64 -L${INSTALL_DIR}/lib" \
+    ./configure \
+    --enable-lib-only \
+    --prefix=${INSTALL_DIR}
+
+RUN set -xe; \
+    make install
+
+###############################################################################
 # CURL Build
-# # https://github.com/curl/curl/releases/
-# # Needs:
-# #   - zlib
-# #   - OpenSSL
-# #   - libssh2
-# # Needed by:
-# #   - php
-ENV VERSION_CURL=7.63.0
+# https://github.com/curl/curl/releases/
+# Needs:
+#   - zlib
+#   - OpenSSL
+#   - libssh2
+# Needed by:
+#   - php
+ENV VERSION_CURL=7.73.0
 ENV CURL_BUILD_DIR=${BUILD_DIR}/curl
 
 RUN set -xe; \
@@ -257,7 +273,7 @@ RUN set -xe; \
 #   - zlib
 # Needed by:
 #   - php
-ENV VERSION_XML2=2.9.8
+ENV VERSION_XML2=2.9.10
 ENV XML2_BUILD_DIR=${BUILD_DIR}/xml2
 
 RUN set -xe; \
@@ -295,13 +311,13 @@ RUN set -xe; \
 # https://github.com/nih-at/libzip/releases
 # Needed by:
 #   - php
-ENV VERSION_ZIP=1.5.1
+ENV VERSION_ZIP=1.7.3
 ENV ZIP_BUILD_DIR=${BUILD_DIR}/zip
 
 RUN set -xe; \
     mkdir -p ${ZIP_BUILD_DIR}/bin/; \
 # Download and upack the source code
-    curl -Ls https://github.com/nih-at/libzip/archive/rel-${VERSION_ZIP//./-}.tar.gz \
+    curl -Ls https://github.com/nih-at/libzip/releases/download/v${VERSION_ZIP}/libzip-${VERSION_ZIP}.tar.gz \
   | tar xzC ${ZIP_BUILD_DIR} --strip-components=1
 
 # Move into the unpackaged code directory
@@ -331,7 +347,7 @@ ENV LIBSODIUM_BUILD_DIR=${BUILD_DIR}/libsodium
 
 RUN set -xe; \
     mkdir -p ${LIBSODIUM_BUILD_DIR}; \
-# Download and upack the source code
+   # Download and unpack the source code
     curl -Ls https://github.com/jedisct1/libsodium/archive/${VERSION_LIBSODIUM}.tar.gz \
   | tar xzC ${LIBSODIUM_BUILD_DIR} --strip-components=1
 
@@ -347,52 +363,6 @@ RUN set -xe; \
 && ./configure --prefix=${INSTALL_DIR}
 
 RUN set -xe; \
-    make install
-
-###############################################################################
-# Bison Build
-# This library is outdated with PHP 7.4
-# https://ftp.gnu.org/gnu/bison
-# Needs:
-#
-# Needed by:
-#   - php
-ENV VERSION_BISON=3.4.2
-ENV BISON_BUILD_DIR=${BUILD_DIR}/bison
-
-RUN set -xe; \
-    mkdir -p ${BISON_BUILD_DIR}; \
-    curl -Ls https://ftp.gnu.org/gnu/bison/bison-${VERSION_BISON}.tar.gz \
-    | tar xzC ${BISON_BUILD_DIR} --strip-components=1
-
-WORKDIR  ${BISON_BUILD_DIR}/
-
-RUN set -xe; \
-    ./configure --prefix=${INSTALL_DIR}; \
-    make -j $(nproc); \
-    make install
-
-###############################################################################
-# libwebp Build
-# https://github.com/webmproject/libwebp/releases
-# Needs:
-#
-# Needed by:
-#   - imagick
-ENV LIBWEBP_BUILD_DIR=${BUILD_DIR}/libwebp
-ENV VERSION_LIBWEBP=1.1.0
-
-RUN set -xe; \
-    mkdir -p ${LIBWEBP_BUILD_DIR}; \
-    curl -Ls https://github.com/webmproject/libwebp/archive/v${VERSION_LIBWEBP}.tar.gz \
-    | tar xzC ${LIBWEBP_BUILD_DIR} --strip-components=1
-
-WORKDIR ${LIBWEBP_BUILD_DIR}
-
-RUN set -xe; \
-    ./autogen.sh; \
-    ./configure --prefix ${INSTALL_DIR} --exec-prefix ${INSTALL_DIR}; \
-    make -j $(nproc); \
     make install
 
 ###############################################################################
@@ -451,6 +421,8 @@ ENV IMAGICK_BUILD_DIR=${BUILD_DIR}/imagick
 ENV VERSION_IMAGICK=6.9.11-22
 ENV VERSION_IMAGICK_EXTENSION=3.4.4
 
+RUN LD_LIBRARY_PATH= yum -y install libjpeg-devel libpng-devel libwebp-devel
+
 RUN set -xe; \
     mkdir -p ${IMAGICK_BUILD_DIR}; \
     curl -Ls https://github.com/ImageMagick/ImageMagick6/archive/${VERSION_IMAGICK}.tar.gz \
@@ -468,9 +440,32 @@ RUN set -xe; \
 # readline-devel : needed for the --with-libedit flag
 # gettext-devel : needed for the --with-gettext flag
 # libicu-devel : needed for
-# libpng-devel : needed for gd
-# libjpeg-devel : needed for gd
 # libxslt-devel : needed for the XSL extension
-# sqlite-devel : needed for PHP 7.4
+# sqlite-devel : Since PHP 7.4 this must be installed (https://github.com/php/php-src/blob/99b8e67615159fc600a615e1e97f2d1cf18f14cb/UPGRADING#L616-L619)
 # re2c : needed for PHP 7.4
-RUN LD_LIBRARY_PATH= yum install -y re2c readline-devel gettext-devel libicu-devel libpng-devel libjpeg-devel libxslt-devel sqlite-devel
+RUN LD_LIBRARY_PATH= yum install -y re2c readline-devel gettext-devel libicu-devel libxslt-devel sqlite-devel
+
+RUN cp -a /usr/lib64/libgcrypt.so* ${INSTALL_DIR}/lib64/
+
+# Copy readline shared libs that are not present in amazonlinux2
+RUN cp -a /usr/lib64/libreadline.so?* ${INSTALL_DIR}/lib64/
+
+# Copy gpg-error shared libds that are not present in amazonlinux2
+RUN cp -a /usr/lib64/libgpg-error.so* ${INSTALL_DIR}/lib64/
+
+# Copy gettext shared libs that are not present in amazonlinux2
+RUN cp -a /usr/lib64/libasprintf.so* ${INSTALL_DIR}/lib64/
+RUN cp -a /usr/lib64/libgettextpo.so* ${INSTALL_DIR}/lib64/
+RUN cp -a /usr/lib64/preloadable_libintl.so* ${INSTALL_DIR}/lib64/
+
+# Copy xslt shared libs that are not present in amazonlinux2
+RUN cp -a /usr/lib64/lib*xslt*.so* ${INSTALL_DIR}/lib64/
+
+# Copy sqlite3 shared libs that are not present in amazonlinux2
+RUN cp -a /usr/lib64/libsqlite3*.so* ${INSTALL_DIR}/lib64/
+
+# Copy ImageMagick shared libs that are not present in amazonlinux2
+RUN cp /usr/lib64/libpng15.so.15.13.0 /opt/ymir/lib/libpng15.so.15
+RUN cp /usr/lib64/libjpeg.so.62.1.0 /opt/ymir/lib/libjpeg.so.62
+RUN cp /usr/lib64/libwebp.so.4.0.2 /opt/ymir/lib/libwebp.so.4
+RUN cp /usr/lib64/libgomp.so.1.0.0 /opt/ymir/lib/libgomp.so.1
