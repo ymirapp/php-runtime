@@ -16,6 +16,10 @@ This PHP runtime wouldn't exist without the tireless work of [Matthieu Napoli][3
 Most of the code to compile PHP started from their implementation. The initial inspiration for the PHP code comes from an 
 [interview][5] between [Adam Wathan][6] and [Taylor Otwell][7] about [Laravel Valet][8].
 
+## How to use the runtime
+
+The runtime layers are publicly available. You can just add one to your Lambda function. You'll find all the current layer ARN in the `layers.json` or `layers.php` files. 
+
 ## Contributing
 
 Install dependencies using composer:

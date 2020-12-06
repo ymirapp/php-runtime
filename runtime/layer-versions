@@ -1,0 +1,59 @@
+#!/usr/bin/env php -d memory_limit=-1
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Ymir PHP Runtime.
+ *
+ * (c) Carl Alexander <support@ymirapp.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+use AsyncAws\Lambda\LambdaClient;
+use AsyncAws\Lambda\Result\ListLayerVersionsResponse;
+
+require_once __DIR__.'/../vendor/autoload.php';
+
+$layers = collect(json_decode(file_get_contents(__DIR__.'/layers.json'), true))->keys();
+$layerVersions = collect();
+$profile = $argv[1] ?? null;
+$regions = collect(json_decode(file_get_contents(__DIR__.'/regions.json'), true));
+
+$regions->each(function (string $region) use ($layers, $layerVersions, $profile) {
+    $client = new LambdaClient(array_filter([
+        'profile' => $profile,
+        'region' => $region,
+    ]));
+
+    $layerVersions[$region] = $layers->mapWithKeys(function (string $layer) use ($client, $region) {
+        $response = $client->listLayerVersions([
+            'LayerName' => sprintf('arn:aws:lambda:%s:070635646305:layer:%s', $region, $layer),
+            'MaxItems' => 1,
+        ]);
+
+        return [$layer => $response];
+    })->map(function (ListLayerVersionsResponse $response) {
+        $layerVersions = collect($response->getLayerVersions(true));
+
+        if ($layerVersions->isEmpty()) {
+            return;
+        }
+
+        return $layerVersions->last()->getLayerVersionArn();
+    })->all();
+});
+
+file_put_contents(__DIR__.'/../layers.json', json_encode($layerVersions, JSON_PRETTY_PRINT));
+
+$patterns = [
+    "/array \(/" => '[',
+    "/^([ ]*)\)(,?)$/m" => '$1]$2',
+    "/=>[ ]?\n[ ]+\[/" => '=> [',
+    "/([ ]*)(\'[^\']+\') => ([\[\'])/" => '$1$2 => $3',
+];
+file_put_contents(__DIR__.'/../layers.php', preg_replace(array_keys($patterns), array_values($patterns), var_export($layerVersions->all(), true)));
+
+

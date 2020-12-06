@@ -12,53 +12,107 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-use Aws\Lambda\LambdaClient;
+use Symfony\Component\Process\Process;
+use Tightenco\Collect\Support\Collection;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__.'/../vendor/autoload.php';
 
-$dotenv = Dotenv\Dotenv::create(__DIR__);
-$dotenv->load();
+$layers = collect(json_decode(file_get_contents(__DIR__.'/layers.json'), true));
+$profile = $argv[1] ?? null;
+$regions = collect(json_decode(file_get_contents(__DIR__.'/regions.json'), true));
 
-$layers = [
-    'php-72' => 'Ymir PHP 7.2',
-    'php-73' => 'Ymir PHP 7.3',
-    'php-74' => 'Ymir PHP 7.4',
-];
-$regions = [
-    'us-east-1',
-];
+$layers->keys()->each(function (string $layer) {
+    if (!file_exists(__DIR__."/../build/{$layer}.zip")) {
+        throw new Exception("$layer archive does not exist");
+    }
+});
 
-if (empty($argv[1])) {
-    throw new Exception('Must pass a layer to publish');
-} elseif (!isset($layers[$argv[1]])) {
-    throw new Exception("\"{$argv[1]}\" layer doesn't exist");
-}
+$publishingProcesses = collect([]);
+$regions->each(function (string $region) use ($layers, $profile, $publishingProcesses) {
+    $layers->each(function (string $description, $layer) use ($profile, $publishingProcesses, $region) {
+        $command = ['aws',
+            'lambda',
+            'publish-layer-version',
+            '--region', $region,
+            '--layer-name',
+            $layer,
+            '--description',
+            $description,
+            '--license-info', 'MIT',
+            '--zip-file',
+            'fileb://'.__DIR__."/../build/$layer.zip",
+            '--compatible-runtimes',
+            'provided.al2',
+            '--output',
+            'text',
+            '--query',
+            'Version',
+            '--cli-connect-timeout',
+            '6000',
+        ];
 
-$description = $layers[$argv[1]];
-$layer = $argv[1];
+        if (!empty($profile)) {
+            $command[] = '--profile';
+            $command[] = $profile;
+        }
 
-foreach ($regions as $region) {
-    $layerName = 'ymir-' . $layer;
-    $lambda = new LambdaClient([
-        'region' => 'us-east-1',
-        'version' => '2015-03-31',
-    ]);
+        $process = new Process($command);
+        $process->setTimeout(null);
 
-    $response = $lambda->publishLayerVersion([
-        'LayerName' => $layerName,
-        'Description' => $description,
-        'Content' => [
-            'ZipFile' => file_get_contents(__DIR__ . "/../build/{$layer}.zip"),
-        ],
-    ]);
+        $publishingProcesses[$region.$layer] = $process;
+    });
+});
+run($publishingProcesses);
 
-    $lambda->addLayerVersionPermission([
-        'Action' => 'lambda:GetLayerVersion',
-        'LayerName' => $layerName,
-        'Principal' => '*',
-        'StatementId' => (string) time(),
-        'VersionNumber' => (string) $response->get('Version'),
-    ]);
+$permissionProcesses = collect([]);
+$regions->each(function (string $region) use ($layers, $permissionProcesses, $profile, $publishingProcesses) {
+    $layers->keys()->each(function (string $layer) use ($permissionProcesses, $profile, $publishingProcesses, $region) {
+        $command = [
+            'aws',
+            'lambda',
+            'add-layer-version-permission',
+            '--region',
+            $region,
+            '--layer-name',
+            $layer,
+            '--version-number',
+            trim($publishingProcesses[$region.$layer]->getOutput()),
+            '--statement-id',
+            'public',
+            '--action',
+            'lambda:GetLayerVersion',
+            '--principal',
+            '*',
+        ];
 
-    echo '[' . $region . ']: ' . $response->get('LayerVersionArn') . PHP_EOL;
+        if (!empty($profile)) {
+            $command[] = '--profile';
+            $command[] = $profile;
+        }
+
+        $process = new Process($command);
+        $process->setTimeout(null);
+
+        $permissionProcesses[] = $process;
+    });
+});
+run($permissionProcesses);
+
+/**
+ * Run processes.
+ */
+function run(Collection $processes): void
+{
+    $processes->chunk(4)->each(function (Collection $chunkedProcesses) {
+        $chunkedProcesses->each(function (Process $process) {
+            echo 'Running: '.$process->getCommandLine().PHP_EOL;
+            $process->start();
+        })->each(function (Process $process) {
+            $exitCode = $process->wait();
+
+            if (0 !== $exitCode) {
+                throw new \Exception($process->getErrorOutput());
+            }
+        });
+    });
 }

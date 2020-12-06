@@ -28,7 +28,6 @@
         "tightenco/collect": "^7.19"
     },
     "require-dev": {
-        "aws/aws-sdk-php": "^3.121",
         "friendsofphp/php-cs-fixer": "^2.16",
         "php-mock/php-mock-phpunit": "^2.6",
         "php-parallel-lint/php-parallel-lint": "^1.1",
@@ -36,8 +35,7 @@
         "phpro/grumphp": "^0.19",
         "phpstan/phpstan": "^0.12",
         "phpunit/phpunit": "^7.0",
-        "sebastian/phpcpd": "^4.1",
-        "vlucas/phpdotenv": "^3.6"
+        "sebastian/phpcpd": "^4.1"
     },
     "config": {
         "optimize-autoloader": true,

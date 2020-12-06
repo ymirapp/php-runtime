@@ -16,8 +16,8 @@ build-images:
 	cd php-73 ; docker build -t ymir/runtime/php-73 .
 	cd php-74 ; docker build -t ymir/runtime/php-74 .
 
-publish: publish-php-72.zip publish-php-73.zip publish-php-74.zip
+layer-versions:
+	./layer-versions
 
-publish-php%.zip: build
-	PHP_VERSION=$$(echo $@ | cut -d'.' -f 1 | cut -d'-' -f 2,3);\
-	./publish $$PHP_VERSION
+publish: build
+	./publish
