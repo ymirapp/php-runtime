@@ -83,7 +83,7 @@ class FastCgiRequest implements ProvidesRequestData
 
         if (isset($headers['content-length'][0])) {
             $parameters['CONTENT_LENGTH'] = $headers['content-length'][0];
-        } elseif ('TRACE' === $method) {
+        } elseif ('TRACE' !== $method) {
             $parameters['CONTENT_LENGTH'] = strlen($content);
         }
 

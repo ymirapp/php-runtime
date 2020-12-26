@@ -69,7 +69,6 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
-            'CONTENT_LENGTH' => 3,
             'HTTP_HOST' => 'localhost',
         ], $request->getParams());
     }
@@ -119,6 +118,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'CONTENT_LENGTH' => 3,
             'CONTENT_TYPE' => 'application/x-www-form-urlencoded',
             'HTTP_HOST' => 'localhost',
         ], $request->getParams());
@@ -220,6 +220,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'CONTENT_LENGTH' => 3,
             'CONTENT_TYPE' => 'text/html',
             'HTTP_CONTENT_TYPE' => 'text/html',
             'HTTP_HOST' => 'localhost',
@@ -271,6 +272,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'CONTENT_LENGTH' => 3,
             'HTTP_HOST' => 'localhost',
         ], $request->getParams());
     }
@@ -320,6 +322,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'CONTENT_LENGTH' => 3,
             'HTTP_HOST' => 'test.local',
         ], $request->getParams());
     }
@@ -369,6 +372,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'CONTENT_LENGTH' => 3,
             'HTTP_HOST' => 'localhost',
         ], $request->getParams());
     }
@@ -418,6 +422,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'CONTENT_LENGTH' => 3,
             'HTTP_X_FORWARDED_HOST' => 'test.local',
             'HTTP_HOST' => 'test.local',
         ], $request->getParams());
@@ -469,6 +474,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
             'HTTPS' => 'on',
+            'CONTENT_LENGTH' => 3,
             'HTTP_X_FORWARDED_PROTO' => 'https',
             'HTTP_HOST' => 'localhost',
         ], $request->getParams());
