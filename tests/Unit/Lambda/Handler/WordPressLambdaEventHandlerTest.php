@@ -20,6 +20,7 @@ use Ymir\Runtime\Lambda\Handler\WordPressLambdaEventHandler;
 use Ymir\Runtime\Lambda\Response\NotFoundHttpResponse;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
+use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
 /**
@@ -29,6 +30,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
 {
     use HttpRequestEventMockTrait;
     use InvocationEventInterfaceMockTrait;
+    use LoggerMockTrait;
     use PhpFpmProcessMockTrait;
 
     /**
@@ -69,7 +71,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/index.php');
         touch($this->tempDir.'/wp-config.php');
 
-        $this->assertTrue((new WordPressLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
+        $this->assertTrue((new WordPressLambdaEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
         @unlink($this->tempDir.'/index.php');
         @unlink($this->tempDir.'/wp-config.php');
@@ -81,7 +83,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         touch($this->tempDir.'/wp-config.php');
 
-        $this->assertFalse((new WordPressLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
+        $this->assertFalse((new WordPressLambdaEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
         @unlink($this->tempDir.'/wp-config.php');
     }
@@ -92,7 +94,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         touch($this->tempDir.'/index.php');
 
-        $this->assertFalse((new WordPressLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
+        $this->assertFalse((new WordPressLambdaEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
         @unlink($this->tempDir.'/index.php');
     }
@@ -101,17 +103,21 @@ class WordPressLambdaEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        $this->assertFalse((new WordPressLambdaEventHandler($process, ''))->canHandle($this->getInvocationEventInterfaceMock()));
+        $this->assertFalse((new WordPressLambdaEventHandler($this->getLoggerMock(), $process, ''))->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
     public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExists()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('tmp/');
+
+        $logger->expects($this->once())
+               ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -123,7 +129,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/wp-config.php');
         touch($this->tempDir.'/tmp/index.php');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/index.php');
         @unlink($this->tempDir.'/wp-config.php');
@@ -133,11 +139,15 @@ class WordPressLambdaEventHandlerTest extends TestCase
     public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefault()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('tmp');
+
+        $logger->expects($this->once())
+               ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -148,7 +158,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/index.php');
         touch($this->tempDir.'/wp-config.php');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/index.php');
         @unlink($this->tempDir.'/wp-config.php');
@@ -170,7 +180,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/wp-config.php');
         touch($this->tempDir.$filePath);
 
-        $this->assertInstanceOf(NotFoundHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(NotFoundHttpResponse::class, (new WordPressLambdaEventHandler($this->getLoggerMock(), $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/index.php');
         @unlink($this->tempDir.'/wp-config.php');
@@ -180,11 +190,15 @@ class WordPressLambdaEventHandlerTest extends TestCase
     public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisite()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('/subdirectory/wp-admin/');
+
+        $logger->expects($this->once())
+               ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -198,7 +212,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         file_put_contents($this->tempDir.'/wp-config.php', 'define(\'MULTISITE\', true);');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/index.php');
         @unlink($this->tempDir.'/wp-config.php');
@@ -208,11 +222,15 @@ class WordPressLambdaEventHandlerTest extends TestCase
     public function testHandleRewritesWpLoginUrlWithMultisite()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('/subdirectory/wp-login.php');
+
+        $logger->expects($this->once())
+               ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -226,7 +244,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
 
         file_put_contents($this->tempDir.'/wp-config.php', 'define(\'MULTISITE\', true);');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/index.php');
         @unlink($this->tempDir.'/wp-config.php');

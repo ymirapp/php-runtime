@@ -16,6 +16,7 @@ namespace Ymir\Runtime\Lambda\Handler;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
+use Ymir\Runtime\Logger;
 
 /**
  * Lambda invocation event handler for a specific PHP script.
@@ -32,9 +33,9 @@ class PhpScriptLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
     /**
      * Constructor.
      */
-    public function __construct(PhpFpmProcess $process, string $rootDirectory, string $scriptFilename)
+    public function __construct(Logger $logger, PhpFpmProcess $process, string $rootDirectory, string $scriptFilename)
     {
-        parent::__construct($process, $rootDirectory);
+        parent::__construct($logger, $process, $rootDirectory);
 
         $this->scriptFilePath = $this->rootDirectory.'/'.ltrim($scriptFilename, '/');
     }

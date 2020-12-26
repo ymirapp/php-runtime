@@ -20,6 +20,7 @@ use Ymir\Runtime\Lambda\Handler\BedrockLambdaEventHandler;
 use Ymir\Runtime\Lambda\Response\NotFoundHttpResponse;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
+use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
 /**
@@ -29,6 +30,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
 {
     use HttpRequestEventMockTrait;
     use InvocationEventInterfaceMockTrait;
+    use LoggerMockTrait;
     use PhpFpmProcessMockTrait;
 
     /**
@@ -84,7 +86,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/config/application.php');
         touch($this->tempDir.'/web/wp-config.php');
 
-        $this->assertTrue((new BedrockLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
+        $this->assertTrue((new BedrockLambdaEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
         @unlink($this->tempDir.'/config/application.php');
         @unlink($this->tempDir.'/web/wp-config.php');
@@ -94,7 +96,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        $handler = new BedrockLambdaEventHandler($process, $this->tempDir);
+        $handler = new BedrockLambdaEventHandler($this->getLoggerMock(), $process, $this->tempDir);
 
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
 
@@ -109,7 +111,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
 
         touch($this->tempDir.'/web/wp-config.php');
 
-        $this->assertFalse((new BedrockLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
+        $this->assertFalse((new BedrockLambdaEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
         @unlink($this->tempDir.'/web/wp-config.php');
     }
@@ -120,7 +122,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
 
         touch($this->tempDir.'/config/application.php');
 
-        $this->assertFalse((new BedrockLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
+        $this->assertFalse((new BedrockLambdaEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
         @unlink($this->tempDir.'/config/application.php');
     }
@@ -129,24 +131,28 @@ class BedrockLambdaEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        $this->assertFalse((new BedrockLambdaEventHandler($process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
+        $this->assertFalse((new BedrockLambdaEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
     }
 
     public function testCanHandleWrongEventType()
     {
         $process = $this->getPhpFpmProcessMock();
 
-        $this->assertFalse((new BedrockLambdaEventHandler($process, ''))->canHandle($this->getInvocationEventInterfaceMock()));
+        $this->assertFalse((new BedrockLambdaEventHandler($this->getLoggerMock(), $process, ''))->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
     public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExists()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('tmp/');
+
+        $logger->expects($this->once())
+                ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -158,7 +164,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         touch($this->tempDir.'/tmp/index.php');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/config/application.php');
         @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
@@ -168,11 +174,15 @@ class BedrockLambdaEventHandlerTest extends TestCase
     public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefault()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('tmp');
+
+        $logger->expects($this->once())
+               ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -183,7 +193,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/config/application.php');
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/config/application.php');
         @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
@@ -192,11 +202,15 @@ class BedrockLambdaEventHandlerTest extends TestCase
     public function testHandleCreatesFastCgiRequestToWebDirectoryWithWpPaths()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('wp/tmp');
+
+        $logger->expects($this->once())
+               ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -208,7 +222,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         touch($this->tempDir.'/web/wp/tmp/index.php');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/config/application.php');
         @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
@@ -231,7 +245,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         touch($this->tempDir.$filePath);
 
-        $this->assertInstanceOf(NotFoundHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(NotFoundHttpResponse::class, (new BedrockLambdaEventHandler($this->getLoggerMock(), $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/config/application.php');
         @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
@@ -241,11 +255,15 @@ class BedrockLambdaEventHandlerTest extends TestCase
     public function testHandleRewritesWpAdminUrl()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('/wp-admin/');
+
+        $logger->expects($this->once())
+               ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -257,7 +275,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         touch($this->tempDir.'/web/wp/wp-admin/index.php');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/config/application.php');
         @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
@@ -267,11 +285,15 @@ class BedrockLambdaEventHandlerTest extends TestCase
     public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisite()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('/subdirectory/wp-admin/');
+
+        $logger->expects($this->once())
+               ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -285,7 +307,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
 
         file_put_contents($this->tempDir.'/config/application.php', 'Config::define(\'MULTISITE\', true);');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/config/application.php');
         @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
@@ -295,11 +317,15 @@ class BedrockLambdaEventHandlerTest extends TestCase
     public function testHandleRewritesWpLoginUrl()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('/wp-login.php');
+
+        $logger->expects($this->once())
+               ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -311,7 +337,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         touch($this->tempDir.'/web/wp/wp-login.php');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/config/application.php');
         @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
@@ -321,11 +347,15 @@ class BedrockLambdaEventHandlerTest extends TestCase
     public function testHandleRewritesWpLoginUrlWithSubdirectoryMultisite()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('/subdirectory/wp-login.php');
+
+        $logger->expects($this->once())
+               ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -339,7 +369,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
 
         file_put_contents($this->tempDir.'/config/application.php', 'Config::define(\'MULTISITE\', true);');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/config/application.php');
         @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
@@ -349,11 +379,15 @@ class BedrockLambdaEventHandlerTest extends TestCase
     public function testHandleWithWpLoginUrl()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('/wp/wp-login.php');
+
+        $logger->expects($this->once())
+               ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -365,7 +399,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
         touch($this->tempDir.'/web/wp/wp-login.php');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/config/application.php');
         @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');

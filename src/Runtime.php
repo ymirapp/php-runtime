@@ -116,9 +116,9 @@ class Runtime
                 new PingLambdaEventHandler(),
                 new WarmUpEventHandler(new LambdaClient(['region' => $region])),
                 new ConsoleCommandLambdaEventHandler(),
-                new WordPressLambdaEventHandler($phpFpmProcess, $rootDirectory),
-                new BedrockLambdaEventHandler($phpFpmProcess, $rootDirectory),
-                new PhpScriptLambdaEventHandler($phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
+                new WordPressLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
+                new BedrockLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
+                new PhpScriptLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
             ]),
             $logger,
             $phpFpmProcess

@@ -18,6 +18,7 @@ use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\AbstractPhpFpmRequestEventHandler;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
+use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
 /**
@@ -26,22 +27,27 @@ use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 class AbstractPhpFpmRequestEventHandlerTest extends TestCase
 {
     use HttpRequestEventMockTrait;
+    use LoggerMockTrait;
     use PhpFpmProcessMockTrait;
 
     public function testHandleCreatesFastCgiHttpResponse()
     {
         $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(2))
               ->method('getPath')
               ->willReturn('tmp');
 
+        $logger->expects($this->once())
+            ->method('debug');
+
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->isInstanceOf(FastCgiRequest::class));
 
-        $handler = $this->getMockForAbstractClass(AbstractPhpFpmRequestEventHandler::class, [$process, '/']);
+        $handler = $this->getMockForAbstractClass(AbstractPhpFpmRequestEventHandler::class, [$logger, $process, '/']);
 
         $handler->expects($this->once())
                 ->method('getScriptFilePath')
@@ -56,10 +62,14 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
         $event = $this->getHttpRequestEventMock();
         $file = tmpfile();
         $filePath = stream_get_meta_data($file)['uri'];
+        $logger = $this->getLoggerMock();
         $phpFilePath = $filePath.'.php';
         $process = $this->getPhpFpmProcessMock();
 
-        $handler = $this->getMockForAbstractClass(AbstractPhpFpmRequestEventHandler::class, [$process, '/']);
+        $logger->expects($this->once())
+               ->method('debug');
+
+        $handler = $this->getMockForAbstractClass(AbstractPhpFpmRequestEventHandler::class, [$logger, $process, '/']);
 
         rename($filePath, $phpFilePath);
 

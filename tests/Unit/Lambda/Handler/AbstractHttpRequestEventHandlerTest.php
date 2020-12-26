@@ -29,7 +29,7 @@ class AbstractHttpRequestEventHandlerTest extends TestCase
     use HttpResponseMockTrait;
     use InvocationEventInterfaceMockTrait;
 
-    public function testCanHandlePingEventType()
+    public function testCanHandleHttpRequestEventType()
     {
         $handler = $this->getMockForAbstractClass(AbstractHttpRequestEventHandler::class, ['/']);
 
