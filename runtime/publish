@@ -12,8 +12,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-use Symfony\Component\Process\Process;
-use Tightenco\Collect\Support\Collection;
+use Aws\Lambda\LambdaClient;
+use Aws\Result;
+use Aws\S3\S3Client;
+use GuzzleHttp\Promise\Promise;
 
 require_once __DIR__.'/../vendor/autoload.php';
 
@@ -27,92 +29,71 @@ $layers->keys()->each(function (string $layer) {
     }
 });
 
-$publishingProcesses = collect([]);
-$regions->each(function (string $region) use ($layers, $profile, $publishingProcesses) {
-    $layers->each(function (string $description, $layer) use ($profile, $publishingProcesses, $region) {
-        $command = ['aws',
-            'lambda',
-            'publish-layer-version',
-            '--region', $region,
-            '--layer-name',
-            $layer,
-            '--description',
-            $description,
-            '--license-info', 'MIT',
-            '--zip-file',
-            'fileb://'.__DIR__."/../build/$layer.zip",
-            '--compatible-runtimes',
-            'provided.al2',
-            '--output',
-            'text',
-            '--query',
-            'Version',
-            '--cli-connect-timeout',
-            '6000',
-        ];
+foreach ($regions as $region) {
+    $bucket = 'ymir-layer-'.time();
+    $lambda = new LambdaClient([
+        'profile' => $profile,
+        'region' => $region,
+        'version' => 'latest',
+    ]);
+    $s3 = new S3Client([
+        'profile' => $profile,
+        'region' => $region,
+        'version' => 'latest',
+    ]);
 
-        if (!empty($profile)) {
-            $command[] = '--profile';
-            $command[] = $profile;
-        }
+    $s3->createBucket([
+        'Bucket' => $bucket,
+    ]);
 
-        $process = new Process($command);
-        $process->setTimeout(null);
+    $layers->keys()->map(function($layer) use ($bucket, $s3) {
+        $file = "$layer.zip";
 
-        $publishingProcesses[$region.$layer] = $process;
+        return $s3->putObjectAsync([
+            'Bucket' => $bucket,
+            'Key' => $file,
+            'SourceFile' => __DIR__."/../build/$file",
+        ]);
+    })->each(function(Promise $promise) {
+        $promise->wait();
     });
-});
-run($publishingProcesses);
 
-$permissionProcesses = collect([]);
-$regions->each(function (string $region) use ($layers, $permissionProcesses, $profile, $publishingProcesses) {
-    $layers->keys()->each(function (string $layer) use ($permissionProcesses, $profile, $publishingProcesses, $region) {
-        $command = [
-            'aws',
-            'lambda',
-            'add-layer-version-permission',
-            '--region',
-            $region,
-            '--layer-name',
-            $layer,
-            '--version-number',
-            trim($publishingProcesses[$region.$layer]->getOutput()),
-            '--statement-id',
-            'public',
-            '--action',
-            'lambda:GetLayerVersion',
-            '--principal',
-            '*',
-        ];
+    $results = $layers->map(function ($description, string $layer) use ($bucket, $lambda) {
+            return $lambda->publishLayerVersionAsync([
+                'CompatibleRuntimes' => ['provided.al2'],
+                'LayerName' => $layer,
+                'Description' => $description,
+                'Content' => [
+                    'S3Bucket' => $bucket,
+                    'S3Key' => "$layer.zip",
+                ],
+            ]);
+    })->map(function (Promise $promise) use ($region) {
+        $result = $promise->wait();
 
-        if (!empty($profile)) {
-            $command[] = '--profile';
-            $command[] = $profile;
-        }
+        echo sprintf('[%s]: %s'.PHP_EOL, $region, $result->get('LayerVersionArn'));
 
-        $process = new Process($command);
-        $process->setTimeout(null);
-
-        $permissionProcesses[] = $process;
+        return $result;
     });
-});
-run($permissionProcesses);
 
-/**
- * Run processes.
- */
-function run(Collection $processes): void
-{
-    $processes->chunk(4)->each(function (Collection $chunkedProcesses) {
-        $chunkedProcesses->each(function (Process $process) {
-            echo 'Running: '.$process->getCommandLine().PHP_EOL;
-            $process->start();
-        })->each(function (Process $process) {
-            $exitCode = $process->wait();
-
-            if (0 !== $exitCode) {
-                throw new \Exception($process->getErrorOutput());
-            }
-        });
+    $results->each(function (Result $response, string $layer) use ($lambda) {
+        $lambda->addLayerVersionPermissionAsync([
+            'Action' => 'lambda:GetLayerVersion',
+            'LayerName' => $layer,
+            'Principal' => '*',
+            'StatementId' => (string) time(),
+            'VersionNumber' => (string) $response->get('Version'),
+        ]);
     });
+
+    $layers->keys()->each(function (string $layer) use ($bucket, $s3) {
+        $s3->deleteObject([
+            'Bucket' => $bucket,
+            'Key' => "$layer.zip",
+        ]);
+    });
+
+    $s3->deleteBucket([
+        'Bucket' => $bucket,
+    ]);
 }

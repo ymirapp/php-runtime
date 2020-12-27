@@ -28,6 +28,7 @@
         "tightenco/collect": "^7.19"
     },
     "require-dev": {
+        "aws/aws-sdk-php": "^3.171",
         "friendsofphp/php-cs-fixer": "^2.16",
         "php-mock/php-mock-phpunit": "^2.6",
         "php-parallel-lint/php-parallel-lint": "^1.1",
