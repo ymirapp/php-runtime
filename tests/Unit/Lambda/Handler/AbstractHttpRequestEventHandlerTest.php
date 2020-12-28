@@ -77,7 +77,7 @@ class AbstractHttpRequestEventHandlerTest extends TestCase
     public function testHandleWithWrongEventType()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageRegExp('/[^\s]* cannot handle the given invocation event object/');
+        $this->expectExceptionMessageMatches('/[^\s]* cannot handle the given invocation event object/');
 
         $handler = $this->getMockForAbstractClass(AbstractHttpRequestEventHandler::class, ['/']);
 

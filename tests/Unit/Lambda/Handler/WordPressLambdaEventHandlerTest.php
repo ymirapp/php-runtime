@@ -41,7 +41,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
     /**
      * {@inheritdoc}
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->tempDir = sys_get_temp_dir();
 
