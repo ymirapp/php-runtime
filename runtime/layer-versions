@@ -30,7 +30,7 @@ $regions->each(function (string $region) use ($layers, $layerVersions, $profile)
 
     $layerVersions[$region] = $layers->mapWithKeys(function (string $layer) use ($client, $region) {
         $response = $client->listLayerVersions([
-            'LayerName' => sprintf('arn:aws:lambda:%s:070635646305:layer:%s', $region, $layer),
+            'LayerName' => sprintf('arn:aws:lambda:%s:070635646305:layer:ymir-%s', $region, $layer),
             'MaxItems' => 1,
         ]);
 
