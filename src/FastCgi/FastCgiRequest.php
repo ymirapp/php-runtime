@@ -50,32 +50,36 @@ class FastCgiRequest implements ProvidesRequestData
     public static function createFromInvocationEvent(HttpRequestEvent $event, string $scriptFilename): self
     {
         $content = $event->getBody();
+        $documentRoot = (string) getcwd();
         $headers = $event->getHeaders();
         $host = $headers['x-forwarded-host'][0] ?? $headers['host'][0] ?? 'localhost';
         $method = strtoupper($event->getMethod());
         $path = $uri = $event->getPath();
         $port = $headers['x-forwarded-port'][0] ?? 80;
         $queryString = $event->getQueryString();
-
-        if (!empty($queryString)) {
-            $uri = $uri.'?'.$queryString;
-        }
+        $scriptName = str_replace($documentRoot, '', $scriptFilename);
 
         $parameters = [
+            'DOCUMENT_ROOT' => $documentRoot,
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'PATH_INFO' => $path,
+            'PHP_SELF' => '/'.trim($scriptName.$uri, '/'),
             'QUERY_STRING' => $queryString,
             'REMOTE_ADDR' => '127.0.0.1',
             'REMOTE_PORT' => $port,
             'REQUEST_METHOD' => $method,
-            'REQUEST_URI' => $uri,
+            'REQUEST_TIME' => time(),
+            'REQUEST_TIME_FLOAT' => microtime(true),
             'SCRIPT_FILENAME' => $scriptFilename,
+            'SCRIPT_NAME' => $scriptName,
             'SERVER_ADDR' => '127.0.0.1',
             'SERVER_NAME' => $host,
             'SERVER_PORT' => $port,
             'SERVER_PROTOCOL' => $event->getProtocol(),
             'SERVER_SOFTWARE' => 'ymir',
         ];
+
+        $parameters['REQUEST_URI'] = empty($queryString) ? $uri : $uri.'?'.$queryString;
 
         if (isset($headers['x-forwarded-proto'][0]) && 'https' == strtolower($headers['x-forwarded-proto'][0])) {
             $parameters['HTTPS'] = 'on';
@@ -99,6 +103,8 @@ class FastCgiRequest implements ProvidesRequestData
 
         // Force "HTTP_HOST" and "SERVER_NAME" to match because of the "X_FORWARDED_HOST" header.
         $parameters['HTTP_HOST'] = $parameters['SERVER_NAME'];
+
+        ksort($parameters);
 
         return new self($content, $parameters);
     }

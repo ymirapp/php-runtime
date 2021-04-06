@@ -15,18 +15,27 @@ namespace Ymir\Runtime\Tests\Unit\FastCgi;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
+use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 
 /**
  * @covers \Ymir\Runtime\FastCgi\FastCgiRequest
+ * @group test
  */
 class FastCgiRequestTest extends TestCase
 {
+    use FunctionMockTrait;
     use HttpRequestEventMockTrait;
 
     public function testCreateFromInvocationEventSetsContentLengthWithTraceMethod()
     {
         $event = $this->getHttpRequestEventMock();
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
 
         $event->expects($this->once())
               ->method('getBody')
@@ -52,30 +61,47 @@ class FastCgiRequestTest extends TestCase
               ->method('getQueryString')
               ->willReturn('');
 
-        $request = FastCgiRequest::createFromInvocationEvent($event, 'foo');
+        $microtime->expects($this->once())
+                  ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+             ->willReturn(1617733986);
+
+        $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
+            'HTTP_HOST' => 'localhost',
             'PATH_INFO' => '/',
+            'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
             'REMOTE_ADDR' => '127.0.0.1',
             'REMOTE_PORT' => 80,
             'REQUEST_METHOD' => 'TRACE',
+            'REQUEST_TIME' => 1617733986,
+            'REQUEST_TIME_FLOAT' => 1617733986.080936,
             'REQUEST_URI' => '/',
-            'SCRIPT_FILENAME' => 'foo',
+            'SCRIPT_FILENAME' => '/tmp/foo.php',
+            'SCRIPT_NAME' => '/foo.php',
             'SERVER_ADDR' => '127.0.0.1',
             'SERVER_NAME' => 'localhost',
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
-            'HTTP_HOST' => 'localhost',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventSetsContentTypeWithPostMethod()
     {
         $event = $this->getHttpRequestEventMock();
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
 
         $event->expects($this->once())
               ->method('getBody')
@@ -101,32 +127,49 @@ class FastCgiRequestTest extends TestCase
               ->method('getQueryString')
               ->willReturn('');
 
-        $request = FastCgiRequest::createFromInvocationEvent($event, 'foo');
+        $microtime->expects($this->once())
+                  ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+             ->willReturn(1617733986);
+
+        $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'CONTENT_LENGTH' => 3,
+            'CONTENT_TYPE' => 'application/x-www-form-urlencoded',
+            'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
+            'HTTP_HOST' => 'localhost',
             'PATH_INFO' => '/',
+            'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
             'REMOTE_ADDR' => '127.0.0.1',
             'REMOTE_PORT' => 80,
             'REQUEST_METHOD' => 'POST',
+            'REQUEST_TIME' => 1617733986,
+            'REQUEST_TIME_FLOAT' => 1617733986.080936,
             'REQUEST_URI' => '/',
-            'SCRIPT_FILENAME' => 'foo',
+            'SCRIPT_FILENAME' => '/tmp/foo.php',
+            'SCRIPT_NAME' => '/foo.php',
             'SERVER_ADDR' => '127.0.0.1',
             'SERVER_NAME' => 'localhost',
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
-            'CONTENT_LENGTH' => 3,
-            'CONTENT_TYPE' => 'application/x-www-form-urlencoded',
-            'HTTP_HOST' => 'localhost',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithContentLengthHeader()
     {
         $event = $this->getHttpRequestEventMock();
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
 
         $event->expects($this->once())
               ->method('getBody')
@@ -152,32 +195,49 @@ class FastCgiRequestTest extends TestCase
               ->method('getQueryString')
               ->willReturn('');
 
-        $request = FastCgiRequest::createFromInvocationEvent($event, 'foo');
+        $microtime->expects($this->once())
+            ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+            ->willReturn(1617733986);
+
+        $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'CONTENT_LENGTH' => 42,
+            'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
+            'HTTP_CONTENT_LENGTH' => 42,
+            'HTTP_HOST' => 'localhost',
             'PATH_INFO' => '/',
+            'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
             'REMOTE_ADDR' => '127.0.0.1',
             'REMOTE_PORT' => 80,
             'REQUEST_METHOD' => 'GET',
+            'REQUEST_TIME' => 1617733986,
+            'REQUEST_TIME_FLOAT' => 1617733986.080936,
             'REQUEST_URI' => '/',
-            'SCRIPT_FILENAME' => 'foo',
+            'SCRIPT_FILENAME' => '/tmp/foo.php',
+            'SCRIPT_NAME' => '/foo.php',
             'SERVER_ADDR' => '127.0.0.1',
             'SERVER_NAME' => 'localhost',
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
-            'CONTENT_LENGTH' => 42,
-            'HTTP_CONTENT_LENGTH' => 42,
-            'HTTP_HOST' => 'localhost',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithContentTypeHeader()
     {
         $event = $this->getHttpRequestEventMock();
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
 
         $event->expects($this->once())
               ->method('getBody')
@@ -203,33 +263,50 @@ class FastCgiRequestTest extends TestCase
               ->method('getQueryString')
               ->willReturn('');
 
-        $request = FastCgiRequest::createFromInvocationEvent($event, 'foo');
+        $microtime->expects($this->once())
+            ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+            ->willReturn(1617733986);
+
+        $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'CONTENT_LENGTH' => 3,
+            'CONTENT_TYPE' => 'text/html',
+            'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
+            'HTTP_CONTENT_TYPE' => 'text/html',
+            'HTTP_HOST' => 'localhost',
             'PATH_INFO' => '/',
+            'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
             'REMOTE_ADDR' => '127.0.0.1',
             'REMOTE_PORT' => 80,
             'REQUEST_METHOD' => 'GET',
+            'REQUEST_TIME' => 1617733986,
+            'REQUEST_TIME_FLOAT' => 1617733986.080936,
             'REQUEST_URI' => '/',
-            'SCRIPT_FILENAME' => 'foo',
+            'SCRIPT_FILENAME' => '/tmp/foo.php',
+            'SCRIPT_NAME' => '/foo.php',
             'SERVER_ADDR' => '127.0.0.1',
             'SERVER_NAME' => 'localhost',
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
-            'CONTENT_LENGTH' => 3,
-            'CONTENT_TYPE' => 'text/html',
-            'HTTP_CONTENT_TYPE' => 'text/html',
-            'HTTP_HOST' => 'localhost',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithDefaults()
     {
         $event = $this->getHttpRequestEventMock();
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
 
         $event->expects($this->once())
               ->method('getBody')
@@ -255,31 +332,48 @@ class FastCgiRequestTest extends TestCase
               ->method('getQueryString')
               ->willReturn('');
 
-        $request = FastCgiRequest::createFromInvocationEvent($event, 'foo');
+        $microtime->expects($this->once())
+                  ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+             ->willReturn(1617733986);
+
+        $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'CONTENT_LENGTH' => 3,
+            'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
+            'HTTP_HOST' => 'localhost',
             'PATH_INFO' => '/',
+            'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
             'REMOTE_ADDR' => '127.0.0.1',
             'REMOTE_PORT' => 80,
             'REQUEST_METHOD' => 'GET',
+            'REQUEST_TIME' => 1617733986,
+            'REQUEST_TIME_FLOAT' => 1617733986.080936,
             'REQUEST_URI' => '/',
-            'SCRIPT_FILENAME' => 'foo',
+            'SCRIPT_FILENAME' => '/tmp/foo.php',
+            'SCRIPT_NAME' => '/foo.php',
             'SERVER_ADDR' => '127.0.0.1',
             'SERVER_NAME' => 'localhost',
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
-            'CONTENT_LENGTH' => 3,
-            'HTTP_HOST' => 'localhost',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithHostHeader()
     {
         $event = $this->getHttpRequestEventMock();
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
 
         $event->expects($this->once())
             ->method('getBody')
@@ -305,31 +399,115 @@ class FastCgiRequestTest extends TestCase
             ->method('getQueryString')
             ->willReturn('');
 
-        $request = FastCgiRequest::createFromInvocationEvent($event, 'foo');
+        $microtime->expects($this->once())
+                  ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+             ->willReturn(1617733986);
+
+        $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'CONTENT_LENGTH' => 3,
+            'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
+            'HTTP_HOST' => 'test.local',
             'PATH_INFO' => '/',
+            'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
             'REMOTE_ADDR' => '127.0.0.1',
             'REMOTE_PORT' => 80,
             'REQUEST_METHOD' => 'GET',
+            'REQUEST_TIME' => 1617733986,
+            'REQUEST_TIME_FLOAT' => 1617733986.080936,
             'REQUEST_URI' => '/',
-            'SCRIPT_FILENAME' => 'foo',
+            'SCRIPT_FILENAME' => '/tmp/foo.php',
+            'SCRIPT_NAME' => '/foo.php',
             'SERVER_ADDR' => '127.0.0.1',
             'SERVER_NAME' => 'test.local',
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+        ], $request->getParams());
+    }
+
+    public function testCreateFromInvocationEventWithPathAndQueryString()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
+
+        $event->expects($this->once())
+            ->method('getBody')
+            ->willReturn('foo');
+
+        $event->expects($this->once())
+            ->method('getHeaders')
+            ->willReturn([]);
+
+        $event->expects($this->once())
+            ->method('getMethod')
+            ->willReturn('get');
+
+        $event->expects($this->once())
+            ->method('getPath')
+            ->willReturn('/bar');
+
+        $event->expects($this->once())
+            ->method('getProtocol')
+            ->willReturn('HTTP/1.1');
+
+        $event->expects($this->once())
+            ->method('getQueryString')
+            ->willReturn('test');
+
+        $microtime->expects($this->once())
+            ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+            ->willReturn(1617733986);
+
+        $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
+
+        $this->assertSame('foo', $request->getContent());
+        $this->assertSame([
             'CONTENT_LENGTH' => 3,
-            'HTTP_HOST' => 'test.local',
+            'DOCUMENT_ROOT' => '/tmp',
+            'GATEWAY_INTERFACE' => 'FastCGI/1.0',
+            'HTTP_HOST' => 'localhost',
+            'PATH_INFO' => '/bar',
+            'PHP_SELF' => '/foo.php/bar',
+            'QUERY_STRING' => 'test',
+            'REMOTE_ADDR' => '127.0.0.1',
+            'REMOTE_PORT' => 80,
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_TIME' => 1617733986,
+            'REQUEST_TIME_FLOAT' => 1617733986.080936,
+            'REQUEST_URI' => '/bar?test',
+            'SCRIPT_FILENAME' => '/tmp/foo.php',
+            'SCRIPT_NAME' => '/foo.php',
+            'SERVER_ADDR' => '127.0.0.1',
+            'SERVER_NAME' => 'localhost',
+            'SERVER_PORT' => 80,
+            'SERVER_PROTOCOL' => 'HTTP/1.1',
+            'SERVER_SOFTWARE' => 'ymir',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithQueryString()
     {
         $event = $this->getHttpRequestEventMock();
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
 
         $event->expects($this->once())
               ->method('getBody')
@@ -355,31 +533,48 @@ class FastCgiRequestTest extends TestCase
             ->method('getQueryString')
             ->willReturn('test');
 
-        $request = FastCgiRequest::createFromInvocationEvent($event, 'foo');
+        $microtime->expects($this->once())
+                  ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+             ->willReturn(1617733986);
+
+        $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'CONTENT_LENGTH' => 3,
+            'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
+            'HTTP_HOST' => 'localhost',
             'PATH_INFO' => '/',
+            'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => 'test',
             'REMOTE_ADDR' => '127.0.0.1',
             'REMOTE_PORT' => 80,
             'REQUEST_METHOD' => 'GET',
+            'REQUEST_TIME' => 1617733986,
+            'REQUEST_TIME_FLOAT' => 1617733986.080936,
             'REQUEST_URI' => '/?test',
-            'SCRIPT_FILENAME' => 'foo',
+            'SCRIPT_FILENAME' => '/tmp/foo.php',
+            'SCRIPT_NAME' => '/foo.php',
             'SERVER_ADDR' => '127.0.0.1',
             'SERVER_NAME' => 'localhost',
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
-            'CONTENT_LENGTH' => 3,
-            'HTTP_HOST' => 'localhost',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithXForwardedHostHeader()
     {
         $event = $this->getHttpRequestEventMock();
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
 
         $event->expects($this->once())
             ->method('getBody')
@@ -405,32 +600,49 @@ class FastCgiRequestTest extends TestCase
             ->method('getQueryString')
             ->willReturn('');
 
-        $request = FastCgiRequest::createFromInvocationEvent($event, 'foo');
+        $microtime->expects($this->once())
+                  ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+             ->willReturn(1617733986);
+
+        $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'CONTENT_LENGTH' => 3,
+            'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
+            'HTTP_HOST' => 'test.local',
+            'HTTP_X_FORWARDED_HOST' => 'test.local',
             'PATH_INFO' => '/',
+            'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
             'REMOTE_ADDR' => '127.0.0.1',
             'REMOTE_PORT' => 80,
             'REQUEST_METHOD' => 'GET',
+            'REQUEST_TIME' => 1617733986,
+            'REQUEST_TIME_FLOAT' => 1617733986.080936,
             'REQUEST_URI' => '/',
-            'SCRIPT_FILENAME' => 'foo',
+            'SCRIPT_FILENAME' => '/tmp/foo.php',
+            'SCRIPT_NAME' => '/foo.php',
             'SERVER_ADDR' => '127.0.0.1',
             'SERVER_NAME' => 'test.local',
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
-            'CONTENT_LENGTH' => 3,
-            'HTTP_X_FORWARDED_HOST' => 'test.local',
-            'HTTP_HOST' => 'test.local',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithXForwardedProto()
     {
         $event = $this->getHttpRequestEventMock();
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
 
         $event->expects($this->once())
               ->method('getBody')
@@ -456,27 +668,38 @@ class FastCgiRequestTest extends TestCase
               ->method('getQueryString')
               ->willReturn('');
 
-        $request = FastCgiRequest::createFromInvocationEvent($event, 'foo');
+        $microtime->expects($this->once())
+                  ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+             ->willReturn(1617733986);
+
+        $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'CONTENT_LENGTH' => 3,
+            'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
+            'HTTPS' => 'on',
+            'HTTP_HOST' => 'localhost',
+            'HTTP_X_FORWARDED_PROTO' => 'https',
             'PATH_INFO' => '/',
+            'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
             'REMOTE_ADDR' => '127.0.0.1',
             'REMOTE_PORT' => 80,
             'REQUEST_METHOD' => 'GET',
+            'REQUEST_TIME' => 1617733986,
+            'REQUEST_TIME_FLOAT' => 1617733986.080936,
             'REQUEST_URI' => '/',
-            'SCRIPT_FILENAME' => 'foo',
+            'SCRIPT_FILENAME' => '/tmp/foo.php',
+            'SCRIPT_NAME' => '/foo.php',
             'SERVER_ADDR' => '127.0.0.1',
             'SERVER_NAME' => 'localhost',
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
-            'HTTPS' => 'on',
-            'CONTENT_LENGTH' => 3,
-            'HTTP_X_FORWARDED_PROTO' => 'https',
-            'HTTP_HOST' => 'localhost',
         ], $request->getParams());
     }
 
