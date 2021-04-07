@@ -20,7 +20,6 @@ use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 
 /**
  * @covers \Ymir\Runtime\FastCgi\FastCgiRequest
- * @group test
  */
 class FastCgiRequestTest extends TestCase
 {
