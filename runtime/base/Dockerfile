@@ -6,14 +6,14 @@
 # https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html
 # AWS provides it a Docker image that we use here:
 # https://github.com/amazonlinux/container-images/tree/amzn2
-FROM amazonlinux:2
+FROM public.ecr.aws/lambda/provided:al2
 
 
 # Move to /tmp to compile everything in there.
 WORKDIR /tmp
 
 
-# Lambda is based on 2018.03. Lock YUM to that release version.
+# Lambda is based on Amazon Linux 2. Lock YUM to that release version.
 RUN sed -i 's/releasever=latest/releaserver=amzn2/' /etc/yum.conf
 
 
@@ -117,9 +117,9 @@ RUN set -xe; \
 # Needed by:
 #   - curl
 #   - php
-ENV VERSION_OPENSSL=1.1.1g
-ENV OPENSSL_BUILD_DIR=${BUILD_DIR}/xml2
-ENV CA_BUNDLE_SOURCE="https://curl.haxx.se/ca/cacert.pem"
+ENV VERSION_OPENSSL=1.1.1k
+ENV OPENSSL_BUILD_DIR=${BUILD_DIR}/openssl
+ENV CA_BUNDLE_SOURCE="https://curl.se/ca/cacert.pem"
 ENV CA_BUNDLE="${INSTALL_DIR}/ssl/cert.pem"
 
 
@@ -148,11 +148,11 @@ RUN set -xe; \
 
 RUN set -xe; \
     make install \
- && curl -k -o ${CA_BUNDLE} ${CA_BUNDLE_SOURCE}
+ && curl -Lk -o ${CA_BUNDLE} ${CA_BUNDLE_SOURCE}
 
 ###############################################################################
 # LIBSSH2 Build
-# https://github.com/libssh2/libssh2/releases/
+# https://github.com/libssh2/libssh2/releases
 # Needs:
 #   - zlib
 #   - OpenSSL
@@ -188,12 +188,13 @@ RUN set -xe; \
 ###############################################################################
 # LIBNGHTTP2 Build
 # This adds support for HTTP 2 requests in curl.
+# https://github.com/nghttp2/nghttp2/releases
 # Needs:
 #   - zlib
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_NGHTTP2=1.41.0
+ENV VERSION_NGHTTP2=1.43.0
 ENV NGHTTP2_BUILD_DIR=${BUILD_DIR}/nghttp2
 
 RUN set -xe; \
@@ -216,14 +217,14 @@ RUN set -xe; \
 
 ###############################################################################
 # CURL Build
-# https://github.com/curl/curl/releases/
+# https://github.com/curl/curl/releases
 # Needs:
 #   - zlib
 #   - OpenSSL
 #   - libssh2
 # Needed by:
 #   - php
-ENV VERSION_CURL=7.73.0
+ENV VERSION_CURL=7.75.0
 ENV CURL_BUILD_DIR=${BUILD_DIR}/curl
 
 RUN set -xe; \
@@ -260,7 +261,8 @@ RUN set -xe; \
     --enable-cookies \
     --with-gnu-ld \
     --with-ssl \
-    --with-libssh2
+    --with-libssh2 \
+    --with-nghttp2
 
 
 RUN set -xe; \
@@ -342,7 +344,7 @@ RUN set -xe; \
 #
 # Needed by:
 #   - php
-ENV VERSION_LIBSODIUM=1.0.16
+ENV VERSION_LIBSODIUM=1.0.18
 ENV LIBSODIUM_BUILD_DIR=${BUILD_DIR}/libsodium
 
 RUN set -xe; \
