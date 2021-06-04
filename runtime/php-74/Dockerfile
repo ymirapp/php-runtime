@@ -122,10 +122,17 @@ RUN /tmp/clean.sh && rm /tmp/clean.sh
 COPY php.ini ${INSTALL_DIR}/etc/php/conf.d
 COPY php-fpm.conf ${INSTALL_DIR}/etc/php-fpm.d
 
+# Build PHP runtime
+WORKDIR /opt
+RUN git clone https://github.com/ymirapp/php-runtime.git /tmp/runtime-build \
+ && cp -R /tmp/runtime-build/composer.json /tmp/runtime-build/composer.lock /tmp/runtime-build/runtime/bootstrap /tmp/runtime-build/runtime/runtime.php /tmp/runtime-build/src ./ \
+ && chmod 0555 /opt/bootstrap /opt/runtime.php \
+ && composer install --no-dev
+
 # Now we start back from a clean image.
 # We get rid of everything that is unnecessary (build tools, source code, and anything else
 # that might have created intermediate layers for docker) by copying online the /opt directory.
-FROM lambci/lambda:build-provided.al2
+FROM public.ecr.aws/lambda/provided:al2
 ENV PATH="/opt/bin:${PATH}" \
     LD_LIBRARY_PATH="/opt/ymir/lib64:/opt/ymir/lib"
 
@@ -134,6 +141,3 @@ COPY --from=php-build /opt /opt
 
 # Needed for building the layer
 COPY --from=php-build /usr/lib64 /usr/lib64
-
-# Needed for creating the build archive
-RUN LD_LIBRARY_PATH= yum install -y zip

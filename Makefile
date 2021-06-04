@@ -12,3 +12,6 @@ layer-versions:
 
 publish:
 	cd runtime && make publish
+
+publish-images:
+	cd runtime && make publish-images
