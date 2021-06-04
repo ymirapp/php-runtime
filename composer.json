@@ -23,8 +23,8 @@
         "hollodotme/fast-cgi-client": "^3.0",
         "monolog/monolog": "^1.0",
         "ralouphie/mimey": "^2.1",
-        "symfony/http-client": "^4.4",
-        "symfony/process": "^4.4",
+        "symfony/http-client": "^5.3",
+        "symfony/process": "^5.3",
         "tightenco/collect": "^7.19"
     },
     "require-dev": {
@@ -41,7 +41,7 @@
     "config": {
         "optimize-autoloader": true,
         "platform": {
-            "php": "7.2.5"
+            "php": "7.2.34"
         },
         "preferred-install": "dist",
         "sort-packages": true
