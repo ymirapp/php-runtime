@@ -467,7 +467,7 @@ RUN cp -a /usr/lib64/lib*xslt*.so* ${INSTALL_DIR}/lib64/
 RUN cp -a /usr/lib64/libsqlite3*.so* ${INSTALL_DIR}/lib64/
 
 # Copy ImageMagick shared libs that are not present in amazonlinux2
-RUN cp /usr/lib64/libpng15.so.15.13.0 /opt/ymir/lib/libpng15.so.15
-RUN cp /usr/lib64/libjpeg.so.62.1.0 /opt/ymir/lib/libjpeg.so.62
-RUN cp /usr/lib64/libwebp.so.4.0.2 /opt/ymir/lib/libwebp.so.4
-RUN cp /usr/lib64/libgomp.so.1.0.0 /opt/ymir/lib/libgomp.so.1
+RUN cp /usr/lib64/libpng15.so.15 /opt/ymir/lib/libpng15.so.15
+RUN cp /usr/lib64/libjpeg.so.62 /opt/ymir/lib/libjpeg.so.62
+RUN cp /usr/lib64/libwebp.so.4 /opt/ymir/lib/libwebp.so.4
+RUN cp /usr/lib64/libgomp.so.1 /opt/ymir/lib/libgomp.so.1
