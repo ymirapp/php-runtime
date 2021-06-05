@@ -437,15 +437,25 @@ RUN set -xe; \
     make -j $(nproc); \
     make install
 
+###############################################################################
+# Redis Build
+# https://github.com/phpredis/phpredis/releases
+# Needs:
+#
+# Needed by:
+#   - php
+ENV REDIS_BUILD_DIR=${BUILD_DIR}/redis
+ENV VERSION_REDIS_EXTENSION=5.3.4
 
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
 # gettext-devel : needed for the --with-gettext flag
 # libicu-devel : needed for
 # libxslt-devel : needed for the XSL extension
+# libzstd-devel: needed for PHP Redis
 # sqlite-devel : Since PHP 7.4 this must be installed (https://github.com/php/php-src/blob/99b8e67615159fc600a615e1e97f2d1cf18f14cb/UPGRADING#L616-L619)
 # re2c : needed for PHP 7.4
-RUN LD_LIBRARY_PATH= yum install -y re2c readline-devel gettext-devel libicu-devel libxslt-devel sqlite-devel
+RUN LD_LIBRARY_PATH= yum install -y re2c readline-devel gettext-devel libicu-devel libxslt-devel libzstd-devel sqlite-devel
 
 RUN cp -a /usr/lib64/libgcrypt.so* ${INSTALL_DIR}/lib64/
 
@@ -465,6 +475,9 @@ RUN cp -a /usr/lib64/lib*xslt*.so* ${INSTALL_DIR}/lib64/
 
 # Copy sqlite3 shared libs that are not present in amazonlinux2
 RUN cp -a /usr/lib64/libsqlite3*.so* ${INSTALL_DIR}/lib64/
+
+# Copy zstd shared libs that are not present in amazonlinux2
+RUN cp /usr/lib64/libzstd.so.1 /opt/ymir/lib/libzstd.so.1
 
 # Copy ImageMagick shared libs that are not present in amazonlinux2
 RUN cp /usr/lib64/libpng15.so.15 /opt/ymir/lib/libpng15.so.15

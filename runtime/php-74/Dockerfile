@@ -90,13 +90,14 @@ RUN set -xe; \
  cp php.ini-production ${INSTALL_DIR}/etc/php/php.ini
 
 # Install extensions using pecl
-RUN pecl install redis
 RUN pecl install APCu
+RUN pecl install igbinary
+RUN pecl install zstd
 
 # Build extensions
 WORKDIR ${IMAGICK_BUILD_DIR}
 RUN set -xe; \
-    pecl download imagick; \
+    pecl download imagick-${VERSION_IMAGICK_EXTENSION}; \
     tar xzf imagick-${VERSION_IMAGICK_EXTENSION}.tgz
 WORKDIR ${IMAGICK_BUILD_DIR}/imagick-${VERSION_IMAGICK_EXTENSION}
 RUN set -xe; \
@@ -104,6 +105,16 @@ RUN set -xe; \
     ./configure --with-imagick=${INSTALL_DIR}; \
     make -j $(nproc); \
     make install;
+
+WORKDIR ${REDIS_BUILD_DIR}
+RUN set -xe; \
+    pecl download redis-${VERSION_REDIS_EXTENSION}; \
+    tar xzf redis-${VERSION_REDIS_EXTENSION}.tgz
+WORKDIR ${REDIS_BUILD_DIR}/redis-${VERSION_REDIS_EXTENSION}
+RUN set -xe; \
+    phpize; \
+    ./configure --enable-redis-igbinary --enable-redis-zstd; \
+    make && make install;
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --install-dir=${INSTALL_DIR}/bin/ --filename=composer
