@@ -114,7 +114,7 @@ class Runtime
             new RuntimeApiClient($apiUrl, $logger),
             new LambdaEventHandlerCollection($logger, [
                 new PingLambdaEventHandler(),
-                new WarmUpEventHandler(new LambdaClient(['region' => $region])),
+                new WarmUpEventHandler(new LambdaClient(['region' => $region], null, null, $logger)),
                 new ConsoleCommandLambdaEventHandler(),
                 new WordPressLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
                 new BedrockLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
@@ -177,7 +177,7 @@ class Runtime
             return;
         }
 
-        collect((new SsmClient(['region' => $region]))->getParametersByPath(new GetParametersByPathRequest([
+        collect((new SsmClient(['region' => $region], null, null, $logger))->getParametersByPath(new GetParametersByPathRequest([
             'Path' => $secretsPath,
             'WithDecryption' => true,
         ])))->mapWithKeys(function (Parameter $parameter) {
