@@ -224,7 +224,7 @@ RUN set -xe; \
 #   - libssh2
 # Needed by:
 #   - php
-ENV VERSION_CURL=7.75.0
+ENV VERSION_CURL=7.76.0
 ENV CURL_BUILD_DIR=${BUILD_DIR}/curl
 
 RUN set -xe; \
@@ -375,7 +375,7 @@ RUN set -xe; \
 # Needed by:
 #   - imagick
 ENV LIBDE265_BUILD_DIR=${BUILD_DIR}/libde265
-ENV VERSION_LIBDE265=1.0.5
+ENV VERSION_LIBDE265=1.0.8
 
 RUN set -xe; \
     mkdir -p ${LIBDE265_BUILD_DIR}; \
@@ -397,7 +397,7 @@ RUN set -xe; \
 # Needed by:
 #   - imagick
 ENV LIBHEIF_BUILD_DIR=${BUILD_DIR}/libheif
-ENV VERSION_LIBHEIF=1.6.2
+ENV VERSION_LIBHEIF=1.12.0
 
 RUN set -xe; \
     mkdir -p ${LIBHEIF_BUILD_DIR}; \
@@ -420,8 +420,8 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV IMAGICK_BUILD_DIR=${BUILD_DIR}/imagick
-ENV VERSION_IMAGICK=6.9.11-22
-ENV VERSION_IMAGICK_EXTENSION=3.4.4
+ENV VERSION_IMAGICK=6.9.12-21
+ENV VERSION_IMAGICK_EXTENSION=3.5.1
 
 RUN LD_LIBRARY_PATH= yum -y install libjpeg-devel libpng-devel libwebp-devel
 
