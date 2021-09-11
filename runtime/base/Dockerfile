@@ -420,20 +420,20 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV IMAGICK_BUILD_DIR=${BUILD_DIR}/imagick
-ENV VERSION_IMAGICK=6.9.12-21
+ENV VERSION_IMAGICK=7.1.0-6
 ENV VERSION_IMAGICK_EXTENSION=3.5.1
 
 RUN LD_LIBRARY_PATH= yum -y install libjpeg-devel libpng-devel libwebp-devel
 
 RUN set -xe; \
     mkdir -p ${IMAGICK_BUILD_DIR}; \
-    curl -Ls https://github.com/ImageMagick/ImageMagick6/archive/${VERSION_IMAGICK}.tar.gz \
+    curl -Ls https://github.com/ImageMagick/ImageMagick/archive/${VERSION_IMAGICK}.tar.gz \
     | tar xzC ${IMAGICK_BUILD_DIR} --strip-components=1
 
 WORKDIR ${IMAGICK_BUILD_DIR}
 
 RUN set -xe; \
-    ./configure --prefix ${INSTALL_DIR} --exec-prefix ${INSTALL_DIR} --with-webp --with-heic --disable-static; \
+    ./configure --prefix ${INSTALL_DIR} --exec-prefix ${INSTALL_DIR} --with-webp --with-heic --disable-static --with-freetype=yes; \
     make -j $(nproc); \
     make install
 
