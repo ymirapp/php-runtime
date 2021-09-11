@@ -1,5 +1,6 @@
 {
     "php-72": "Ymir PHP 7.2 runtime",
     "php-73": "Ymir PHP 7.3 runtime",
-    "php-74": "Ymir PHP 7.4 runtime"
+    "php-74": "Ymir PHP 7.4 runtime",
+    "php-80": "Ymir PHP 8.0 runtime"
 }
