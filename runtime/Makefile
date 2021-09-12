@@ -29,3 +29,5 @@ layer-versions:
 
 publish: build
 	./publish
+	./layer-versions
+	./permissions

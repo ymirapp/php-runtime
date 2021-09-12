@@ -13,7 +13,6 @@ declare(strict_types=1);
  */
 
 use Aws\Lambda\LambdaClient;
-use Aws\Result;
 use Aws\S3\S3Client;
 use GuzzleHttp\Promise\Promise;
 
@@ -58,7 +57,7 @@ foreach ($regions as $region) {
         $promise->wait();
     });
 
-    $results = $layers->map(function ($description, string $layer) use ($bucket, $lambda) {
+    $results = $layers->map(function (string $description, string $layer) use ($bucket, $lambda) {
             return $lambda->publishLayerVersionAsync([
                 'CompatibleRuntimes' => ['provided.al2'],
                 'LayerName' => 'ymir-'.$layer,
@@ -74,16 +73,6 @@ foreach ($regions as $region) {
         echo sprintf('[%s]: %s'.PHP_EOL, $region, $result->get('LayerVersionArn'));
 
         return $result;
-    });
-
-    $results->each(function (Result $response, string $layer) use ($lambda) {
-        $lambda->addLayerVersionPermissionAsync([
-            'Action' => 'lambda:GetLayerVersion',
-            'LayerName' => $layer,
-            'Principal' => '*',
-            'StatementId' => (string) time(),
-            'VersionNumber' => (string) $response->get('Version'),
-        ]);
     });
 
     $layers->keys()->each(function (string $layer) use ($bucket, $s3) {

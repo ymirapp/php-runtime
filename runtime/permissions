@@ -1,0 +1,41 @@
+#!/usr/bin/env php -d memory_limit=-1
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Ymir PHP Runtime.
+ *
+ * (c) Carl Alexander <support@ymirapp.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+use Aws\Lambda\LambdaClient;
+
+require_once __DIR__.'/../vendor/autoload.php';
+
+$layers = collect(json_decode(file_get_contents(__DIR__.'/../layers.json'), true));
+$profile = $argv[1] ?? null;
+
+$layers->each(function(array $layers, string $region) use ($profile) {
+    $lambda = new LambdaClient([
+        'profile' => $profile,
+        'region' => $region,
+        'version' => 'latest',
+    ]);
+
+    foreach ($layers as $layer) {
+        $matches = [];
+        preg_match('/(arn:[a-zA-Z0-9-]+:lambda:[a-zA-Z0-9-]+:\d{12}:layer:[a-zA-Z0-9-_]+):([0-9]+)/', $layer, $matches);
+
+        $lambda->addLayerVersionPermission([
+            'Action' => 'lambda:GetLayerVersion',
+            'LayerName' => $matches[1],
+            'Principal' => '*',
+            'StatementId' => (string) time(),
+            'VersionNumber' => $matches[2],
+        ]);
+    }
+});
