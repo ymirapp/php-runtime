@@ -40,7 +40,7 @@ class RuntimeApiClient
     /**
      * The cURL handle for the Lambda next invocation API.
      *
-     * @var resource
+     * @var \CurlHandle|resource
      */
     private $nextInvocationHandle;
 
@@ -51,7 +51,7 @@ class RuntimeApiClient
     {
         $handle = curl_init("http://$apiUrl/2018-06-01/runtime/invocation/next");
 
-        if (!is_resource($handle)) {
+        if (false === $handle) {
             throw new \RuntimeException('Failed to connect to the AWS Lambda next invocation API');
         }
 
@@ -131,7 +131,7 @@ class RuntimeApiClient
         $url = "http://{$this->apiUrl}/2018-06-01/runtime/".ltrim($uri, '/');
         $handle = curl_init($url);
 
-        if (!is_resource($handle)) {
+        if (false === $handle) {
             throw new \Exception('Unable to initialize curl session for: '.$url);
         }
 

@@ -27,8 +27,8 @@ class InvocationEventFactory
      */
     public static function createFromApi($handle, Logger $logger): InvocationEventInterface
     {
-        if (!is_resource($handle)) {
-            throw new \RuntimeException('The given "handle" must be a resource');
+        if (!self::isHandle($handle)) {
+            throw new \RuntimeException('The given "handle" must be a resource or a CurlHandle object');
         }
 
         $requestId = '';
@@ -98,5 +98,14 @@ class InvocationEventFactory
         }
 
         return $invocationEvent;
+    }
+
+    /**
+     * Checks if we have a valid cURL handle.
+     */
+    private static function isHandle($handle): bool
+    {
+        return (\PHP_VERSION_ID < 80000 && is_resource($handle))
+            || (\PHP_VERSION_ID >= 80000 && $handle instanceof \CurlHandle);
     }
 }

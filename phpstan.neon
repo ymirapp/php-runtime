@@ -8,3 +8,8 @@ parameters:
         - '#Constant SIGTERM not found#'
         - '#Method [^\s]* has no return typehint specified.#'
         - '#Method [^\s]* has parameter \$[^\s]* with no typehint specified.#'
+        - '#CurlHandle|resource given#'
+        - message: '#unknown class CurlHandle|Class CurlHandle not found#'
+          paths:
+            - src/Lambda/RuntimeApiClient.php
+            - src/Lambda/InvocationEvent/InvocationEventFactory.php
