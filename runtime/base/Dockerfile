@@ -117,7 +117,7 @@ RUN set -xe; \
 # Needed by:
 #   - curl
 #   - php
-ENV VERSION_OPENSSL=1.1.1k
+ENV VERSION_OPENSSL=1.1.1m
 ENV OPENSSL_BUILD_DIR=${BUILD_DIR}/openssl
 ENV CA_BUNDLE_SOURCE="https://curl.se/ca/cacert.pem"
 ENV CA_BUNDLE="${INSTALL_DIR}/ssl/cert.pem"
@@ -158,7 +158,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_LIBSSH2=1.8.2
+ENV VERSION_LIBSSH2=1.10.0
 ENV LIBSSH2_BUILD_DIR=${BUILD_DIR}/libssh2
 
 RUN set -xe; \
@@ -194,7 +194,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_NGHTTP2=1.43.0
+ENV VERSION_NGHTTP2=1.46.0
 ENV NGHTTP2_BUILD_DIR=${BUILD_DIR}/nghttp2
 
 RUN set -xe; \
@@ -224,7 +224,7 @@ RUN set -xe; \
 #   - libssh2
 # Needed by:
 #   - php
-ENV VERSION_CURL=7.76.0
+ENV VERSION_CURL=7.81.0
 ENV CURL_BUILD_DIR=${BUILD_DIR}/curl
 
 RUN set -xe; \
@@ -252,8 +252,6 @@ RUN set -xe; \
     --enable-http \
     --enable-ftp  \
     --enable-file \
-    --enable-ldap \
-    --enable-ldaps  \
     --enable-proxy  \
     --enable-tftp \
     --enable-ipv6 \
@@ -275,7 +273,7 @@ RUN set -xe; \
 #   - zlib
 # Needed by:
 #   - php
-ENV VERSION_XML2=2.9.10
+ENV VERSION_XML2=2.9.12
 ENV XML2_BUILD_DIR=${BUILD_DIR}/xml2
 
 RUN set -xe; \
@@ -313,7 +311,7 @@ RUN set -xe; \
 # https://github.com/nih-at/libzip/releases
 # Needed by:
 #   - php
-ENV VERSION_ZIP=1.7.3
+ENV VERSION_ZIP=1.8.0
 ENV ZIP_BUILD_DIR=${BUILD_DIR}/zip
 
 RUN set -xe; \
@@ -420,8 +418,8 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV IMAGICK_BUILD_DIR=${BUILD_DIR}/imagick
-ENV VERSION_IMAGICK=7.1.0-6
-ENV VERSION_IMAGICK_EXTENSION=3.5.1
+ENV VERSION_IMAGICK=7.1.0-22
+ENV VERSION_IMAGICK_EXTENSION=3.7.0
 
 RUN LD_LIBRARY_PATH= yum -y install libjpeg-devel libpng-devel libwebp-devel
 
@@ -445,7 +443,7 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV REDIS_BUILD_DIR=${BUILD_DIR}/redis
-ENV VERSION_REDIS_EXTENSION=5.3.4
+ENV VERSION_REDIS_EXTENSION=5.3.6
 
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
