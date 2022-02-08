@@ -1,11 +1,15 @@
 FROM ymir/runtime/base as php-build
 
+ENV VERSION_PHP=7.3.33
 
 ENV PHP_BUILD_DIR=${BUILD_DIR}/php
 RUN set -xe; \
     mkdir -p ${PHP_BUILD_DIR}; \
-# Download and upack the source code
-    curl -Ls https://github.com/php/php-src/archive/php-7.3.30.tar.gz \
+    # Download and upack the source code
+    # --location will follow redirects
+    # --silent will hide the progress, but also the errors: we restore error messages with --show-error
+    # --fail makes sure that curl returns an error instead of fetching the 404 page
+    curl --location --silent --show-error --fail https://github.com/php/php-src/archive/php-${VERSION_PHP}.tar.gz \
   | tar xzC ${PHP_BUILD_DIR} --strip-components=1
 # Move into the unpackaged code directory
 WORKDIR  ${PHP_BUILD_DIR}/
