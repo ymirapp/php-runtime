@@ -1,0 +1,17 @@
+name: Build images
+
+on:
+  push:
+    paths:
+      - 'runtime/**'
+
+jobs:
+  build:
+    name: Building images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build images
+        run: make build-images
