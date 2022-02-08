@@ -44,7 +44,10 @@
             "php": "7.2.34"
         },
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpro/grumphp": true
+        }
     },
     "autoload": {
         "psr-4": {
