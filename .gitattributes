@@ -1,0 +1,13 @@
+/.github export-ignore
+/build export-ignore
+/runtime export-ignore
+/tests export-ignore
+.editorconfig export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+.php_cs export-ignore
+grumphp.yml export-ignore
+Makefile export-ignore
+phpmd.xml export-ignore
+phpstan.neon export-ignore
+phpunit.xml.dist export-ignore
