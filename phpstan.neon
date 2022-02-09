@@ -4,6 +4,10 @@ parameters:
         - src
     checkMissingIterableValueType: false
     reportUnmatchedIgnoredErrors: false
+    excludePaths:
+        - src/Lambda/Response/AbstractErrorHttpResponse.php
+        - templates/*
+        - tests/*
     ignoreErrors:
         - '#Constant SIGTERM not found#'
         - '#Method [^\s]* has no return typehint specified.#'

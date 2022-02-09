@@ -31,8 +31,6 @@ grumphp:
         - 'tests'
     phpstan:
       level: max
-      ignore_patterns:
-        - '/^tests\//'
     phpunit:
       always_execute: true
   testsuites:

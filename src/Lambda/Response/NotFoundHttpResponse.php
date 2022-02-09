@@ -16,13 +16,13 @@ namespace Ymir\Runtime\Lambda\Response;
 /**
  * A Lambda response for a 404 HTTP response.
  */
-class NotFoundHttpResponse extends HttpResponse
+class NotFoundHttpResponse extends AbstractErrorHttpResponse
 {
     /**
      * Constructor.
      */
-    public function __construct(string $body = '', array $headers = [])
+    public function __construct(string $message = 'Not Found', string $templatesDirectory = '')
     {
-        parent::__construct($body, $headers, 404);
+        parent::__construct($message, 404, $templatesDirectory);
     }
 }
