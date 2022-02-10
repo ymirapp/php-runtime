@@ -23,8 +23,8 @@ abstract class AbstractErrorHttpResponse extends HttpResponse
      */
     public function __construct(string $message, int $statusCode, string $templatesDirectory = '')
     {
-        if (empty($templatesDirectory) && is_string(getenv('LAMBDA_TASK_ROOT'))) {
-            $templatesDirectory = rtrim(getenv('LAMBDA_TASK_ROOT'), '/').'/templates';
+        if (empty($templatesDirectory) && getenv('LAMBDA_TASK_ROOT')) {
+            $templatesDirectory = '/opt/templates';
         }
 
         $body = '';
