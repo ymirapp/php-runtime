@@ -15,6 +15,7 @@ namespace Ymir\Runtime\Lambda;
 
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
+use Ymir\Runtime\Lambda\Response\ForbiddenHttpResponse;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
 use Ymir\Runtime\Logger;
 
@@ -102,7 +103,15 @@ class RuntimeApiClient
      */
     public function sendResponse(InvocationEventInterface $event, ResponseInterface $response)
     {
-        $this->sendData($response->getResponseData(), "invocation/{$event->getId()}/response");
+        $data = $response->getResponseData();
+
+        // Lambda has a 6MB response payload limit. Send an error if we hit this limit instead of getting an
+        // error from the API gateway.
+        if (!empty($data['body']) && mb_strlen((string) $data['body']) >= 6000000) {
+            $data = (new ForbiddenHttpResponse('Response Too Large'))->getResponseData();
+        }
+
+        $this->sendData($data, "invocation/{$event->getId()}/response");
     }
 
     /**
