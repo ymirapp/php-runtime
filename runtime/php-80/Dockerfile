@@ -142,7 +142,7 @@ RUN git clone https://github.com/ymirapp/php-runtime.git /tmp/runtime-build \
  && cd /tmp/runtime-build \
  && git checkout tags/v1.2.0 \
  && cd /opt \
- && cp -R /tmp/runtime-build/composer.json /tmp/runtime-build/composer.lock /tmp/runtime-build/runtime/bootstrap /tmp/runtime-build/runtime/runtime.php /tmp/runtime-build/src ./ \
+ && cp -R /tmp/runtime-build/composer.json /tmp/runtime-build/composer.lock /tmp/runtime-build/runtime/bootstrap /tmp/runtime-build/runtime/runtime.php /tmp/runtime-build/src /tmp/runtime-build/templates ./ \
  && chmod 0555 /opt/bootstrap /opt/runtime.php \
  && composer install --no-dev
 
