@@ -108,7 +108,15 @@ class HttpRequestEventTest extends TestCase
 
     public function testGetQueryStringWithMultiValueQueryStringParameters()
     {
-        $this->assertSame('foo%5B0%5D=bar&foo%5B1%5D=baz', (new HttpRequestEvent('id', ['multiValueQueryStringParameters' => ['foo' => ['bar', 'baz']]]))->getQueryString());
+        $this->assertSame('foo%5B0%5D=bar&foo%5B1%5D=baz', (new HttpRequestEvent('id', ['multiValueQueryStringParameters' => ['foo[]' => ['bar', 'baz']]]))->getQueryString());
+    }
+
+    public function testGetQueryStringWithMultiValueQueryStringParametersAndQueryStringParameter()
+    {
+        $this->assertSame('foo%5B0%5D=bar&foo%5B1%5D=baz', (new HttpRequestEvent('id', [
+            'queryStringParameters' => ['foo[]' => 'bar'],
+            'multiValueQueryStringParameters' => ['foo[]' => ['bar', 'baz']],
+        ]))->getQueryString());
     }
 
     public function testGetQueryStringWithQueryStringParameters()

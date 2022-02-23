@@ -98,22 +98,19 @@ class HttpRequestEvent extends AbstractEvent
     {
         if (empty($this->event['queryStringParameters']) && empty($this->event['multiValueQueryStringParameters'])) {
             return '';
-        } elseif (!empty($this->event['queryStringParameters'])) {
-            return http_build_query($this->event['queryStringParameters']);
         }
 
-        $queryParameters = [];
+        $queryParameters = $this->event['multiValueQueryStringParameters'] ?? $this->event['queryStringParameters'];
+        $queryString = '';
 
-        foreach ($this->event['multiValueQueryStringParameters'] as $parameter => $value) {
-            $matches = [];
-            preg_match('/([^[]*)(\[([^]]*)\])?/', $parameter, $matches);
-
-            $value = 1 === count($value) ? $value[0] : $value;
-            $value = !empty($matches[3]) ? [$matches[3] => $value] : $value;
-
-            $queryParameters[$matches[1]] = $value;
+        foreach ($queryParameters as $key => $values) {
+            $queryString .= array_reduce((array) $values, function ($carry, $value) use ($key) {
+                return $carry.$key.'='.$value.'&';
+            });
         }
 
-        return http_build_query($queryParameters);
+        parse_str($queryString, $decodedQueryParameters);
+
+        return http_build_query($decodedQueryParameters);
     }
 }
