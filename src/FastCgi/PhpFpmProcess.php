@@ -100,7 +100,14 @@ class PhpFpmProcess
      */
     public function handle(ProvidesRequestData $request): ProvidesResponseData
     {
-        return $this->client->handle($request);
+        $response = $this->client->handle($request);
+
+        // This also triggers "updateStatus" inside the Symfony process which will make it output the logs from PHP-FPM.
+        if (!$this->process->isRunning()) {
+            throw new \Exception('PHP-FPM has stopped unexpectedly');
+        }
+
+        return $response;
     }
 
     /**
