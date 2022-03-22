@@ -127,7 +127,7 @@ class PhpFpmProcess
 
         $this->process->setTimeout(null);
         $this->process->start(function ($type, $output) {
-            $this->logger->debug($output);
+            $this->logger->info($output);
         });
 
         $this->wait(function () {
