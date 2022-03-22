@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime;
 
-use Monolog\Formatter\JsonFormatter;
+use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger as MonologLogger;
 
@@ -28,7 +28,7 @@ class Logger extends MonologLogger
     public function __construct($level, $stream = STDERR)
     {
         parent::__construct('ymir', [
-            (new StreamHandler($stream, $level))->setFormatter(new JsonFormatter()),
+            (new StreamHandler($stream, $level))->setFormatter(new LineFormatter("%message% %context% %extra%\n", null, true, true)),
         ]);
     }
 
