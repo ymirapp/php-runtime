@@ -40,8 +40,12 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
               ->method('getPath')
               ->willReturn('tmp');
 
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('1.0');
+
         $logger->expects($this->once())
-            ->method('debug');
+               ->method('debug');
 
         $process->expects($this->once())
                 ->method('handle')
@@ -57,7 +61,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
         $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForPhpFile()
+    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion1()
     {
         $event = $this->getHttpRequestEventMock();
         $file = tmpfile();
@@ -76,6 +80,37 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
         $event->expects($this->exactly(2))
               ->method('getPath')
               ->willReturn($phpFilePath);
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('1.0');
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
+    }
+
+    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion2()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $file = tmpfile();
+        $filePath = stream_get_meta_data($file)['uri'];
+        $logger = $this->getLoggerMock();
+        $phpFilePath = $filePath.'.php';
+        $process = $this->getPhpFpmProcessMock();
+
+        $logger->expects($this->once())
+               ->method('debug');
+
+        $handler = $this->getMockForAbstractClass(AbstractPhpFpmRequestEventHandler::class, [$logger, $process, '/']);
+
+        rename($filePath, $phpFilePath);
+
+        $event->expects($this->exactly(2))
+              ->method('getPath')
+              ->willReturn($phpFilePath);
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('2.0');
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
     }

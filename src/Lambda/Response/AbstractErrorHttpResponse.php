@@ -38,6 +38,6 @@ abstract class AbstractErrorHttpResponse extends HttpResponse
             $body = (string) ob_get_clean();
         }
 
-        parent::__construct($body, [], $statusCode);
+        parent::__construct($body, [], $statusCode, '2.0');
     }
 }

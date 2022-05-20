@@ -64,6 +64,10 @@ class HttpRequestEvent extends AbstractEvent
             }, $this->event['headers']);
         }
 
+        if ('2.0' === $this->getPayloadVersion() && !empty($this->event['cookies'])) {
+            $headers['cookie'] = [implode('; ', $this->event['cookies'])];
+        }
+
         return array_change_key_case($headers, CASE_LOWER);
     }
 
@@ -72,7 +76,7 @@ class HttpRequestEvent extends AbstractEvent
      */
     public function getMethod(): string
     {
-        return strtoupper((string) ($this->event['httpMethod'] ?? 'GET'));
+        return strtoupper((string) ($this->event['httpMethod'] ?? $this->event['requestContext']['http']['method'] ?? 'GET'));
     }
 
     /**
@@ -80,7 +84,17 @@ class HttpRequestEvent extends AbstractEvent
      */
     public function getPath(): string
     {
-        return (string) ($this->event['path'] ?? '/');
+        return (string) ($this->event['path'] ?? $this->event['requestContext']['http']['path'] ?? '/');
+    }
+
+    /**
+     * Get the payload version of the event.
+     *
+     * @see https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format
+     */
+    public function getPayloadVersion(): string
+    {
+        return (string) ($this->event['version'] ?? '1.0');
     }
 
     /**
@@ -88,7 +102,7 @@ class HttpRequestEvent extends AbstractEvent
      */
     public function getProtocol(): string
     {
-        return (string) ($this->event['requestContext']['protocol'] ?? 'HTTP/1.1');
+        return (string) ($this->event['requestContext']['protocol'] ?? $this->event['requestContext']['http']['protocol'] ?? 'HTTP/1.1');
     }
 
     /**
@@ -96,17 +110,17 @@ class HttpRequestEvent extends AbstractEvent
      */
     public function getQueryString(): string
     {
-        if (empty($this->event['queryStringParameters']) && empty($this->event['multiValueQueryStringParameters'])) {
-            return '';
-        }
-
-        $queryParameters = $this->event['multiValueQueryStringParameters'] ?? $this->event['queryStringParameters'];
+        $payloadVersion = $this->getPayloadVersion();
         $queryString = '';
 
-        foreach ($queryParameters as $key => $values) {
-            $queryString .= array_reduce((array) $values, function ($carry, $value) use ($key) {
-                return $carry.$key.'='.$value.'&';
+        if ('1.0' === $payloadVersion) {
+            collect($this->event['multiValueQueryStringParameters'] ?? $this->event['queryStringParameters'] ?? [])->each(function ($values, $key) use (&$queryString) {
+                $queryString .= array_reduce((array) $values, function ($carry, $value) use ($key) {
+                    return $carry.$key.'='.$value.'&';
+                });
             });
+        } elseif ('2.0' === $payloadVersion) {
+            $queryString = $this->event['rawQueryString'] ?? '';
         }
 
         parse_str($queryString, $decodedQueryParameters);

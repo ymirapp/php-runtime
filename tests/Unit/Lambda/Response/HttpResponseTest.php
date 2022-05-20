@@ -21,7 +21,7 @@ use Ymir\Runtime\Lambda\Response\HttpResponse;
  */
 class HttpResponseTest extends TestCase
 {
-    public function testGetResponseDataWith304Status()
+    public function testGetResponseDataWithFormatVersion1And304Status()
     {
         $response = new HttpResponse('foo', [], 304);
 
@@ -31,7 +31,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithBody()
+    public function testGetResponseDataWithFormatVersion1AndBody()
     {
         $response = new HttpResponse('foo');
 
@@ -45,7 +45,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithContentTypeHeader()
+    public function testGetResponseDataWithFormatVersion1AndContentTypeHeader()
     {
         $response = new HttpResponse('foo', ['content-type' => 'application/json']);
 
@@ -59,7 +59,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithHeaders()
+    public function testGetResponseDataWithFormatVersion1AndHeaders()
     {
         $response = new HttpResponse('foo', ['foo' => 'bar']);
 
@@ -70,6 +70,74 @@ class HttpResponseTest extends TestCase
             'multiValueHeaders' => [
                 'Foo' => ['bar'],
                 'Content-Type' => ['text/html'],
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion2And304Status()
+    {
+        $response = new HttpResponse('foo', [], 304, '2.0');
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 304,
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion2AndBody()
+    {
+        $response = new HttpResponse('foo', [], 200, '2.0');
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => 'Zm9v',
+            'headers' => [
+                'Content-Type' => 'text/html',
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion2AndContentTypeHeader()
+    {
+        $response = new HttpResponse('foo', ['content-type' => 'application/json'], 200, '2.0');
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => 'Zm9v',
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion2AndHeaders()
+    {
+        $response = new HttpResponse('foo', ['foo' => 'bar'], 200, '2.0');
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => 'Zm9v',
+            'headers' => [
+                'Foo' => 'bar',
+                'Content-Type' => 'text/html',
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion2AndSetCookieHeaders()
+    {
+        $response = new HttpResponse('foo', ['set-cookie' => ['foo', 'bar']], 200, '2.0');
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => 'Zm9v',
+            'cookies' => ['foo', 'bar'],
+            'headers' => [
+                'Content-Type' => 'text/html',
             ],
         ], $response->getResponseData());
     }

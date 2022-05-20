@@ -83,7 +83,7 @@ class InvocationEventFactory
 
         if (isset($event['command'])) {
             $invocationEvent = new ConsoleCommandEvent($requestId, (string) $event['command']);
-        } elseif (isset($event['httpMethod'])) {
+        } elseif (isset($event['httpMethod']) || isset($event['requestContext']['http']['method'])) {
             $invocationEvent = new HttpRequestEvent($requestId, $event);
         } elseif (isset($event['ping']) && true === $event['ping']) {
             $invocationEvent = new PingEvent($requestId);

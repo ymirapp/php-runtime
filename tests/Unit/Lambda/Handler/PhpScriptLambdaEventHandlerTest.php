@@ -78,7 +78,7 @@ class PhpScriptLambdaEventHandlerTest extends TestCase
         $this->assertFalse($handler->canHandle($this->getHttpRequestEventMock()));
     }
 
-    public function testHandleCreatesFastCgiHttpResponse()
+    public function testHandleCreatesFastCgiHttpResponseWithPayloadVersion1()
     {
         $event = $this->getHttpRequestEventMock();
         $file = tmpfile();
@@ -91,6 +91,37 @@ class PhpScriptLambdaEventHandlerTest extends TestCase
         $event->expects($this->exactly(2))
               ->method('getPath')
               ->willReturn('tmp');
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('1.0');
+
+        $process->expects($this->once())
+                ->method('handle')
+                ->with($this->isInstanceOf(FastCgiRequest::class));
+
+        $handler = new PhpScriptLambdaEventHandler($this->getLoggerMock(), $process, '/', $phpFilePath);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
+    }
+
+    public function testHandleCreatesFastCgiHttpResponseWithPayloadVersion2()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $file = tmpfile();
+        $filePath = stream_get_meta_data($file)['uri'];
+        $phpFilePath = $filePath.'.php';
+        $process = $this->getPhpFpmProcessMock();
+
+        rename($filePath, $phpFilePath);
+
+        $event->expects($this->exactly(2))
+              ->method('getPath')
+              ->willReturn('tmp');
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('2.0');
 
         $process->expects($this->once())
                 ->method('handle')

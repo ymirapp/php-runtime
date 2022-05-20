@@ -113,7 +113,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
         $this->assertFalse((new WordPressLambdaEventHandler($this->getLoggerMock(), $process, ''))->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
-    public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExists()
+    public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion1()
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -122,6 +122,10 @@ class WordPressLambdaEventHandlerTest extends TestCase
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('tmp/');
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('1.0');
 
         $logger->expects($this->once())
                ->method('debug');
@@ -143,7 +147,41 @@ class WordPressLambdaEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/tmp/index.php');
     }
 
-    public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefault()
+    public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion2()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $event->expects($this->exactly(3))
+              ->method('getPath')
+              ->willReturn('tmp/');
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('2.0');
+
+        $logger->expects($this->once())
+            ->method('debug');
+
+        $process->expects($this->once())
+            ->method('handle')
+            ->with($this->callback(function (FastCgiRequest $request) {
+                return $request->getScriptFilename() === $this->tempDir.'/tmp/index.php';
+            }));
+
+        touch($this->tempDir.'/index.php');
+        touch($this->tempDir.'/wp-config.php');
+        touch($this->tempDir.'/tmp/index.php');
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
+
+        @unlink($this->tempDir.'/index.php');
+        @unlink($this->tempDir.'/wp-config.php');
+        @unlink($this->tempDir.'/tmp/index.php');
+    }
+
+    public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion1()
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -152,6 +190,42 @@ class WordPressLambdaEventHandlerTest extends TestCase
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('tmp');
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('1.0');
+
+        $logger->expects($this->once())
+               ->method('debug');
+
+        $process->expects($this->once())
+                ->method('handle')
+                ->with($this->callback(function (FastCgiRequest $request) {
+                    return $request->getScriptFilename() === $this->tempDir.'/index.php';
+                }));
+
+        touch($this->tempDir.'/index.php');
+        touch($this->tempDir.'/wp-config.php');
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
+
+        @unlink($this->tempDir.'/index.php');
+        @unlink($this->tempDir.'/wp-config.php');
+    }
+
+    public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion2()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $event->expects($this->exactly(3))
+              ->method('getPath')
+              ->willReturn('tmp');
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('2.0');
 
         $logger->expects($this->once())
                ->method('debug');
@@ -194,7 +268,7 @@ class WordPressLambdaEventHandlerTest extends TestCase
         @unlink($this->tempDir.$filePath);
     }
 
-    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisite()
+    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion1()
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -203,6 +277,10 @@ class WordPressLambdaEventHandlerTest extends TestCase
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('/subdirectory/wp-admin/');
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('1.0');
 
         $logger->expects($this->once())
                ->method('debug');
@@ -226,7 +304,43 @@ class WordPressLambdaEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/wp-admin/index.php');
     }
 
-    public function testHandleRewritesWpLoginUrlWithMultisite()
+    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion2()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $event->expects($this->exactly(3))
+              ->method('getPath')
+              ->willReturn('/subdirectory/wp-admin/');
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('2.0');
+
+        $logger->expects($this->once())
+               ->method('debug');
+
+        $process->expects($this->once())
+                ->method('handle')
+                ->with($this->callback(function (FastCgiRequest $request) {
+                    return $request->getScriptFilename() === $this->tempDir.'/wp-admin/index.php';
+                }));
+
+        touch($this->tempDir.'/index.php');
+        touch($this->tempDir.'/wp-config.php');
+        touch($this->tempDir.'/wp-admin/index.php');
+
+        file_put_contents($this->tempDir.'/wp-config.php', 'define(\'MULTISITE\', true);');
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
+
+        @unlink($this->tempDir.'/index.php');
+        @unlink($this->tempDir.'/wp-config.php');
+        @unlink($this->tempDir.'/wp-admin/index.php');
+    }
+
+    public function testHandleRewritesWpLoginUrlWithMultisiteWithPayloadVersion1()
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -235,6 +349,46 @@ class WordPressLambdaEventHandlerTest extends TestCase
         $event->expects($this->exactly(3))
               ->method('getPath')
               ->willReturn('/subdirectory/wp-login.php');
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('1.0');
+
+        $logger->expects($this->once())
+               ->method('debug');
+
+        $process->expects($this->once())
+                ->method('handle')
+                ->with($this->callback(function (FastCgiRequest $request) {
+                    return $request->getScriptFilename() === $this->tempDir.'/wp-login.php';
+                }));
+
+        touch($this->tempDir.'/index.php');
+        touch($this->tempDir.'/wp-config.php');
+        touch($this->tempDir.'/wp-login.php');
+
+        file_put_contents($this->tempDir.'/wp-config.php', 'define(\'MULTISITE\', true);');
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
+
+        @unlink($this->tempDir.'/index.php');
+        @unlink($this->tempDir.'/wp-config.php');
+        @unlink($this->tempDir.'/wp-login.php');
+    }
+
+    public function testHandleRewritesWpLoginUrlWithMultisiteWithPayloadVersion2()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $event->expects($this->exactly(3))
+              ->method('getPath')
+              ->willReturn('/subdirectory/wp-login.php');
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('2.0');
 
         $logger->expects($this->once())
                ->method('debug');

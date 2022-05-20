@@ -39,9 +39,14 @@ class InvocationEventFactoryTest extends TestCase
         $this->assertInstanceOf(ConsoleCommandEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['command' => 'foo']));
     }
 
-    public function testCreatesHttpRequestEvent()
+    public function testCreatesHttpRequestEventWithPayloadVersion1()
     {
         $this->assertInstanceOf(HttpRequestEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['httpMethod' => 'get']));
+    }
+
+    public function testCreatesHttpRequestEventWithPayloadVersion2()
+    {
+        $this->assertInstanceOf(HttpRequestEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['requestContext' => ['http' => ['method' => 'get']]]));
     }
 
     public function testCreatesPhpConsoleCommandEvent()

@@ -26,6 +26,15 @@ class HttpResponse implements ResponseInterface
     private $body;
 
     /**
+     * The response format version.
+     *
+     * @see https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.response
+     *
+     * @var string
+     */
+    private $formatVersion;
+
+    /**
      * The headers to send with the Lambda response.
      *
      * @var array
@@ -42,10 +51,15 @@ class HttpResponse implements ResponseInterface
     /**
      * Constructor.
      */
-    public function __construct(string $body, array $headers = [], int $statusCode = 200)
+    public function __construct(string $body, array $headers = [], int $statusCode = 200, string $formatVersion = '1.0')
     {
+        if (!in_array($formatVersion, ['1.0', '2.0'])) {
+            throw new \InvalidArgumentException('"formatVersion" must be either "1.0" or "2.0"');
+        }
+
         $this->body = $body;
-        $this->headers = $this->formatHeaders($headers);
+        $this->formatVersion = $formatVersion;
+        $this->headers = $headers;
         $this->statusCode = $statusCode;
     }
 
@@ -65,27 +79,34 @@ class HttpResponse implements ResponseInterface
         }
 
         $data['body'] = base64_encode($this->body);
-        $data['multiValueHeaders'] = empty($this->headers) ? new \stdClass() : $this->headers;
+
+        $headers = collect($this->headers)->mapWithKeys(function ($values, $name) {
+            $name = str_replace(' ', '-', ucwords(str_replace('-', ' ', $name)));
+            $values = array_values((array) $values);
+
+            return [$name => $values];
+        });
+        $headersKey = '1.0' === $this->formatVersion ? 'multiValueHeaders' : 'headers';
+
+        if (!isset($headers['Content-Type'])) {
+            $headers['Content-Type'] = ['text/html'];
+        }
+
+        if ('2.0' === $this->formatVersion && isset($headers['Set-Cookie'])) {
+            $data['cookies'] = $headers['Set-Cookie'];
+            unset($headers['Set-Cookie']);
+        }
+
+        if ('headers' === $headersKey) {
+            $headers = $headers->map(function (array $values) {
+                return end($values);
+            });
+        }
+
+        // PHP will serialize an empty array to `[]`. However, we need it to be an empty JSON object
+        // which is `{}` so we convert an empty array to an empty object.
+        $data[$headersKey] = $headers->isEmpty() ? new \stdClass() : $headers->all();
 
         return $data;
-    }
-
-    /**
-     * Format the response headers for the API gateway.
-     */
-    private function formatHeaders(array $headers): array
-    {
-        $formattedHeaders = [];
-
-        foreach ($headers as $name => $values) {
-            $name = str_replace(' ', '-', ucwords(str_replace('-', ' ', $name)));
-            $formattedHeaders[$name] = is_array($values) ? array_values($values) : [$values];
-        }
-
-        if (!isset($formattedHeaders['Content-Type'])) {
-            $formattedHeaders['Content-Type'] = ['text/html'];
-        }
-
-        return $formattedHeaders;
     }
 }
