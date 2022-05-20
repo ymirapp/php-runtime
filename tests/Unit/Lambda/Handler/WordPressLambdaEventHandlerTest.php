@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Filesystem\Filesystem;
 use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\WordPressLambdaEventHandler;
@@ -45,12 +46,18 @@ class WordPressLambdaEventHandlerTest extends TestCase
     {
         $this->tempDir = sys_get_temp_dir();
 
-        if (!file_exists($this->tempDir.'/wp-admin')) {
-            mkdir($this->tempDir.'/wp-admin');
-        }
-        if (!file_exists($this->tempDir.'/tmp')) {
-            mkdir($this->tempDir.'/tmp');
-        }
+        collect([
+            $this->tempDir.'/tmp',
+            $this->tempDir.'/wp-admin',
+        ])->each(function (string $directory) {
+            $filesystem = new Filesystem();
+
+            if ($filesystem->exists($directory)) {
+                $filesystem->remove($directory);
+            }
+
+            $filesystem->mkdir($directory);
+        });
     }
 
     public function inaccessibleFilesProvider(): array

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Filesystem\Filesystem;
 use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\BedrockLambdaEventHandler;
@@ -45,27 +46,22 @@ class BedrockLambdaEventHandlerTest extends TestCase
     {
         $this->tempDir = sys_get_temp_dir();
 
-        if (!file_exists($this->tempDir.'/composer')) {
-            mkdir($this->tempDir.'/composer', 0777, true);
-        }
-        if (!file_exists($this->tempDir.'/config')) {
-            mkdir($this->tempDir.'/config', 0777, true);
-        }
-        if (!file_exists($this->tempDir.'/tmp')) {
-            mkdir($this->tempDir.'/tmp');
-        }
-        if (!file_exists($this->tempDir.'/web/app/mu-plugins')) {
-            mkdir($this->tempDir.'/web/app/mu-plugins', 0777, true);
-        }
-        if (!file_exists($this->tempDir.'/web/wp')) {
-            mkdir($this->tempDir.'/web/wp', 0777, true);
-        }
-        if (!file_exists($this->tempDir.'/web/wp/wp-admin')) {
-            mkdir($this->tempDir.'/web/wp/wp-admin', 0777, true);
-        }
-        if (!file_exists($this->tempDir.'/web/wp/tmp')) {
-            mkdir($this->tempDir.'/web/wp/tmp', 0777, true);
-        }
+        collect([
+            $this->tempDir.'/composer',
+            $this->tempDir.'/config',
+            $this->tempDir.'/tmp',
+            $this->tempDir.'/web/app/mu-plugins',
+            $this->tempDir.'/web/wp/tmp',
+            $this->tempDir.'/web/wp/wp-admin',
+        ])->each(function (string $directory) {
+            $filesystem = new Filesystem();
+
+            if ($filesystem->exists($directory)) {
+                $filesystem->remove($directory);
+            }
+
+            $filesystem->mkdir($directory);
+        });
     }
 
     public function inaccessibleFilesProvider(): array
