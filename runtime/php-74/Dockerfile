@@ -10,7 +10,7 @@ FROM ymir/runtime/base as php-build
 # https://github.com/kkos/oniguruma/releases
 # Needed by:
 #   - php mbstring
-ENV VERSION_ONIG=6.9.7.1
+ENV VERSION_ONIG=6.9.8
 ENV ONIG_BUILD_DIR=${BUILD_DIR}/oniguruma
 RUN set -xe; \
     mkdir -p ${ONIG_BUILD_DIR}; \
@@ -23,7 +23,7 @@ RUN set -xe; \
     make install
 
 
-ENV VERSION_PHP=7.4.28
+ENV VERSION_PHP=7.4.29
 
 
 ENV PHP_BUILD_DIR=${BUILD_DIR}/php

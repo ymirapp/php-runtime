@@ -83,7 +83,7 @@ RUN mkdir -p ${BUILD_DIR}  \
 #   - php
 # Used By:
 #   - xml2
-ENV VERSION_ZLIB=1.2.11
+ENV VERSION_ZLIB=1.2.12
 ENV ZLIB_BUILD_DIR=${BUILD_DIR}/xml2
 
 RUN set -xe; \
@@ -117,7 +117,7 @@ RUN set -xe; \
 # Needed by:
 #   - curl
 #   - php
-ENV VERSION_OPENSSL=1.1.1m
+ENV VERSION_OPENSSL=1.1.1o
 ENV OPENSSL_BUILD_DIR=${BUILD_DIR}/openssl
 ENV CA_BUNDLE_SOURCE="https://curl.se/ca/cacert.pem"
 ENV CA_BUNDLE="${INSTALL_DIR}/ssl/cert.pem"
@@ -194,7 +194,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_NGHTTP2=1.46.0
+ENV VERSION_NGHTTP2=1.47.0
 ENV NGHTTP2_BUILD_DIR=${BUILD_DIR}/nghttp2
 
 RUN set -xe; \
@@ -224,7 +224,7 @@ RUN set -xe; \
 #   - libssh2
 # Needed by:
 #   - php
-ENV VERSION_CURL=7.81.0
+ENV VERSION_CURL=7.83.1
 ENV CURL_BUILD_DIR=${BUILD_DIR}/curl
 
 RUN set -xe; \
@@ -273,14 +273,14 @@ RUN set -xe; \
 #   - zlib
 # Needed by:
 #   - php
-ENV VERSION_XML2=2.9.12
+ENV VERSION_XML2=2.9.14
 ENV XML2_BUILD_DIR=${BUILD_DIR}/xml2
 
 RUN set -xe; \
     mkdir -p ${XML2_BUILD_DIR}; \
 # Download and upack the source code
-    curl -Ls http://xmlsoft.org/sources/libxml2-${VERSION_XML2}.tar.gz \
-  | tar xzC ${XML2_BUILD_DIR} --strip-components=1
+    curl -Ls https://download.gnome.org/sources/libxml2/2.9/libxml2-${VERSION_XML2}.tar.xz \
+  | tar xJC ${XML2_BUILD_DIR} --strip-components=1
 
 # Move into the unpackaged code directory
 WORKDIR  ${XML2_BUILD_DIR}/
@@ -443,7 +443,7 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV REDIS_BUILD_DIR=${BUILD_DIR}/redis
-ENV VERSION_REDIS_EXTENSION=5.3.6
+ENV VERSION_REDIS_EXTENSION=5.3.7
 
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
