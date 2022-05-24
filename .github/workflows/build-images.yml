@@ -15,9 +15,3 @@ jobs:
 
       - name: Build images
         run: make build-images
-
-      - name: Upload builds
-        uses: actions/upload-artifact@v2
-        with:
-          name: php-builds
-          path: build
