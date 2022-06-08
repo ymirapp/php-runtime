@@ -84,7 +84,7 @@ class HttpRequestEvent extends AbstractEvent
      */
     public function getPath(): string
     {
-        return (string) ($this->event['path'] ?? $this->event['requestContext']['http']['path'] ?? '/');
+        return (string) ($this->event['path'] ?? $this->event['rawPath'] ?? '/');
     }
 
     /**

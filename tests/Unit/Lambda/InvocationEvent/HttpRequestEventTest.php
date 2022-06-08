@@ -103,7 +103,7 @@ class HttpRequestEventTest extends TestCase
 
     public function testGetPathWithPayloadVersion2Value()
     {
-        $this->assertSame('/path', (new HttpRequestEvent('id', ['requestContext' => ['http' => ['path' => '/path']]]))->getPath());
+        $this->assertSame('/path', (new HttpRequestEvent('id', ['rawPath' => '/path']))->getPath());
     }
 
     public function testGetPayloadVersionDefaultValue()
