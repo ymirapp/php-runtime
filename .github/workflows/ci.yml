@@ -3,10 +3,9 @@ name: Continuous Integration
 on:
   push:
     paths:
+      - 'composer.lock'
       - 'src/**'
       - 'tests/**'
-    tags-ignore:
-      - '**'
 
 jobs:
   code-quality:
