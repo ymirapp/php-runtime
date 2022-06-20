@@ -127,4 +127,12 @@ class HttpRequestEvent extends AbstractEvent
 
         return http_build_query($decodedQueryParameters);
     }
+
+    /**
+     * Get the source IP address of the invocation request.
+     */
+    public function getSourceIp(): string
+    {
+        return (string) ($this->event['requestContext']['http']['sourceIp'] ?? $this->event['requestContext']['identity']['sourceIp'] ?? '127.0.0.1');
+    }
 }

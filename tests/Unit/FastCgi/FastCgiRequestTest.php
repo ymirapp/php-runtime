@@ -60,6 +60,10 @@ class FastCgiRequestTest extends TestCase
               ->method('getQueryString')
               ->willReturn('');
 
+        $event->expects($this->once())
+              ->method('getSourceIp')
+              ->willReturn('127.0.0.1');
+
         $microtime->expects($this->once())
                   ->willReturn(1617733986.080936);
 
@@ -125,6 +129,10 @@ class FastCgiRequestTest extends TestCase
         $event->expects($this->once())
               ->method('getQueryString')
               ->willReturn('');
+
+        $event->expects($this->once())
+              ->method('getSourceIp')
+              ->willReturn('127.0.0.1');
 
         $microtime->expects($this->once())
                   ->willReturn(1617733986.080936);
@@ -194,6 +202,10 @@ class FastCgiRequestTest extends TestCase
               ->method('getQueryString')
               ->willReturn('');
 
+        $event->expects($this->once())
+              ->method('getSourceIp')
+              ->willReturn('127.0.0.1');
+
         $microtime->expects($this->once())
             ->willReturn(1617733986.080936);
 
@@ -261,6 +273,10 @@ class FastCgiRequestTest extends TestCase
         $event->expects($this->once())
               ->method('getQueryString')
               ->willReturn('');
+
+        $event->expects($this->once())
+              ->method('getSourceIp')
+              ->willReturn('127.0.0.1');
 
         $microtime->expects($this->once())
             ->willReturn(1617733986.080936);
@@ -331,6 +347,10 @@ class FastCgiRequestTest extends TestCase
               ->method('getQueryString')
               ->willReturn('');
 
+        $event->expects($this->once())
+              ->method('getSourceIp')
+              ->willReturn('127.0.0.1');
+
         $microtime->expects($this->once())
                   ->willReturn(1617733986.080936);
 
@@ -387,16 +407,20 @@ class FastCgiRequestTest extends TestCase
             ->willReturn('get');
 
         $event->expects($this->once())
-            ->method('getPath')
-            ->willReturn('/');
+              ->method('getPath')
+              ->willReturn('/');
 
         $event->expects($this->once())
-            ->method('getProtocol')
-            ->willReturn('HTTP/1.1');
+              ->method('getProtocol')
+              ->willReturn('HTTP/1.1');
 
         $event->expects($this->once())
-            ->method('getQueryString')
-            ->willReturn('');
+              ->method('getQueryString')
+              ->willReturn('');
+
+        $event->expects($this->once())
+              ->method('getSourceIp')
+              ->willReturn('127.0.0.1');
 
         $microtime->expects($this->once())
                   ->willReturn(1617733986.080936);
@@ -454,22 +478,26 @@ class FastCgiRequestTest extends TestCase
             ->willReturn('get');
 
         $event->expects($this->once())
-            ->method('getPath')
-            ->willReturn('/bar');
+              ->method('getPath')
+              ->willReturn('/bar');
 
         $event->expects($this->once())
-            ->method('getProtocol')
-            ->willReturn('HTTP/1.1');
+              ->method('getProtocol')
+              ->willReturn('HTTP/1.1');
 
         $event->expects($this->once())
-            ->method('getQueryString')
-            ->willReturn('test');
+              ->method('getQueryString')
+              ->willReturn('test');
+
+        $event->expects($this->once())
+              ->method('getSourceIp')
+              ->willReturn('127.0.0.1');
 
         $microtime->expects($this->once())
-            ->willReturn(1617733986.080936);
+                  ->willReturn(1617733986.080936);
 
         $time->expects($this->once())
-            ->willReturn(1617733986);
+             ->willReturn(1617733986);
 
         $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
 
@@ -529,8 +557,12 @@ class FastCgiRequestTest extends TestCase
               ->willReturn('HTTP/1.1');
 
         $event->expects($this->once())
-            ->method('getQueryString')
-            ->willReturn('test');
+              ->method('getQueryString')
+              ->willReturn('test');
+
+        $event->expects($this->once())
+              ->method('getSourceIp')
+              ->willReturn('127.0.0.1');
 
         $microtime->expects($this->once())
                   ->willReturn(1617733986.080936);
@@ -565,6 +597,77 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
+    public function testCreateFromInvocationEventWithXForwardedForHeader()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
+
+        $event->expects($this->once())
+            ->method('getBody')
+            ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getHeaders')
+              ->willReturn(['x-forwarded-for' => ['127.1.1.1']]);
+
+        $event->expects($this->once())
+              ->method('getMethod')
+              ->willReturn('get');
+
+        $event->expects($this->once())
+              ->method('getPath')
+              ->willReturn('/');
+
+        $event->expects($this->once())
+              ->method('getProtocol')
+              ->willReturn('HTTP/1.1');
+
+        $event->expects($this->once())
+              ->method('getQueryString')
+              ->willReturn('');
+
+        $event->expects($this->never())
+              ->method('getSourceIp');
+
+        $microtime->expects($this->once())
+                  ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+             ->willReturn(1617733986);
+
+        $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
+
+        $this->assertSame('foo', $request->getContent());
+        $this->assertSame([
+            'CONTENT_LENGTH' => 3,
+            'DOCUMENT_ROOT' => '/tmp',
+            'GATEWAY_INTERFACE' => 'FastCGI/1.0',
+            'HTTP_HOST' => 'localhost',
+            'HTTP_X_FORWARDED_FOR' => '127.1.1.1',
+            'PATH_INFO' => '/',
+            'PHP_SELF' => '/foo.php',
+            'QUERY_STRING' => '',
+            'REMOTE_ADDR' => '127.1.1.1',
+            'REMOTE_PORT' => 80,
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_TIME' => 1617733986,
+            'REQUEST_TIME_FLOAT' => 1617733986.080936,
+            'REQUEST_URI' => '/',
+            'SCRIPT_FILENAME' => '/tmp/foo.php',
+            'SCRIPT_NAME' => '/foo.php',
+            'SERVER_ADDR' => '127.0.0.1',
+            'SERVER_NAME' => 'localhost',
+            'SERVER_PORT' => 80,
+            'SERVER_PROTOCOL' => 'HTTP/1.1',
+            'SERVER_SOFTWARE' => 'ymir',
+        ], $request->getParams());
+    }
+
     public function testCreateFromInvocationEventWithXForwardedHostHeader()
     {
         $event = $this->getHttpRequestEventMock();
@@ -580,24 +683,28 @@ class FastCgiRequestTest extends TestCase
             ->willReturn('foo');
 
         $event->expects($this->once())
-            ->method('getHeaders')
-            ->willReturn(['x-forwarded-host' => ['test.local']]);
+              ->method('getHeaders')
+              ->willReturn(['x-forwarded-host' => ['test.local']]);
 
         $event->expects($this->once())
-            ->method('getMethod')
-            ->willReturn('get');
+              ->method('getMethod')
+              ->willReturn('get');
 
         $event->expects($this->once())
-            ->method('getPath')
-            ->willReturn('/');
+              ->method('getPath')
+              ->willReturn('/');
 
         $event->expects($this->once())
-            ->method('getProtocol')
-            ->willReturn('HTTP/1.1');
+              ->method('getProtocol')
+              ->willReturn('HTTP/1.1');
 
         $event->expects($this->once())
-            ->method('getQueryString')
-            ->willReturn('');
+              ->method('getQueryString')
+              ->willReturn('');
+
+        $event->expects($this->once())
+              ->method('getSourceIp')
+              ->willReturn('127.0.0.1');
 
         $microtime->expects($this->once())
                   ->willReturn(1617733986.080936);
@@ -666,6 +773,10 @@ class FastCgiRequestTest extends TestCase
         $event->expects($this->once())
               ->method('getQueryString')
               ->willReturn('');
+
+        $event->expects($this->once())
+              ->method('getSourceIp')
+              ->willReturn('127.0.0.1');
 
         $microtime->expects($this->once())
                   ->willReturn(1617733986.080936);

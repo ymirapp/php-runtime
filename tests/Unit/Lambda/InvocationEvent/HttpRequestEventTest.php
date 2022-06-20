@@ -163,4 +163,19 @@ class HttpRequestEventTest extends TestCase
     {
         $this->assertSame('foo%5B0%5D=bar&foo%5B1%5D=baz', (new HttpRequestEvent('id', ['rawQueryString' => 'foo[]=bar&foo[]=baz', 'version' => '2.0']))->getQueryString());
     }
+
+    public function testGetSourceIpDefaultValue()
+    {
+        $this->assertSame('127.0.0.1', (new HttpRequestEvent('id'))->getSourceIp());
+    }
+
+    public function testGetSourceIpWithPayloadVersion1Value()
+    {
+        $this->assertSame('127.1.1.1', (new HttpRequestEvent('id', ['requestContext' => ['identity' => ['sourceIp' => '127.1.1.1']]]))->getSourceIp());
+    }
+
+    public function testGetSourceIpWithPayloadVersion2Value()
+    {
+        $this->assertSame('127.1.1.1', (new HttpRequestEvent('id', ['requestContext' => ['http' => ['sourceIp' => '127.1.1.1']]]))->getSourceIp());
+    }
 }
