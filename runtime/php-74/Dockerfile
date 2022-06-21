@@ -98,6 +98,7 @@ RUN set -xe; \
 # Install extensions using pecl
 RUN pecl install APCu
 RUN pecl install igbinary
+RUN pecl install msgpack
 RUN pecl install zstd
 
 # Build extensions
@@ -112,15 +113,14 @@ RUN set -xe; \
     make -j $(nproc); \
     make install;
 
-WORKDIR ${REDIS_BUILD_DIR}
 RUN set -xe; \
-    pecl download redis-${VERSION_REDIS_EXTENSION}; \
-    tar xzf redis-${VERSION_REDIS_EXTENSION}.tgz
-WORKDIR ${REDIS_BUILD_DIR}/redis-${VERSION_REDIS_EXTENSION}
-RUN set -xe; \
-    phpize; \
-    ./configure --enable-redis-igbinary --enable-redis-zstd; \
-    make && make install;
+    mkdir -p ${RELAY_BUILD_DIR}; \
+    curl -L "https://cachewerk.s3.amazonaws.com/relay/v${VERSION_RELAY_EXTENSION}/relay-v${VERSION_RELAY_EXTENSION}-php7.4-centos7-x86-64.tar.gz" \
+    | tar xzC ${RELAY_BUILD_DIR} --strip-components=1
+WORKDIR ${RELAY_BUILD_DIR}/
+RUN cp relay.ini $(php-config --ini-dir)/50-relay.ini; \
+    cp relay-pkg.so $(php-config --extension-dir)/relay.so; \
+    sed -i "s/BIN:31415926-5358-9793-2384-626433832795/BIN:$(cat /proc/sys/kernel/random/uuid)/" $(php-config --extension-dir)/relay.so;
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --install-dir=${INSTALL_DIR}/bin/ --filename=composer
