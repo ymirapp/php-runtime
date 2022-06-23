@@ -19,15 +19,33 @@ build-images:
 
 publish-images: publish-php-72 publish-php-73 publish-php-74 publish-php-80
 
+publish-dev-images: publish-dev-php-72 publish-dev-php-73 publish-dev-php-74 publish-dev-php-80
+
 publish-php%: build-images
 	PHP_VERSION=$$(echo $@ | cut -d'.' -f 1 | cut -d'-' -f 2,3); \
     docker image tag ymir/runtime/$$PHP_VERSION:latest ymirapp/php-runtime:$$PHP_VERSION; \
     docker image push ymirapp/php-runtime:$$PHP_VERSION
 
+publish-dev-php%: build-images
+	PHP_VERSION=$$(echo $@ | cut -d'.' -f 1 | cut -d'-' -f 3,4); \
+    docker image tag ymir/runtime/$$PHP_VERSION:latest ymirapp/php-runtime-dev:$$PHP_VERSION; \
+    docker image push ymirapp/php-runtime-dev:$$PHP_VERSION
+
 layer-versions:
 	./layer-versions
 
-publish: build
+publish:
 	./publish
 	./layer-versions
 	./permissions
+
+layer-versions-prod:
+	./layer-versions ymir
+
+publish-prod:
+	./publish ymir
+	./layer-versions ymir
+	./permissions ymir
+
+permissions-prod:
+	./permissions ymir
