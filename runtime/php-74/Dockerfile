@@ -118,9 +118,9 @@ RUN set -xe; \
     curl -L "https://cachewerk.s3.amazonaws.com/relay/v${VERSION_RELAY_EXTENSION}/relay-v${VERSION_RELAY_EXTENSION}-php7.4-centos7-x86-64.tar.gz" \
     | tar xzC ${RELAY_BUILD_DIR} --strip-components=1
 WORKDIR ${RELAY_BUILD_DIR}/
-RUN cp relay.ini $(php-config --ini-dir)/50-relay.ini; \
-    cp relay-pkg.so $(php-config --extension-dir)/relay.so; \
-    sed -i "s/BIN:31415926-5358-9793-2384-626433832795/BIN:$(cat /proc/sys/kernel/random/uuid)/" $(php-config --extension-dir)/relay.so;
+RUN cp relay.ini ${INSTALL_DIR}/etc/php/conf.d/50-relay.ini; \
+    cp relay-pkg.so ${INSTALL_DIR}/lib/php/extensions/no-debug-non-zts-20190902/relay.so; \
+    sed -i "s/BIN:31415926-5358-9793-2384-626433832795/BIN:$(cat /proc/sys/kernel/random/uuid)/" ${INSTALL_DIR}/lib/php/extensions/no-debug-non-zts-20190902/relay.so;
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --install-dir=${INSTALL_DIR}/bin/ --filename=composer
