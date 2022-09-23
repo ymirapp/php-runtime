@@ -10,6 +10,7 @@ grumphp:
             - build
             - ci
             - chore
+            - deps
             - docs
             - feat
             - fix
