@@ -23,13 +23,45 @@ use Monolog\Logger as MonologLogger;
 class Logger extends MonologLogger
 {
     /**
+     * The logging level of the logger.
+     *
+     * @var int
+     */
+    private $level;
+
+    /**
+     * The stream to use with the logger.
+     *
+     * @var resource|string
+     */
+    private $stream;
+
+    /**
      * Constructor.
      */
     public function __construct($level, $stream = STDERR)
     {
-        parent::__construct('ymir', [
-            (new StreamHandler($stream, $level))->setFormatter(new LineFormatter("%message% %context% %extra%\n", null, true, true)),
-        ]);
+        $this->level = self::toMonologLevel($level);
+        $this->stream = $stream;
+
+        parent::__construct('ymir', [$this->getStreamHandler()]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addRecord($level, $message, array $context = []): bool
+    {
+        // When killing the Lambda container, it appears that PHP closes the stream with the `__destruct` method before
+        // we're done sending logs. We use a try/catch block here in order to reset the stream handler so we can send
+        // the final logs from process shutdown.
+        try {
+            return parent::addRecord($level, $message, $context);
+        } catch (\LogicException $exception) {
+            $this->setHandlers([$this->getStreamHandler()]);
+
+            return parent::addRecord($level, $message, $context);
+        }
     }
 
     /**
@@ -50,5 +82,17 @@ class Logger extends MonologLogger
             $exception->getLine(),
             $exception->getTraceAsString()
         ));
+    }
+
+    /**
+     * Get the stream handler used by the logger.
+     */
+    private function getStreamHandler(): StreamHandler
+    {
+        $handler = new StreamHandler($this->stream, $this->level);
+
+        $handler->setFormatter(new LineFormatter("%message% %context% %extra%\n", null, true, true));
+
+        return $handler;
     }
 }
