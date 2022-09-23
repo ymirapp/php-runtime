@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Lambda\Response;
 
+use Tightenco\Collect\Support\Collection;
+
 /**
  * An HTTP lambda response.
  */
@@ -78,18 +80,16 @@ class HttpResponse implements ResponseInterface
             return $data;
         }
 
-        $data['body'] = base64_encode($this->body);
-
-        $headers = collect($this->headers)->mapWithKeys(function ($values, $name) {
-            $name = str_replace(' ', '-', ucwords(str_replace('-', ' ', $name)));
-            $values = array_values((array) $values);
-
-            return [$name => $values];
-        });
+        $body = $this->body;
+        $headers = $this->getFormattedHeaders();
         $headersKey = '1.0' === $this->formatVersion ? 'multiValueHeaders' : 'headers';
 
-        if (!isset($headers['Content-Type'])) {
-            $headers['Content-Type'] = ['text/html'];
+        // Compress HTML responses if they haven't already. This helps prevent hitting the Lambda
+        // payload limit since compression happens after the response gets sent back.
+        if (!isset($headers['Content-Encoding']) && ['text/html'] === $headers['Content-Type']) {
+            $body = (string) gzencode($body, 9);
+            $headers['Content-Encoding'] = ['gzip'];
+            $headers['Content-Length'] = [strlen($body)];
         }
 
         if ('2.0' === $this->formatVersion && isset($headers['Set-Cookie'])) {
@@ -103,10 +103,31 @@ class HttpResponse implements ResponseInterface
             });
         }
 
+        $data['body'] = base64_encode($body);
+
         // PHP will serialize an empty array to `[]`. However, we need it to be an empty JSON object
         // which is `{}` so we convert an empty array to an empty object.
         $data[$headersKey] = $headers->isEmpty() ? new \stdClass() : $headers->all();
 
         return $data;
+    }
+
+    /**
+     * Get the HTTP response headers properly formatted for a Lambda response.
+     */
+    private function getFormattedHeaders(): Collection
+    {
+        $headers = collect($this->headers)->mapWithKeys(function ($values, $name) {
+            $name = str_replace(' ', '-', ucwords(str_replace('-', ' ', $name)));
+            $values = array_values((array) $values);
+
+            return [$name => $values];
+        });
+
+        if (!isset($headers['Content-Type'])) {
+            $headers['Content-Type'] = ['text/html'];
+        }
+
+        return $headers;
     }
 }

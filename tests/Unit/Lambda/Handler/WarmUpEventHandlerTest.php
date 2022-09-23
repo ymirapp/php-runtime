@@ -59,9 +59,11 @@ class WarmUpEventHandlerTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'Tm8gYWRkaXRpb25hbCBmdW5jdGlvbiB3YXJtZWQgdXA=',
+            'body' => 'H4sIAAAAAAACE/PLV0hMScksyczPS8xRSCvNSwYxFcoTi3JTUxRKCwBYiDpTIAAAAA==',
             'multiValueHeaders' => [
                 'Content-Type' => ['text/html'],
+                'Content-Encoding' => ['gzip'],
+                'Content-Length' => [49],
             ],
         ], $reponse->getResponseData());
     }
@@ -96,9 +98,11 @@ class WarmUpEventHandlerTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'V2FybWVkIHVwIGFkZGl0aW9uYWwgZnVuY3Rpb25z',
+            'body' => 'H4sIAAAAAAACEwtPLMpNTVEoLVBITEnJLMnMz0vMUUgrzUsGMYsBzXzvwx4AAAA=',
             'multiValueHeaders' => [
                 'Content-Type' => ['text/html'],
+                'Content-Encoding' => ['gzip'],
+                'Content-Length' => [47],
             ],
         ], $reponse->getResponseData());
     }

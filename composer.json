@@ -18,6 +18,7 @@
         "ext-json": "*",
         "ext-pcntl": "*",
         "ext-posix": "*",
+        "ext-zlib": "*",
         "async-aws/lambda": "^1.0",
         "async-aws/ssm": "^1.0",
         "hollodotme/fast-cgi-client": "^3.0",
