@@ -18,7 +18,7 @@ error_reporting(E_ALL);
 
 fwrite(STDERR, 'Cold start'.PHP_EOL);
 
-require __DIR__ . '/vendor/autoload.php';
+require __DIR__.'/vendor/autoload.php';
 
 fwrite(STDERR, 'Loaded runtime Composer autoload file'.PHP_EOL);
 

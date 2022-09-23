@@ -14,7 +14,7 @@ __  __          _
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title><?= $statusCode ?> | <?= $message ?></title>
+        <title><?= $statusCode; ?> | <?= $message; ?></title>
 
         <!-- Fonts -->
         <link rel="dns-prefetch" href="https://rsms.me/">
@@ -102,11 +102,11 @@ __  __          _
 
             <div class="flex-center">
                 <div class="code">
-                    <?= $statusCode ?>
+                    <?= $statusCode; ?>
                 </div>
 
                 <div class="message" style="padding: 10px;">
-                    <?= $message ?>
+                    <?= $message; ?>
                 </div>
             </div>
         </div>

@@ -126,6 +126,28 @@ class Runtime
     }
 
     /**
+     * Inject the secret environment variables into the runtime.
+     */
+    private static function injectSecretEnvironmentVariables(Logger $logger, string $region)
+    {
+        $secretsPath = getenv('YMIR_SECRETS_PATH');
+
+        if (!is_string($secretsPath)) {
+            return;
+        }
+
+        collect((new SsmClient(['region' => $region], null, null, $logger))->getParametersByPath(new GetParametersByPathRequest([
+            'Path' => $secretsPath,
+            'WithDecryption' => true,
+        ])))->mapWithKeys(function (Parameter $parameter) {
+            return [Arr::last(explode('/', (string) $parameter->getName())) => (string) $parameter->getValue()];
+        })->filter()->each(function ($value, $name) use ($logger) {
+            $logger->debug(sprintf('Injecting [%s] secret environment variable into runtime', $name));
+            $_ENV[$name] = $value;
+        });
+    }
+
+    /**
      * Process the next Lambda runtime API event.
      */
     public function processNextEvent()
@@ -164,27 +186,5 @@ class Runtime
 
             exit(1);
         }
-    }
-
-    /**
-     * Inject the secret environment variables into the runtime.
-     */
-    private static function injectSecretEnvironmentVariables(Logger $logger, string $region)
-    {
-        $secretsPath = getenv('YMIR_SECRETS_PATH');
-
-        if (!is_string($secretsPath)) {
-            return;
-        }
-
-        collect((new SsmClient(['region' => $region], null, null, $logger))->getParametersByPath(new GetParametersByPathRequest([
-            'Path' => $secretsPath,
-            'WithDecryption' => true,
-        ])))->mapWithKeys(function (Parameter $parameter) {
-            return [Arr::last(explode('/', (string) $parameter->getName())) => (string) $parameter->getValue()];
-        })->filter()->each(function ($value, $name) use ($logger) {
-            $logger->debug(sprintf('Injecting [%s] secret environment variable into runtime', $name));
-            $_ENV[$name] = $value;
-        });
     }
 }
