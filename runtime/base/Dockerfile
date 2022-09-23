@@ -28,7 +28,7 @@ RUN set -xe \
 # our libraries, and at least one library requires a version of cmake greater than that.
 #
 # Needed to build:
-# - libzip: minimum required CMAKE version 3.0.2
+# - libzip: minimum required CMAKE version 3.0.
 RUN LD_LIBRARY_PATH= yum install -y cmake3
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
 
@@ -117,7 +117,7 @@ RUN set -xe; \
 # Needed by:
 #   - curl
 #   - php
-ENV VERSION_OPENSSL=1.1.1o
+ENV VERSION_OPENSSL=1.1.1q
 ENV OPENSSL_BUILD_DIR=${BUILD_DIR}/openssl
 ENV CA_BUNDLE_SOURCE="https://curl.se/ca/cacert.pem"
 ENV CA_BUNDLE="${INSTALL_DIR}/ssl/cert.pem"
@@ -194,7 +194,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_NGHTTP2=1.47.0
+ENV VERSION_NGHTTP2=1.49.0
 ENV NGHTTP2_BUILD_DIR=${BUILD_DIR}/nghttp2
 
 RUN set -xe; \
@@ -224,7 +224,7 @@ RUN set -xe; \
 #   - libssh2
 # Needed by:
 #   - php
-ENV VERSION_CURL=7.83.1
+ENV VERSION_CURL=7.85.0
 ENV CURL_BUILD_DIR=${BUILD_DIR}/curl
 
 RUN set -xe; \
@@ -273,13 +273,13 @@ RUN set -xe; \
 #   - zlib
 # Needed by:
 #   - php
-ENV VERSION_XML2=2.9.14
+ENV VERSION_XML2=2.10.2
 ENV XML2_BUILD_DIR=${BUILD_DIR}/xml2
 
 RUN set -xe; \
     mkdir -p ${XML2_BUILD_DIR}; \
 # Download and upack the source code
-    curl -Ls https://download.gnome.org/sources/libxml2/2.9/libxml2-${VERSION_XML2}.tar.xz \
+    curl -Ls https://download.gnome.org/sources/libxml2/${VERSION_XML2%.*}/libxml2-${VERSION_XML2}.tar.xz \
   | tar xJC ${XML2_BUILD_DIR} --strip-components=1
 
 # Move into the unpackaged code directory
@@ -311,7 +311,7 @@ RUN set -xe; \
 # https://github.com/nih-at/libzip/releases
 # Needed by:
 #   - php
-ENV VERSION_ZIP=1.8.0
+ENV VERSION_ZIP=1.9.2
 ENV ZIP_BUILD_DIR=${BUILD_DIR}/zip
 
 RUN set -xe; \
