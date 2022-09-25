@@ -33,12 +33,13 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion1AndBody()
     {
-        $response = new HttpResponse('foo');
+        $body = 'foo';
+        $response = new HttpResponse($body);
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'body' => base64_encode(gzencode($body, 9)),
             'multiValueHeaders' => [
                 'Content-Type' => ['text/html'],
                 'Content-Encoding' => ['gzip'],
@@ -63,12 +64,13 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion1AndHeaders()
     {
-        $response = new HttpResponse('foo', ['foo' => 'bar']);
+        $body = 'foo';
+        $response = new HttpResponse($body, ['foo' => 'bar']);
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'body' => base64_encode(gzencode($body, 9)),
             'multiValueHeaders' => [
                 'Foo' => ['bar'],
                 'Content-Type' => ['text/html'],
@@ -80,12 +82,13 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion1AndHtmlCharsetContentTypeHeader()
     {
-        $response = new HttpResponse('foo', ['content-type' => 'text/html; charset=UTF-8']);
+        $body = 'foo';
+        $response = new HttpResponse($body, ['content-type' => 'text/html; charset=UTF-8']);
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'body' => base64_encode(gzencode($body, 9)),
             'multiValueHeaders' => [
                 'Content-Type' => ['text/html; charset=UTF-8'],
                 'Content-Encoding' => ['gzip'],
@@ -96,12 +99,13 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion1AndJsonContentTypeHeader()
     {
-        $response = new HttpResponse('foo', ['content-type' => 'application/json']);
+        $body = 'foo';
+        $response = new HttpResponse($body, ['content-type' => 'application/json']);
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'body' => base64_encode(gzencode($body, 9)),
             'multiValueHeaders' => [
                 'Content-Type' => ['application/json'],
                 'Content-Encoding' => ['gzip'],
@@ -137,12 +141,13 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion2AndBody()
     {
-        $response = new HttpResponse('foo', [], 200, '2.0');
+        $body = 'foo';
+        $response = new HttpResponse($body, [], 200, '2.0');
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'body' => base64_encode(gzencode($body, 9)),
             'headers' => [
                 'Content-Type' => 'text/html',
                 'Content-Encoding' => 'gzip',
@@ -167,12 +172,13 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion2AndHeaders()
     {
-        $response = new HttpResponse('foo', ['foo' => 'bar'], 200, '2.0');
+        $body = 'foo';
+        $response = new HttpResponse($body, ['foo' => 'bar'], 200, '2.0');
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'body' => base64_encode(gzencode($body, 9)),
             'headers' => [
                 'Foo' => 'bar',
                 'Content-Type' => 'text/html',
@@ -184,12 +190,13 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion2AndHtmlCharsetContentTypeHeader()
     {
-        $response = new HttpResponse('foo', ['content-type' => 'text/html; charset=UTF-8'], 200, '2.0');
+        $body = 'foo';
+        $response = new HttpResponse($body, ['content-type' => 'text/html; charset=UTF-8'], 200, '2.0');
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'body' => base64_encode(gzencode($body, 9)),
             'headers' => [
                 'Content-Type' => 'text/html; charset=UTF-8',
                 'Content-Encoding' => 'gzip',
@@ -200,12 +207,13 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion2AndJsonContentTypeHeader()
     {
-        $response = new HttpResponse('foo', ['content-type' => 'application/json'], 200, '2.0');
+        $body = 'foo';
+        $response = new HttpResponse($body, ['content-type' => 'application/json'], 200, '2.0');
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'body' => base64_encode(gzencode($body, 9)),
             'headers' => [
                 'Content-Type' => 'application/json',
                 'Content-Encoding' => 'gzip',
@@ -216,13 +224,14 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion2AndSetCookieHeaders()
     {
-        $response = new HttpResponse('foo', ['set-cookie' => ['foo', 'bar']], 200, '2.0');
+        $body = 'foo';
+        $response = new HttpResponse($body, ['set-cookie' => ['foo', 'bar']], 200, '2.0');
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
             'cookies' => ['foo', 'bar'],
-            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'body' => base64_encode(gzencode($body, 9)),
             'headers' => [
                 'Content-Type' => 'text/html',
                 'Content-Encoding' => 'gzip',

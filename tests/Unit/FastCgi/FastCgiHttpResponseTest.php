@@ -41,7 +41,7 @@ class FastCgiHttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'H4sIAAAAAAACEwMAAAAAAAAAAAA=',
+            'body' => base64_encode(gzencode('', 9)),
             'multiValueHeaders' => [
                 'Content-Type' => ['text/html'],
                 'Content-Encoding' => ['gzip'],
@@ -67,7 +67,7 @@ class FastCgiHttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 201,
-            'body' => 'H4sIAAAAAAACEwMAAAAAAAAAAAA=',
+            'body' => base64_encode(gzencode('', 9)),
             'multiValueHeaders' => [
                 'Content-Type' => ['text/html'],
                 'Content-Encoding' => ['gzip'],

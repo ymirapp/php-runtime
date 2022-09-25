@@ -59,7 +59,7 @@ class WarmUpEventHandlerTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'H4sIAAAAAAACE/PLV0hMScksyczPS8xRSCvNSwYxFcoTi3JTUxRKCwBYiDpTIAAAAA==',
+            'body' => base64_encode(gzencode('No additional function warmed up', 9)),
             'multiValueHeaders' => [
                 'Content-Type' => ['text/html'],
                 'Content-Encoding' => ['gzip'],
@@ -98,7 +98,7 @@ class WarmUpEventHandlerTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'H4sIAAAAAAACEwtPLMpNTVEoLVBITEnJLMnMz0vMUUgrzUsGMYsBzXzvwx4AAAA=',
+            'body' => base64_encode(gzencode('Warmed up additional functions', 9)),
             'multiValueHeaders' => [
                 'Content-Type' => ['text/html'],
                 'Content-Encoding' => ['gzip'],
