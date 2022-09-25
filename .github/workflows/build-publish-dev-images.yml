@@ -2,8 +2,8 @@ name: Build and publish development images
 
 on:
   push:
-    paths:
-      - 'runtime/**'
+    paths-ignore:
+      - 'tests/**'
 
 jobs:
   publish:
