@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Lambda\Response;
 
+use Tightenco\Collect\Support\Arr;
 use Tightenco\Collect\Support\Collection;
 
 /**
@@ -84,9 +85,9 @@ class HttpResponse implements ResponseInterface
         $headers = $this->getFormattedHeaders();
         $headersKey = '1.0' === $this->formatVersion ? 'multiValueHeaders' : 'headers';
 
-        // Compress HTML responses if they haven't already. This helps prevent hitting the Lambda
-        // payload limit since compression happens after the response gets sent back.
-        if (!isset($headers['Content-Encoding']) && ['text/html'] === $headers['Content-Type']) {
+        // Compress HTML responses if they haven't already. This reduces the chance of hitting the 6MB Lambda payload
+        // limit since compression happens after the response gets sent back.
+        if ($this->shouldCompressResponse($headers)) {
             $body = (string) gzencode($body, 9);
             $headers['Content-Encoding'] = ['gzip'];
             $headers['Content-Length'] = [strlen($body)];
@@ -129,5 +130,19 @@ class HttpResponse implements ResponseInterface
         }
 
         return $headers;
+    }
+
+    /**
+     * Determine if we should compress the HTTP response or not.
+     */
+    private function shouldCompressResponse(Collection $headers): bool
+    {
+        if (isset($headers['Content-Encoding']) || !isset($headers['Content-Type']) || !is_array($headers['Content-Type'])) {
+            return false;
+        }
+
+        $contentType = (string) Arr::last($headers['Content-Type']);
+
+        return 0 === stripos($contentType, 'text/html') || 0 === stripos($contentType, 'application/json');
     }
 }

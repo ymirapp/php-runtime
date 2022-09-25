@@ -49,14 +49,14 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion1AndContentTypeHeader()
     {
-        $response = new HttpResponse('foo', ['content-type' => 'application/json']);
+        $response = new HttpResponse('foo', ['content-type' => 'bar']);
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
             'body' => 'Zm9v',
             'multiValueHeaders' => [
-                'Content-Type' => ['application/json'],
+                'Content-Type' => ['bar'],
             ],
         ], $response->getResponseData());
     }
@@ -72,6 +72,38 @@ class HttpResponseTest extends TestCase
             'multiValueHeaders' => [
                 'Foo' => ['bar'],
                 'Content-Type' => ['text/html'],
+                'Content-Encoding' => ['gzip'],
+                'Content-Length' => [23],
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion1AndHtmlCharsetContentTypeHeader()
+    {
+        $response = new HttpResponse('foo', ['content-type' => 'text/html; charset=UTF-8']);
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'multiValueHeaders' => [
+                'Content-Type' => ['text/html; charset=UTF-8'],
+                'Content-Encoding' => ['gzip'],
+                'Content-Length' => [23],
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion1AndJsonContentTypeHeader()
+    {
+        $response = new HttpResponse('foo', ['content-type' => 'application/json']);
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'multiValueHeaders' => [
+                'Content-Type' => ['application/json'],
                 'Content-Encoding' => ['gzip'],
                 'Content-Length' => [23],
             ],
@@ -121,14 +153,14 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion2AndContentTypeHeader()
     {
-        $response = new HttpResponse('foo', ['content-type' => 'application/json'], 200, '2.0');
+        $response = new HttpResponse('foo', ['content-type' => 'bar'], 200, '2.0');
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
             'body' => 'Zm9v',
             'headers' => [
-                'Content-Type' => 'application/json',
+                'Content-Type' => 'bar',
             ],
         ], $response->getResponseData());
     }
@@ -144,6 +176,38 @@ class HttpResponseTest extends TestCase
             'headers' => [
                 'Foo' => 'bar',
                 'Content-Type' => 'text/html',
+                'Content-Encoding' => 'gzip',
+                'Content-Length' => 23,
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion2AndHtmlCharsetContentTypeHeader()
+    {
+        $response = new HttpResponse('foo', ['content-type' => 'text/html; charset=UTF-8'], 200, '2.0');
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'headers' => [
+                'Content-Type' => 'text/html; charset=UTF-8',
+                'Content-Encoding' => 'gzip',
+                'Content-Length' => 23,
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion2AndJsonContentTypeHeader()
+    {
+        $response = new HttpResponse('foo', ['content-type' => 'application/json'], 200, '2.0');
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => 'H4sIAAAAAAACE0vLzwcAIWVzjAMAAAA=',
+            'headers' => [
+                'Content-Type' => 'application/json',
                 'Content-Encoding' => 'gzip',
                 'Content-Length' => 23,
             ],
