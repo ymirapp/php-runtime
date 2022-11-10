@@ -3,9 +3,10 @@ name: Continuous Integration
 on:
   push:
     paths:
-      - 'composer.lock'
+      - '.github/workflows/ci.yml'
       - 'src/**'
       - 'tests/**'
+      - 'composer.lock'
 
 jobs:
   code-quality:
