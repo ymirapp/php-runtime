@@ -9,7 +9,7 @@ on:
 
 jobs:
   code-quality:
-    name: Run code quality checks on PHP 7.2
+    name: Run code quality checks on PHP 7.4
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -17,8 +17,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.2'
-          extensions: xdebug-2.9.8
+          php-version: '7.4'
       - name: Install dependencies
         run: composer install --no-ansi --no-interaction --no-scripts --no-suggest --prefer-dist
       - name: Run code quality checks
@@ -38,6 +37,5 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
-          tools: composer:v1
       - name: Run unit tests
         run: vendor/bin/phpunit
