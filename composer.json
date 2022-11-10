@@ -47,6 +47,7 @@
         "platform": {
             "php": "7.4.33"
         },
+        "platform-check": false,
         "preferred-install": "dist",
         "sort-packages": true
     },
