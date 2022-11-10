@@ -141,7 +141,11 @@ class HttpResponse implements ResponseInterface
             return false;
         }
 
-        $contentType = (string) Arr::last($headers['Content-Type']);
+        $contentType = Arr::last($headers['Content-Type']);
+
+        if (!is_string($contentType)) {
+            return false;
+        }
 
         return 0 === stripos($contentType, 'text/html') || 0 === stripos($contentType, 'application/json');
     }

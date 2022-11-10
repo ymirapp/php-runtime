@@ -27,7 +27,6 @@ $layers->each(function(array $layers, string $region) use ($profile) {
     ]);
 
     foreach ($layers as $layer) {
-        $matches = [];
         preg_match('/(arn:[a-zA-Z0-9-]+:lambda:[a-zA-Z0-9-]+:\d{12}:layer:[a-zA-Z0-9-_]+):([0-9]+)/', $layer, $matches);
 
         $lambda->addLayerVersionPermission([

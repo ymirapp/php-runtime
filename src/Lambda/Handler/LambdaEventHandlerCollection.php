@@ -89,8 +89,10 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
      */
     private function getHandlerForEvent(InvocationEventInterface $event): ?LambdaEventHandlerInterface
     {
-        return collect($this->handlers)->first(function (LambdaEventHandlerInterface $handler) use ($event) {
+        $handler = collect($this->handlers)->first(function (LambdaEventHandlerInterface $handler) use ($event) {
             return $handler->canHandle($event);
         });
+
+        return $handler instanceof LambdaEventHandlerInterface ? $handler : null;
     }
 }
