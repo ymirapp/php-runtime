@@ -6,6 +6,7 @@ on:
       - '.github/workflows/ci.yml'
       - 'src/**'
       - 'tests/**'
+      - 'composer.json'
       - 'composer.lock'
 
 jobs:
