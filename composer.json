@@ -34,21 +34,21 @@
         "php-mock/php-mock-phpunit": "^2.6",
         "php-parallel-lint/php-parallel-lint": "^1.1",
         "phpmd/phpmd": "^2.7",
-        "phpro/grumphp": "^0.19",
+        "phpro/grumphp": "^1.0",
         "phpstan/phpstan": "^0.12",
-        "phpunit/phpunit": "^8.5",
-        "sebastian/phpcpd": "^4.1"
+        "phpunit/phpunit": "^9.0",
+        "sebastian/phpcpd": "^6.0"
     },
     "config": {
-        "optimize-autoloader": true,
-        "platform": {
-            "php": "7.2.34"
-        },
-        "preferred-install": "dist",
-        "sort-packages": true,
         "allow-plugins": {
             "phpro/grumphp": true
-        }
+        },
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "7.4.33"
+        },
+        "preferred-install": "dist",
+        "sort-packages": true
     },
     "autoload": {
         "psr-4": {

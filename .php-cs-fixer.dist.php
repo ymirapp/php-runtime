@@ -12,7 +12,10 @@ EOF;
 $finder = PhpCsFixer\Finder::create()
     ->ignoreDotFiles(false)
     ->ignoreVCSIgnored(true)
-    ->in(__DIR__)
+    ->in([
+        __DIR__ . '/src',
+        __DIR__ . '/tests',
+    ])
 ;
 
 $config = new PhpCsFixer\Config();
@@ -66,7 +69,7 @@ $config
                 'method_protected_abstract',
                 'method_private',
             ],
-            'sort_algorithm' => 'alpha'
+            'sort_algorithm' => 'alpha',
         ],
         'ordered_imports' => true,
         'php_unit_construct' => true,
