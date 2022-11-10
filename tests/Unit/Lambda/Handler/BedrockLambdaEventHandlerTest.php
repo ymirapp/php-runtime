@@ -15,6 +15,7 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
+use Tightenco\Collect\Support\Arr;
 use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\BedrockLambdaEventHandler;
@@ -640,7 +641,77 @@ class BedrockLambdaEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/wp-login.php');
     }
 
-    public function testHandleWithWpLoginUrlWithPayloadVersion1()
+    public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion1()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $event->expects($this->exactly(3))
+              ->method('getPath')
+              ->willReturn('/wp/wp-login.php/foo');
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('1.0');
+
+        $logger->expects($this->once())
+               ->method('debug');
+
+        $process->expects($this->once())
+                ->method('handle')
+                ->with($this->callback(function (FastCgiRequest $request) {
+                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-login.php'
+                        && '/foo' === Arr::get($request->getParams(), 'PATH_INFO');
+                }));
+
+        touch($this->tempDir.'/config/application.php');
+        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
+        touch($this->tempDir.'/web/wp/wp-login.php');
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
+
+        @unlink($this->tempDir.'/config/application.php');
+        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
+        @unlink($this->tempDir.'/web/wp/wp-login.php');
+    }
+
+    public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion2()
+    {
+        $event = $this->getHttpRequestEventMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $event->expects($this->exactly(3))
+              ->method('getPath')
+              ->willReturn('/wp/wp-login.php/foo');
+
+        $event->expects($this->once())
+              ->method('getPayloadVersion')
+              ->willReturn('2.0');
+
+        $logger->expects($this->once())
+               ->method('debug');
+
+        $process->expects($this->once())
+                ->method('handle')
+                ->with($this->callback(function (FastCgiRequest $request) {
+                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-login.php'
+                        && '/foo' === Arr::get($request->getParams(), 'PATH_INFO');
+                }));
+
+        touch($this->tempDir.'/config/application.php');
+        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
+        touch($this->tempDir.'/web/wp/wp-login.php');
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
+
+        @unlink($this->tempDir.'/config/application.php');
+        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
+        @unlink($this->tempDir.'/web/wp/wp-login.php');
+    }
+
+    public function testHandleWpLoginUrlWithPayloadVersion1()
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -674,7 +745,7 @@ class BedrockLambdaEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/wp-login.php');
     }
 
-    public function testHandleWithWpLoginUrlWithPayloadVersion2()
+    public function testHandleWpLoginUrlWithPayloadVersion2()
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();

@@ -38,7 +38,11 @@ class WordPressLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
     {
         $path = $event->getPath();
 
-        if ($this->isMultisite() && (1 === preg_match('/^(.*)?(\/wp-(content|admin|includes).*)/', $path, $matches) || 1 === preg_match('/^(.*)?(\/.*\.php)$/', $path, $matches))) {
+        if (1 === preg_match('%^(.+\.php)%i', $path, $matches)) {
+            $path = $matches[1];
+        }
+
+        if ($this->isMultisite() && (1 === preg_match('/^(.*)?(\/wp-(content|admin|includes).*)/', $path, $matches) || 1 === preg_match('/^(.*)?(\/.*\.php)/', $path, $matches))) {
             $path = $matches[2];
         }
 

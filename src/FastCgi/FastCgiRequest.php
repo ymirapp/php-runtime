@@ -50,20 +50,27 @@ class FastCgiRequest implements ProvidesRequestData
     public static function createFromInvocationEvent(HttpRequestEvent $event, string $scriptFilename): self
     {
         $content = $event->getBody();
-        $documentRoot = (string) getcwd();
+        $documentRoot = getcwd() ?: '';
         $headers = $event->getHeaders();
-        $host = $headers['x-forwarded-host'][0] ?? $headers['host'][0] ?? 'localhost';
         $method = strtoupper($event->getMethod());
-        $path = $uri = $event->getPath();
+        $path = $event->getPath();
+        $pathInfo = '';
         $port = $headers['x-forwarded-port'][0] ?? 80;
         $queryString = $event->getQueryString();
         $scriptName = str_replace($documentRoot, '', $scriptFilename);
+        $self = $scriptName.$path;
+
+        // Parse path information using same regex for nginx with "fastcgi_split_path_info"
+        if (1 === preg_match('%^(.+\.php)(/.+)$%i', $path, $matches)) {
+            $pathInfo = $matches[2];
+            $self = $matches[0];
+        }
 
         $parameters = [
             'DOCUMENT_ROOT' => $documentRoot,
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
-            'PATH_INFO' => $path,
-            'PHP_SELF' => '/'.trim($scriptName.$uri, '/'),
+            'PATH_INFO' => $pathInfo,
+            'PHP_SELF' => '/'.trim($self, '/'),
             'QUERY_STRING' => $queryString,
             'REMOTE_ADDR' => $headers['x-forwarded-for'][0] ?? $event->getSourceIp(),
             'REMOTE_PORT' => $port,
@@ -73,13 +80,13 @@ class FastCgiRequest implements ProvidesRequestData
             'SCRIPT_FILENAME' => $scriptFilename,
             'SCRIPT_NAME' => $scriptName,
             'SERVER_ADDR' => '127.0.0.1',
-            'SERVER_NAME' => $host,
+            'SERVER_NAME' => $headers['x-forwarded-host'][0] ?? $headers['host'][0] ?? 'localhost',
             'SERVER_PORT' => $port,
             'SERVER_PROTOCOL' => $event->getProtocol(),
             'SERVER_SOFTWARE' => 'ymir',
         ];
 
-        $parameters['REQUEST_URI'] = empty($queryString) ? $uri : $uri.'?'.$queryString;
+        $parameters['REQUEST_URI'] = empty($queryString) ? $path : $path.'?'.$queryString;
 
         if (isset($headers['x-forwarded-proto'][0]) && 'https' == strtolower($headers['x-forwarded-proto'][0])) {
             $parameters['HTTPS'] = 'on';

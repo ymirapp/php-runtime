@@ -28,7 +28,8 @@ grumphp:
     phpmd:
       ruleset: ['phpmd.xml']
       exclude:
-        - 'Runtime.php'
+        - 'src/FastCgi/FastCgiRequest.php'
+        - 'src/Runtime.php'
         - 'tests'
     phpstan:
       level: max
