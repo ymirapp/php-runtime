@@ -53,8 +53,8 @@ class Logger extends MonologLogger
     public function addRecord($level, $message, array $context = []): bool
     {
         // When killing the Lambda container, it appears that PHP closes the stream with the `__destruct` method before
-        // we're done sending logs. We use a try/catch block here in order to reset the stream handler so we can send
-        // the final logs from process shutdown.
+        // we're done sending logs. We use a try/catch block here in order to reset the stream handler that way we can
+        // send the final logs during the shutdown.
         try {
             return parent::addRecord($level, $message, $context);
         } catch (\LogicException $exception) {
