@@ -83,7 +83,7 @@ RUN mkdir -p ${BUILD_DIR}  \
 #   - php
 # Used By:
 #   - xml2
-ENV VERSION_ZLIB=1.2.12
+ENV VERSION_ZLIB=1.2.13
 ENV ZLIB_BUILD_DIR=${BUILD_DIR}/xml2
 
 RUN set -xe; \
@@ -117,7 +117,7 @@ RUN set -xe; \
 # Needed by:
 #   - curl
 #   - php
-ENV VERSION_OPENSSL=1.1.1q
+ENV VERSION_OPENSSL=1.1.1s
 ENV OPENSSL_BUILD_DIR=${BUILD_DIR}/openssl
 ENV CA_BUNDLE_SOURCE="https://curl.se/ca/cacert.pem"
 ENV CA_BUNDLE="${INSTALL_DIR}/ssl/cert.pem"
@@ -194,7 +194,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_NGHTTP2=1.49.0
+ENV VERSION_NGHTTP2=1.50.0
 ENV NGHTTP2_BUILD_DIR=${BUILD_DIR}/nghttp2
 
 RUN set -xe; \
@@ -273,7 +273,7 @@ RUN set -xe; \
 #   - zlib
 # Needed by:
 #   - php
-ENV VERSION_XML2=2.10.2
+ENV VERSION_XML2=2.10.3
 ENV XML2_BUILD_DIR=${BUILD_DIR}/xml2
 
 RUN set -xe; \
@@ -373,7 +373,7 @@ RUN set -xe; \
 # Needed by:
 #   - imagick
 ENV LIBDE265_BUILD_DIR=${BUILD_DIR}/libde265
-ENV VERSION_LIBDE265=1.0.8
+ENV VERSION_LIBDE265=1.0.9
 
 RUN set -xe; \
     mkdir -p ${LIBDE265_BUILD_DIR}; \
@@ -395,7 +395,7 @@ RUN set -xe; \
 # Needed by:
 #   - imagick
 ENV LIBHEIF_BUILD_DIR=${BUILD_DIR}/libheif
-ENV VERSION_LIBHEIF=1.12.0
+ENV VERSION_LIBHEIF=1.13.0
 
 RUN set -xe; \
     mkdir -p ${LIBHEIF_BUILD_DIR}; \
@@ -443,7 +443,7 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV RELAY_BUILD_DIR=${BUILD_DIR}/relay
-ENV VERSION_RELAY_EXTENSION=0.4.1
+ENV VERSION_RELAY_EXTENSION=0.4.6
 
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
