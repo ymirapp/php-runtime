@@ -10,7 +10,6 @@ parameters:
         - tests/*
     ignoreErrors:
         - '#Constant SIGTERM not found#'
-        - '#Method [^\s]* has no return type specified#'
         - '#Method [^\s]* has parameter \$[^\s]* with no type specified#'
         - '#CurlHandle\|resource given#'
         - message: '#unknown class CurlHandle|Class CurlHandle not found#'

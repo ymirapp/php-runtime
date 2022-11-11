@@ -51,7 +51,7 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
     /**
      * Add a new Lambda invocation event handler to the collection.
      */
-    public function addHandler(LambdaEventHandlerInterface $handler)
+    public function addHandler(LambdaEventHandlerInterface $handler): void
     {
         $this->handlers[] = $handler;
     }

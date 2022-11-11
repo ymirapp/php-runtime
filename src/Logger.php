@@ -67,7 +67,7 @@ class Logger extends MonologLogger
     /**
      * Logs an exception.
      */
-    public function exception(\Throwable $exception)
+    public function exception(\Throwable $exception): void
     {
         $errorMessage = $exception->getMessage();
 

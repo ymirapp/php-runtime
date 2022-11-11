@@ -85,7 +85,7 @@ class RuntimeApiClient
     /**
      * Send an error back to the Lambda runtime API for the given event.
      */
-    public function sendEventError(InvocationEventInterface $event, \Throwable $error)
+    public function sendEventError(InvocationEventInterface $event, \Throwable $error): void
     {
         $this->sendData($this->getErrorData($error), "invocation/{$event->getId()}/error");
     }
@@ -93,7 +93,7 @@ class RuntimeApiClient
     /**
      * Send an initialization error to the Lambda runtime API.
      */
-    public function sendInitializationError(\Throwable $error)
+    public function sendInitializationError(\Throwable $error): void
     {
         $this->sendData($this->getErrorData($error), 'init/error');
     }
@@ -101,7 +101,7 @@ class RuntimeApiClient
     /**
      * Send a response to the Lambda runtime API for the given event.
      */
-    public function sendResponse(InvocationEventInterface $event, ResponseInterface $response)
+    public function sendResponse(InvocationEventInterface $event, ResponseInterface $response): void
     {
         $data = $response->getResponseData();
 
@@ -129,7 +129,7 @@ class RuntimeApiClient
     /**
      * Send data back to the Lambda runtime API.
      */
-    private function sendData($data, string $uri)
+    private function sendData($data, string $uri): void
     {
         $json = json_encode($data);
 

@@ -128,7 +128,7 @@ class Runtime
     /**
      * Inject the secret environment variables into the runtime.
      */
-    private static function injectSecretEnvironmentVariables(Logger $logger, string $region)
+    private static function injectSecretEnvironmentVariables(Logger $logger, string $region): void
     {
         $secretsPath = getenv('YMIR_SECRETS_PATH');
 
@@ -150,7 +150,7 @@ class Runtime
     /**
      * Process the next Lambda runtime API event.
      */
-    public function processNextEvent()
+    public function processNextEvent(): void
     {
         $event = $this->client->getNextEvent();
 
@@ -176,7 +176,7 @@ class Runtime
     /**
      * Start the Lambda runtime.
      */
-    public function start()
+    public function start(): void
     {
         try {
             $this->phpFpmProcess->start();

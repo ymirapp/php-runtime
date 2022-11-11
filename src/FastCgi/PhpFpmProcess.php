@@ -113,7 +113,7 @@ class PhpFpmProcess
     /**
      * Start the PHP-FPM process.
      */
-    public function start()
+    public function start(): void
     {
         if ($this->isStarted()) {
             $this->killExistingProcess();
@@ -152,7 +152,7 @@ class PhpFpmProcess
     /**
      * Kill an existing PHP-FPM process.
      */
-    private function killExistingProcess()
+    private function killExistingProcess(): void
     {
         $this->logger->info('Killing existing PHP-FPM process');
 
@@ -188,7 +188,7 @@ class PhpFpmProcess
     /**
      * Removes all the files associated with the PHP-FPM process.
      */
-    private function removeProcessFiles()
+    private function removeProcessFiles(): void
     {
         unlink(self::SOCKET_PATH);
         unlink(self::PID_PATH);
@@ -197,7 +197,7 @@ class PhpFpmProcess
     /**
      * Stop the PHP-FPM process.
      */
-    private function stop()
+    private function stop(): void
     {
         if ($this->process->isRunning()) {
             $this->process->stop();
@@ -207,7 +207,7 @@ class PhpFpmProcess
     /**
      * Wait for the given callback to finish.
      */
-    private function wait(callable $callback, string $message, int $timeout)
+    private function wait(callable $callback, string $message, int $timeout): void
     {
         $elapsed = 0;
         $wait = 5000; // 5ms
