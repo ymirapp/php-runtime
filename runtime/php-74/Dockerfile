@@ -120,7 +120,7 @@ RUN set -xe; \
 WORKDIR ${RELAY_BUILD_DIR}/
 RUN cp relay.ini ${INSTALL_DIR}/etc/php/conf.d/50-relay.ini; \
     cp relay-pkg.so ${INSTALL_DIR}/lib/php/extensions/no-debug-non-zts-20190902/relay.so; \
-    sed -i "s/BIN:31415926-5358-9793-2384-626433832795/BIN:$(cat /proc/sys/kernel/random/uuid)/" ${INSTALL_DIR}/lib/php/extensions/no-debug-non-zts-20190902/relay.so;
+    sed -i "s/00000000-0000-0000-0000-000000000000/$(cat /proc/sys/kernel/random/uuid)/" ${INSTALL_DIR}/lib/php/extensions/no-debug-non-zts-20190902/relay.so;
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --install-dir=${INSTALL_DIR}/bin/ --filename=composer
