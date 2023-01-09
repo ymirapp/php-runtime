@@ -194,7 +194,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_NGHTTP2=1.50.0
+ENV VERSION_NGHTTP2=1.51.0
 ENV NGHTTP2_BUILD_DIR=${BUILD_DIR}/nghttp2
 
 RUN set -xe; \
@@ -443,7 +443,7 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV RELAY_BUILD_DIR=${BUILD_DIR}/relay
-ENV VERSION_RELAY_EXTENSION=0.4.6
+ENV VERSION_RELAY_EXTENSION=0.5.1
 
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
