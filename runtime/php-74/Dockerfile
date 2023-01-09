@@ -115,7 +115,7 @@ RUN set -xe; \
 
 RUN set -xe; \
     mkdir -p ${RELAY_BUILD_DIR}; \
-    curl -L "https://cachewerk.s3.amazonaws.com/relay/v${VERSION_RELAY_EXTENSION}/relay-v${VERSION_RELAY_EXTENSION}-php7.4-centos7-x86-64.tar.gz" \
+    curl -L "https://builds.r2.relay.so/v${VERSION_RELAY_EXTENSION}/relay-v${VERSION_RELAY_EXTENSION}-php7.4-centos7-x86-64.tar.gz" \
     | tar xzC ${RELAY_BUILD_DIR} --strip-components=1
 WORKDIR ${RELAY_BUILD_DIR}/
 RUN cp relay.ini ${INSTALL_DIR}/etc/php/conf.d/50-relay.ini; \
