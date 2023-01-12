@@ -117,6 +117,16 @@ class FastCgiRequest implements ProvidesRequestData
     }
 
     /**
+     * Get the list of content encodings that the client understands.
+     */
+    public function getAcceptableEncodings(): array
+    {
+        return collect(explode(',', $this->parameters['HTTP_ACCEPT_ENCODING'] ?? ''))->map(function (string $encoding) {
+            return strtolower(trim($encoding));
+        })->filter()->all();
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getContent(): string

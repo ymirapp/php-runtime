@@ -7,6 +7,7 @@
     xsi:noNamespaceSchemaLocation="http://pmd.sf.net/ruleset_xml_schema.xsd"
 >
     <rule ref="rulesets/cleancode.xml">
+        <exclude name="BooleanArgumentFlag"/>
         <exclude name="StaticAccess" />
         <exclude name="MissingImport" />
     </rule>

@@ -24,7 +24,7 @@ class FastCgiHttpResponse extends HttpResponse
     /**
      * {@inheritdoc}
      */
-    public function __construct(ProvidesResponseData $response, string $formatVersion = '1.0')
+    public function __construct(ProvidesResponseData $response, string $formatVersion = '1.0', bool $compressible = true)
     {
         $headers = array_change_key_case($response->getHeaders(), CASE_LOWER);
         $statusCode = 200;
@@ -35,6 +35,6 @@ class FastCgiHttpResponse extends HttpResponse
 
         unset($headers['status']);
 
-        parent::__construct($response->getBody(), $headers, $statusCode, $formatVersion);
+        parent::__construct($response->getBody(), $headers, $statusCode, $formatVersion, $compressible);
     }
 }

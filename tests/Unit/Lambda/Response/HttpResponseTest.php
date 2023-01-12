@@ -129,6 +129,20 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
+    public function testGetResponseDataWithFormatVersion1DoesntGzipEncodeIfResponseIsntCompressible()
+    {
+        $response = new HttpResponse('foo', [], 200, '1.0', false);
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => 'Zm9v',
+            'multiValueHeaders' => [
+                'Content-Type' => ['text/html'],
+            ],
+        ], $response->getResponseData());
+    }
+
     public function testGetResponseDataWithFormatVersion2And304Status()
     {
         $response = new HttpResponse('foo', [], 304, '2.0');
@@ -253,5 +267,24 @@ class HttpResponseTest extends TestCase
                 'Content-Type' => 'text/html',
             ],
         ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion2DoesntGzipEncodeIfResponseIsntCompressible()
+    {
+        $response = new HttpResponse('foo', [], 200, '2.0', false);
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => 'Zm9v',
+            'headers' => [
+                'Content-Type' => 'text/html',
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testIsCompressible()
+    {
+        $this->assertFalse((new HttpResponse('foo', [], 200, '1.0', false))->isCompressible());
     }
 }

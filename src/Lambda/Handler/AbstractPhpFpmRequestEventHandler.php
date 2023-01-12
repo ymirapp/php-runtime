@@ -62,7 +62,7 @@ abstract class AbstractPhpFpmRequestEventHandler extends AbstractHttpRequestEven
             'parameters' => $request->getParams(),
         ]);
 
-        return new FastCgiHttpResponse($this->process->handle($request), $event->getPayloadVersion());
+        return new FastCgiHttpResponse($this->process->handle($request), $event->getPayloadVersion(), in_array('gzip', $request->getAcceptableEncodings()));
     }
 
     /**

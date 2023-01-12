@@ -884,6 +884,16 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
+    public function testGetAcceptableEncodingsWithAcceptEncodingHeader()
+    {
+        $this->assertSame(['deflate', 'gzip'], (new FastCgiRequest('', ['HTTP_ACCEPT_ENCODING' => 'Deflate, gzip']))->getAcceptableEncodings());
+    }
+
+    public function testGetAcceptableEncodingsWithoutAcceptEncodingHeader()
+    {
+        $this->assertEmpty((new FastCgiRequest())->getAcceptableEncodings());
+    }
+
     public function testGetContent()
     {
         $request = new FastCgiRequest('foo', []);

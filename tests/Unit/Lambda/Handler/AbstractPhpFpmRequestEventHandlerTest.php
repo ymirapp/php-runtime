@@ -58,7 +58,10 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
                 ->with($this->identicalTo($event))
                 ->willReturn('/path');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
+        $response = $handler->handle($event);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, $response);
+        $this->assertFalse($response->isCompressible());
     }
 
     public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion1()
@@ -85,7 +88,10 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
               ->method('getPayloadVersion')
               ->willReturn('1.0');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
+        $response = $handler->handle($event);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, $response);
+        $this->assertFalse($response->isCompressible());
     }
 
     public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion2()
@@ -112,6 +118,9 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
               ->method('getPayloadVersion')
               ->willReturn('2.0');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
+        $response = $handler->handle($event);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, $response);
+        $this->assertFalse($response->isCompressible());
     }
 }

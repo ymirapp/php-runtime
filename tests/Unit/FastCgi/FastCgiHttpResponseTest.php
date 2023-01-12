@@ -24,6 +24,30 @@ class FastCgiHttpResponseTest extends TestCase
 {
     use ProvidesResponseDataMockTrait;
 
+    public function testGetResponseDataWhenResponseIsntCompressible()
+    {
+        $response = $this->getProvidesResponseDataMock();
+
+        $response->expects($this->once())
+                 ->method('getBody')
+                 ->willReturn('');
+
+        $response->expects($this->once())
+                 ->method('getHeaders')
+                 ->willReturn([]);
+
+        $fastCgiResponse = new FastCgiHttpResponse($response, '1.0', false);
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => '',
+            'multiValueHeaders' => [
+                'Content-Type' => ['text/html'],
+            ],
+        ], $fastCgiResponse->getResponseData());
+    }
+
     public function testGetResponseDataWithDefaults()
     {
         $response = $this->getProvidesResponseDataMock();

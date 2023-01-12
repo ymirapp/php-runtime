@@ -29,6 +29,13 @@ class HttpResponse implements ResponseInterface
     private $body;
 
     /**
+     * Flag whether the response can be compressed or not.
+     *
+     * @var bool
+     */
+    private $compressible;
+
+    /**
      * The response format version.
      *
      * @see https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.response
@@ -54,13 +61,14 @@ class HttpResponse implements ResponseInterface
     /**
      * Constructor.
      */
-    public function __construct(string $body, array $headers = [], int $statusCode = 200, string $formatVersion = '1.0')
+    public function __construct(string $body, array $headers = [], int $statusCode = 200, string $formatVersion = '1.0', bool $compressible = true)
     {
         if (!in_array($formatVersion, ['1.0', '2.0'])) {
             throw new \InvalidArgumentException('"formatVersion" must be either "1.0" or "2.0"');
         }
 
         $this->body = $body;
+        $this->compressible = $compressible;
         $this->formatVersion = $formatVersion;
         $this->headers = $headers;
         $this->statusCode = $statusCode;
@@ -114,6 +122,14 @@ class HttpResponse implements ResponseInterface
     }
 
     /**
+     * Check if the HTTP response can be compressed or not.
+     */
+    public function isCompressible(): bool
+    {
+        return $this->compressible;
+    }
+
+    /**
      * Get the HTTP response headers properly formatted for a Lambda response.
      */
     private function getFormattedHeaders(): Collection
@@ -137,7 +153,7 @@ class HttpResponse implements ResponseInterface
      */
     private function shouldCompressResponse(Collection $headers): bool
     {
-        if (isset($headers['Content-Encoding']) || !isset($headers['Content-Type']) || !is_array($headers['Content-Type'])) {
+        if (!$this->isCompressible() || isset($headers['Content-Encoding']) || !isset($headers['Content-Type']) || !is_array($headers['Content-Type'])) {
             return false;
         }
 
