@@ -136,10 +136,15 @@ class Runtime
             return;
         }
 
-        collect((new SsmClient(['region' => $region], null, null, $logger))->getParametersByPath(new GetParametersByPathRequest([
+        // Need to pass results through iterator_to_array manually because the collection object
+        // preserves keys. This causes the next page of results to overwrite the previous page of
+        // results because they use a numbered index.
+        //
+        // @see https://stackoverflow.com/questions/70536304/why-does-iterator-to-array-give-different-results-than-foreach
+        collect(iterator_to_array((new SsmClient(['region' => $region], null, null, $logger))->getParametersByPath(new GetParametersByPathRequest([
             'Path' => $secretsPath,
             'WithDecryption' => true,
-        ])))->mapWithKeys(function (Parameter $parameter) {
+        ])), false))->mapWithKeys(function (Parameter $parameter) {
             return [Arr::last(explode('/', (string) $parameter->getName())) => (string) $parameter->getValue()];
         })->filter()->each(function ($value, $name) use ($logger) {
             $logger->debug(sprintf('Injecting [%s] secret environment variable into runtime', $name));
