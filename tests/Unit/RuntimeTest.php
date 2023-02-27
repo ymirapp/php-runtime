@@ -34,6 +34,19 @@ class RuntimeTest extends TestCase
     use PhpFpmProcessMockTrait;
     use ResponseInterfaceMockTrait;
 
+    public function testConstructorWithMaxInvocationLessThan1()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('"maxInvocations" must be greater than 0');
+
+        $client = $this->getLambdaRuntimeApiClientMock();
+        $handler = $this->getLambdaEventHandlerInterfaceMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        new Runtime($client, $handler, $logger, $process, 0);
+    }
+
     public function testProcessNextEvent()
     {
         $client = $this->getLambdaRuntimeApiClientMock();

@@ -81,6 +81,10 @@ class Runtime
      */
     public function __construct(RuntimeApiClient $client, LambdaEventHandlerInterface $handler, Logger $logger, PhpFpmProcess $phpFpmProcess, int $maxInvocations = 100)
     {
+        if (0 >= $maxInvocations) {
+            throw new \InvalidArgumentException('"maxInvocations" must be greater than 0');
+        }
+
         $this->client = $client;
         $this->handler = $handler;
         $this->invocations = 0;
