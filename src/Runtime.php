@@ -96,6 +96,7 @@ class Runtime
     {
         $apiUrl = getenv('AWS_LAMBDA_RUNTIME_API');
         $logger = new Logger(getenv('YMIR_RUNTIME_LOG_LEVEL') ?: Logger::INFO);
+        $maxInvocations = getenv('YMIR_RUNTIME_MAX_INVOCATIONS') ?: 100;
         $phpFpmProcess = PhpFpmProcess::createForConfig($logger);
         $region = getenv('AWS_REGION');
         $rootDirectory = getenv('LAMBDA_TASK_ROOT');
@@ -121,7 +122,8 @@ class Runtime
                 new PhpScriptLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
             ]),
             $logger,
-            $phpFpmProcess
+            $phpFpmProcess,
+            (int) $maxInvocations
         );
     }
 
