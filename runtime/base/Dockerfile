@@ -1,12 +1,16 @@
 # The container we build here contains everything needed to compile PHP.
 
+# CPU Architecture. Can be "x86_64" or "arm64"
+ARG CPU_ARCHITECTURE
+# Platform used to build the image. Can be "linux/amd64" or "linux/arm64".
+ARG DOCKER_PLATFORM
 
 # Lambda instances use a custom AMI named Amazon Linux 2, as
 # documented under the AWS Lambda Runtimes.
 # https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html
 # AWS provides it a Docker image that we use here:
 # https://github.com/amazonlinux/container-images/tree/amzn2
-FROM public.ecr.aws/lambda/provided:al2
+FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2-${CPU_ARCHITECTURE}
 
 
 # Move to /tmp to compile everything in there.
@@ -72,42 +76,6 @@ RUN mkdir -p ${BUILD_DIR}  \
     ${INSTALL_DIR}/libexec \
     ${INSTALL_DIR}/sbin \
     ${INSTALL_DIR}/share
-
-
-###############################################################################
-# ZLIB Build
-# https://github.com/madler/zlib/releases
-# Needed for:
-#   - openssl
-#   - curl
-#   - php
-# Used By:
-#   - xml2
-ENV VERSION_ZLIB=1.2.13
-ENV ZLIB_BUILD_DIR=${BUILD_DIR}/xml2
-
-RUN set -xe; \
-    mkdir -p ${ZLIB_BUILD_DIR}; \
-# Download and upack the source code
-    curl -Ls  http://zlib.net/zlib-${VERSION_ZLIB}.tar.xz \
-  | tar xJC ${ZLIB_BUILD_DIR} --strip-components=1
-
-# Move into the unpackaged code directory
-WORKDIR  ${ZLIB_BUILD_DIR}/
-
-# Configure the build
-RUN set -xe; \
-    make distclean \
- && CFLAGS="" \
-    CPPFLAGS="-I${INSTALL_DIR}/include  -I/usr/include" \
-    LDFLAGS="-L${INSTALL_DIR}/lib64 -L${INSTALL_DIR}/lib" \
-    ./configure \
-    --prefix=${INSTALL_DIR} \
-    --64
-
-RUN set -xe; \
-    make install \
- && rm ${INSTALL_DIR}/lib/libz.a
 
 ###############################################################################
 # OPENSSL Build

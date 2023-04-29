@@ -1,4 +1,11 @@
-FROM ymir/runtime/base as php-build
+# Base Image to use for build.
+ARG BASE_IMAGE=base
+# CPU Architecture. Can be "x86_64" or "arm64"
+ARG CPU_ARCHITECTURE
+# Platform used to build the image. Can be "linux/amd64" or "linux/arm64".
+ARG DOCKER_PLATFORM
+
+FROM --platform=${DOCKER_PLATFORM} ymirapp/${BASE_IMAGE}:${CPU_ARCHITECTURE} as php-build
 
 ###############################################################################
 # Oniguruma
@@ -55,7 +62,6 @@ RUN set -xe \
     CPPFLAGS="-fstack-protector-strong -fpic -fpie -O3 -I${INSTALL_DIR}/include -I/usr/include -ffunction-sections -fdata-sections" \
     LDFLAGS="-L${INSTALL_DIR}/lib64 -L${INSTALL_DIR}/lib -Wl,-O1 -Wl,--strip-all -Wl,--hash-style=both -pie" \
     ./configure \
-        --build=x86_64-pc-linux-gnu \
         --prefix=${INSTALL_DIR} \
         --enable-option-checking=fatal \
         --enable-sockets \
@@ -69,8 +75,8 @@ RUN set -xe \
         --with-sodium \
         --with-readline \
         --with-openssl \
-        --with-zlib=${INSTALL_DIR} \
-        --with-zlib-dir=${INSTALL_DIR} \
+        --with-zlib \
+        --with-zlib-dir \
         --with-curl \
         --enable-exif \
         --enable-ftp \
@@ -149,7 +155,7 @@ RUN git clone https://github.com/ymirapp/php-runtime.git /tmp/runtime-build \
 # Now we start back from a clean image.
 # We get rid of everything that is unnecessary (build tools, source code, and anything else
 # that might have created intermediate layers for docker) by copying online the /opt directory.
-FROM public.ecr.aws/lambda/provided:al2
+FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2-${CPU_ARCHITECTURE}
 ENV PATH="/opt/bin:${PATH}" \
     LD_LIBRARY_PATH="/opt/ymir/lib64:/opt/ymir/lib"
 

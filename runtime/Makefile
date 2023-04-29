@@ -3,34 +3,46 @@ SHELL := /bin/bash
 
 build: build-php-72.zip build-php-73.zip build-php-74.zip build-php-80.zip build-php-81.zip
 
-build-php%.zip: build-images
+build-php%.zip: publish-images
 	PHP_VERSION=$$(echo $@ | cut -d'.' -f 1 | cut -d'-' -f 2,3); \
-	rm -f ${PWD}/../build/$@; \
-	docker run --rm --entrypoint "/export.sh" --env ARCHIVE_FILENAME=$$PHP_VERSION --volume ${PWD}/../:/ymir --volume ${PWD}/export.sh:/export.sh:ro ymir/runtime/$$PHP_VERSION .
+	rm ${PWD}/../build/$$PHP_VERSION.zip; \
+	rm ${PWD}/../build/arm-$$PHP_VERSION.zip; \
+	docker run --rm --entrypoint "/export.sh" --env ARCHIVE_FILENAME=$$PHP_VERSION --volume ${PWD}/../:/ymir --volume ${PWD}/export.sh:/export.sh:ro ymirapp/php-runtime:$$PHP_VERSION .; \
+	docker run --rm --entrypoint "/export.sh" --env ARCHIVE_FILENAME=arm-$$PHP_VERSION --volume ${PWD}/../:/ymir --volume ${PWD}/export.sh:/export.sh:ro ymirapp/arm-php-runtime:$$PHP_VERSION .
 
-build-images:
-	# Build base Docker image
-	cd base ; docker build -t ymir/runtime/base .
-	# Build PHP Docker images
-	cd php-72 ; docker build -t ymir/runtime/php-72 .
-	cd php-73 ; docker build -t ymir/runtime/php-73 .
-	cd php-74 ; docker build -t ymir/runtime/php-74 .
-	cd php-80 ; docker build -t ymir/runtime/php-80 .
-	cd php-81 ; docker build -t ymir/runtime/php-81 .
+publish-images-%:
+	CPU_ARCHITECTURE=$$(echo '$*' | cut -d '-' -f 2); \
+	DOCKER_PLATFORM=$$(echo '$*' | cut -d '-' -f 1 | sed 's/_/\//'); \
+	if [ "$$CPU_ARCHITECTURE" = "x86_64" ]; then \
+		RUNTIME_REPO="ymirapp/php-runtime"; \
+	else \
+		RUNTIME_REPO="ymirapp/arm-php-runtime"; \
+	fi; \
+	cd base ; depot build -t ymirapp/base:$$CPU_ARCHITECTURE . --push --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
+	cd ../php-72 ; depot build -t $$RUNTIME_REPO:php-72 . --load --push --build-arg BASE_IMAGE=base --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
+	cd ../php-73 ; depot build -t $$RUNTIME_REPO:php-73 . --load --push --build-arg BASE_IMAGE=base --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
+	cd ../php-74 ; depot build -t $$RUNTIME_REPO:php-74 . --load --push --build-arg BASE_IMAGE=base --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
+	cd ../php-80 ; depot build -t $$RUNTIME_REPO:php-80 . --load --push --build-arg BASE_IMAGE=base --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
+	cd ../php-81 ; depot build -t $$RUNTIME_REPO:php-81 . --load --push --build-arg BASE_IMAGE=base --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE
 
-publish-images: publish-php-72 publish-php-73 publish-php-74 publish-php-80 publish-php-81
+publish-images: publish-images-linux_amd64-x86_64 publish-images-linux_arm64-arm64
 
-publish-dev-images: publish-dev-php-72 publish-dev-php-73 publish-dev-php-74 publish-dev-php-80 publish-dev-php-81
+publish-dev-images-%:
+	CPU_ARCHITECTURE=$$(echo '$*' | cut -d '-' -f 2); \
+	DOCKER_PLATFORM=$$(echo '$*' | cut -d '-' -f 1 | sed 's/_/\//'); \
+	if [ "$$CPU_ARCHITECTURE" = "x86_64" ]; then \
+		RUNTIME_REPO="ymirapp/php-runtime-dev"; \
+	else \
+		RUNTIME_REPO="ymirapp/arm-php-runtime-dev"; \
+	fi; \
+	cd base ; depot build -t ymirapp/base-dev:$$CPU_ARCHITECTURE . --push --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
+	cd ../php-72 ; depot build -t $$RUNTIME_REPO:php-72 . --load --push --build-arg BASE_IMAGE=base-dev --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
+	cd ../php-73 ; depot build -t $$RUNTIME_REPO:php-73 . --load --push --build-arg BASE_IMAGE=base-dev --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
+	cd ../php-74 ; depot build -t $$RUNTIME_REPO:php-74 . --load --push --build-arg BASE_IMAGE=base-dev --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
+	cd ../php-80 ; depot build -t $$RUNTIME_REPO:php-80 . --load --push --build-arg BASE_IMAGE=base-dev --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
+	cd ../php-81 ; depot build -t $$RUNTIME_REPO:php-81 . --load --push --build-arg BASE_IMAGE=base-dev --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE
 
-publish-php%: build-images
-	PHP_VERSION=$$(echo $@ | cut -d'.' -f 1 | cut -d'-' -f 2,3); \
-    docker image tag ymir/runtime/$$PHP_VERSION:latest ymirapp/php-runtime:$$PHP_VERSION; \
-    docker image push ymirapp/php-runtime:$$PHP_VERSION
-
-publish-dev-php%: build-images
-	PHP_VERSION=$$(echo $@ | cut -d'.' -f 1 | cut -d'-' -f 3,4); \
-    docker image tag ymir/runtime/$$PHP_VERSION:latest ymirapp/php-runtime-dev:$$PHP_VERSION; \
-    docker image push ymirapp/php-runtime-dev:$$PHP_VERSION
+publish-dev-images: publish-dev-images-linux_amd64-x86_64 publish-dev-images-linux_arm64-arm64
 
 layer-versions:
 	./layer-versions
