@@ -119,7 +119,8 @@ RUN set -xe; \
 
 RUN set -xe; \
     mkdir -p ${RELAY_BUILD_DIR}; \
-    curl -L "https://builds.r2.relay.so/v${VERSION_RELAY_EXTENSION}/relay-v${VERSION_RELAY_EXTENSION}-php8.0-centos7-x86-64.tar.gz" \
+    RELAY_CPU_ARCHITECTURE=$(arch | sed -e 's/arm64/aarch64/;s/amd64\|x86_64/x86-64/') && \
+    curl -L "https://builds.r2.relay.so/v${VERSION_RELAY_EXTENSION}/relay-v${VERSION_RELAY_EXTENSION}-php8.0-centos7-${RELAY_CPU_ARCHITECTURE}.tar.gz" \
     | tar xzC ${RELAY_BUILD_DIR} --strip-components=1
 WORKDIR ${RELAY_BUILD_DIR}/
 RUN cp relay.ini ${INSTALL_DIR}/etc/php/conf.d/50-relay.ini; \
