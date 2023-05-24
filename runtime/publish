@@ -59,6 +59,7 @@ foreach ($regions as $region) {
 
     $results = $layers->map(function (string $description, string $layer) use ($bucket, $lambda) {
             return $lambda->publishLayerVersionAsync([
+                'CompatibleArchitectures' => str_starts_with($layer, 'arm-') ? ['arm64'] : ['x86_64'],
                 'CompatibleRuntimes' => ['provided.al2'],
                 'LayerName' => 'ymir-'.$layer,
                 'Description' => $description,
