@@ -416,7 +416,7 @@ ENV VERSION_RELAY_EXTENSION=0.6.3
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
 # gettext-devel : needed for the --with-gettext flag
-# libicu-devel : needed for
+# libicu-devel : needed for intl
 # libxslt-devel : needed for the XSL extension
 # libzstd-devel: needed for Relay
 # sqlite-devel : Since PHP 7.4 this must be installed (https://github.com/php/php-src/blob/99b8e67615159fc600a615e1e97f2d1cf18f14cb/UPGRADING#L616-L619)
