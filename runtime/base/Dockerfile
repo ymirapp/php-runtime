@@ -93,7 +93,6 @@ ENV CA_BUNDLE="${INSTALL_DIR}/ssl/cert.pem"
 
 RUN set -xe; \
     mkdir -p ${OPENSSL_BUILD_DIR}; \
-# Download and upack the source code
     curl -Ls  https://github.com/openssl/openssl/archive/OpenSSL_${VERSION_OPENSSL//./_}.tar.gz \
   | tar xzC ${OPENSSL_BUILD_DIR} --strip-components=1
 
@@ -110,6 +109,7 @@ RUN set -xe; \
         --prefix=${INSTALL_DIR} \
         --openssldir=${INSTALL_DIR}/ssl \
         --release \
+        enable-tls1_3 \
         no-tests \
         shared \
         zlib
@@ -192,21 +192,20 @@ RUN set -xe; \
 #   - libssh2
 # Needed by:
 #   - php
-ENV VERSION_CURL=7.88.1
+ENV VERSION_CURL=8.1.1
 ENV CURL_BUILD_DIR=${BUILD_DIR}/curl
 
 RUN set -xe; \
-            mkdir -p ${CURL_BUILD_DIR}/bin; \
-curl -Ls https://github.com/curl/curl/archive/curl-${VERSION_CURL//./_}.tar.gz \
-| tar xzC ${CURL_BUILD_DIR} --strip-components=1
-
+    mkdir -p ${CURL_BUILD_DIR}/bin; \
+    curl -Ls https://github.com/curl/curl/archive/curl-${VERSION_CURL//./_}.tar.gz \
+    | tar xzC ${CURL_BUILD_DIR} --strip-components=1
 
 WORKDIR  ${CURL_BUILD_DIR}/
 
 RUN set -xe; \
     ./buildconf \
  && CFLAGS="" \
-    CPPFLAGS="-I${INSTALL_DIR}/include  -I/usr/include" \
+    CPPFLAGS="-I${INSTALL_DIR}/include -I/usr/include" \
     LDFLAGS="-L${INSTALL_DIR}/lib64 -L${INSTALL_DIR}/lib" \
     ./configure \
     --prefix=${INSTALL_DIR} \
