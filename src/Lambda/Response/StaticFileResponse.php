@@ -38,7 +38,7 @@ class StaticFileResponse implements ResponseInterface
     /**
      * Constructor.
      */
-    public function __construct(string $filePath, ?MimeTypesInterface $mimeTypes = null)
+    public function __construct(string $filePath, MimeTypesInterface $mimeTypes = null)
     {
         $this->filePath = $filePath;
         $this->mimeTypes = $mimeTypes ?? new MimeTypes();
