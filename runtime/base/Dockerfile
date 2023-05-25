@@ -419,9 +419,10 @@ ENV VERSION_RELAY_EXTENSION=0.6.3
 # libicu-devel : needed for intl
 # libxslt-devel : needed for the XSL extension
 # libzstd-devel: needed for Relay
+# lz4-devel : needed for Relay
 # sqlite-devel : Since PHP 7.4 this must be installed (https://github.com/php/php-src/blob/99b8e67615159fc600a615e1e97f2d1cf18f14cb/UPGRADING#L616-L619)
 # re2c : needed for PHP 7.4
-RUN LD_LIBRARY_PATH= yum install -y re2c readline-devel gettext-devel libicu-devel libxslt-devel libzstd-devel sqlite-devel
+RUN LD_LIBRARY_PATH= yum install -y re2c readline-devel gettext-devel libicu-devel libxslt-devel libzstd-devel lz4-devel sqlite-devel
 
 RUN cp -a /usr/lib64/libgcrypt.so* ${INSTALL_DIR}/lib64/
 
@@ -444,6 +445,9 @@ RUN cp -a /usr/lib64/libsqlite3*.so* ${INSTALL_DIR}/lib64/
 
 # Copy zstd shared libs that are not present in amazonlinux2
 RUN cp /usr/lib64/libzstd.so.1 /opt/ymir/lib/libzstd.so.1
+
+# Copy lz4 shared libs that are not present in amazonlinux2
+RUN cp /usr/lib64/liblz4.so.1 /opt/ymir/lib/liblz4.so.1
 
 # Copy ImageMagick shared libs that are not present in amazonlinux2
 RUN cp /usr/lib64/libpng15.so.15 /opt/ymir/lib/libpng15.so.15
