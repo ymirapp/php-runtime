@@ -93,9 +93,8 @@ class HttpResponse implements ResponseInterface
         $headers = $this->getFormattedHeaders();
         $headersKey = '1.0' === $this->formatVersion ? 'multiValueHeaders' : 'headers';
 
-        // Compress HTML responses if they haven't already. This reduces the chance of hitting the 6MB Lambda payload
-        // limit since compression happens after the response gets sent back.
-        if ($this->shouldCompressResponse($headers)) {
+        // Compress the response body if we hit the 6MB Lambda payload limit and the response supports it.
+        if ($this->shouldCompressResponse($body, $headers)) {
             $body = (string) gzencode($body, 9);
             $headers['Content-Encoding'] = ['gzip'];
             $headers['Content-Length'] = [strlen($body)];
@@ -151,9 +150,9 @@ class HttpResponse implements ResponseInterface
     /**
      * Determine if we should compress the HTTP response or not.
      */
-    private function shouldCompressResponse(Collection $headers): bool
+    private function shouldCompressResponse(string $body, Collection $headers): bool
     {
-        if (!$this->isCompressible() || isset($headers['Content-Encoding']) || !isset($headers['Content-Type']) || !is_array($headers['Content-Type'])) {
+        if (!$this->isCompressible() || mb_strlen($body) < 6000000 || isset($headers['Content-Encoding']) || !isset($headers['Content-Type']) || !is_array($headers['Content-Type'])) {
             return false;
         }
 

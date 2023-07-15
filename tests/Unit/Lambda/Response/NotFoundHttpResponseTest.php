@@ -36,11 +36,9 @@ class NotFoundHttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => $statusCode,
-            'body' => base64_encode(gzencode($body, 9)),
+            'body' => base64_encode($body),
             'headers' => [
                 'Content-Type' => 'text/html',
-                'Content-Encoding' => 'gzip',
-                'Content-Length' => 1993,
             ],
         ], (new NotFoundHttpResponse($message, $templatesDirectory))->getResponseData());
     }
@@ -50,11 +48,9 @@ class NotFoundHttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 404,
-            'body' => base64_encode(gzencode('', 9)),
+            'body' => base64_encode(''),
             'headers' => [
                 'Content-Type' => 'text/html',
-                'Content-Encoding' => 'gzip',
-                'Content-Length' => 20,
             ],
         ], (new NotFoundHttpResponse('foo'))->getResponseData());
     }

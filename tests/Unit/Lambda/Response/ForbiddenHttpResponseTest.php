@@ -36,11 +36,9 @@ class ForbiddenHttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => $statusCode,
-            'body' => base64_encode(gzencode($body, 9)),
+            'body' => base64_encode($body),
             'headers' => [
                 'Content-Type' => 'text/html',
-                'Content-Encoding' => 'gzip',
-                'Content-Length' => 1993,
             ],
         ], (new ForbiddenHttpResponse($message, $templatesDirectory))->getResponseData());
     }
@@ -50,11 +48,9 @@ class ForbiddenHttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 403,
-            'body' => base64_encode(gzencode('', 9)),
+            'body' => base64_encode(''),
             'headers' => [
                 'Content-Type' => 'text/html',
-                'Content-Encoding' => 'gzip',
-                'Content-Length' => 20,
             ],
         ], (new ForbiddenHttpResponse('foo'))->getResponseData());
     }

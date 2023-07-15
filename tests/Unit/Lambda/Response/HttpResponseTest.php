@@ -39,11 +39,9 @@ class HttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => base64_encode(gzencode($body, 9)),
+            'body' => base64_encode($body),
             'multiValueHeaders' => [
                 'Content-Type' => ['text/html'],
-                'Content-Encoding' => ['gzip'],
-                'Content-Length' => [23],
             ],
         ], $response->getResponseData());
     }
@@ -70,12 +68,10 @@ class HttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => base64_encode(gzencode($body, 9)),
+            'body' => base64_encode($body),
             'multiValueHeaders' => [
                 'Foo' => ['bar'],
                 'Content-Type' => ['text/html'],
-                'Content-Encoding' => ['gzip'],
-                'Content-Length' => [23],
             ],
         ], $response->getResponseData());
     }
@@ -88,11 +84,9 @@ class HttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => base64_encode(gzencode($body, 9)),
+            'body' => base64_encode($body),
             'multiValueHeaders' => [
                 'Content-Type' => ['text/html; charset=UTF-8'],
-                'Content-Encoding' => ['gzip'],
-                'Content-Length' => [23],
             ],
         ], $response->getResponseData());
     }
@@ -105,23 +99,37 @@ class HttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => base64_encode(gzencode($body, 9)),
+            'body' => base64_encode($body),
             'multiValueHeaders' => [
                 'Content-Type' => ['application/json'],
-                'Content-Encoding' => ['gzip'],
-                'Content-Length' => [23],
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion1DoesntGzipEncodeIfCompressibleIsFalse()
+    {
+        $body = str_repeat('a', 6 * 1024 * 1024);
+        $response = new HttpResponse($body, [], 200, '1.0', false);
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => base64_encode($body),
+            'multiValueHeaders' => [
+                'Content-Type' => ['text/html'],
             ],
         ], $response->getResponseData());
     }
 
     public function testGetResponseDataWithFormatVersion1DoesntGzipEncodeIfContentEncodingHeaderPresent()
     {
-        $response = new HttpResponse('foo', ['content-encoding' => 'foo']);
+        $body = str_repeat('a', 6 * 1024 * 1024);
+        $response = new HttpResponse($body, ['content-encoding' => 'foo']);
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'Zm9v',
+            'body' => base64_encode($body),
             'multiValueHeaders' => [
                 'Content-Encoding' => ['foo'],
                 'Content-Type' => ['text/html'],
@@ -129,16 +137,36 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion1DoesntGzipEncodeIfResponseIsntCompressible()
+    public function testGetResponseDataWithFormatVersion1GzipEncodesResponseForHtmlContentType()
     {
-        $response = new HttpResponse('foo', [], 200, '1.0', false);
+        $body = str_repeat('a', 6 * 1024 * 1024);
+        $response = new HttpResponse($body, [], 200, '1.0');
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'Zm9v',
+            'body' => base64_encode(gzencode($body, 9)),
             'multiValueHeaders' => [
                 'Content-Type' => ['text/html'],
+                'Content-Encoding' => ['gzip'],
+                'Content-Length' => [6132],
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion1GzipEncodesResponseForJsonContentType()
+    {
+        $body = str_repeat('a', 6 * 1024 * 1024);
+        $response = new HttpResponse($body, ['content-type' => 'application/json'], 200, '1.0');
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => base64_encode(gzencode($body, 9)),
+            'multiValueHeaders' => [
+                'Content-Type' => ['application/json'],
+                'Content-Encoding' => ['gzip'],
+                'Content-Length' => [6132],
             ],
         ], $response->getResponseData());
     }
@@ -161,11 +189,9 @@ class HttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => base64_encode(gzencode($body, 9)),
+            'body' => base64_encode($body),
             'headers' => [
                 'Content-Type' => 'text/html',
-                'Content-Encoding' => 'gzip',
-                'Content-Length' => 23,
             ],
         ], $response->getResponseData());
     }
@@ -192,12 +218,10 @@ class HttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => base64_encode(gzencode($body, 9)),
+            'body' => base64_encode($body),
             'headers' => [
                 'Foo' => 'bar',
                 'Content-Type' => 'text/html',
-                'Content-Encoding' => 'gzip',
-                'Content-Length' => 23,
             ],
         ], $response->getResponseData());
     }
@@ -210,11 +234,9 @@ class HttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => base64_encode(gzencode($body, 9)),
+            'body' => base64_encode($body),
             'headers' => [
                 'Content-Type' => 'text/html; charset=UTF-8',
-                'Content-Encoding' => 'gzip',
-                'Content-Length' => 23,
             ],
         ], $response->getResponseData());
     }
@@ -227,11 +249,9 @@ class HttpResponseTest extends TestCase
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => base64_encode(gzencode($body, 9)),
+            'body' => base64_encode($body),
             'headers' => [
                 'Content-Type' => 'application/json',
-                'Content-Encoding' => 'gzip',
-                'Content-Length' => 23,
             ],
         ], $response->getResponseData());
     }
@@ -245,23 +265,37 @@ class HttpResponseTest extends TestCase
             'isBase64Encoded' => true,
             'statusCode' => 200,
             'cookies' => ['foo', 'bar'],
-            'body' => base64_encode(gzencode($body, 9)),
+            'body' => base64_encode($body),
             'headers' => [
                 'Content-Type' => 'text/html',
-                'Content-Encoding' => 'gzip',
-                'Content-Length' => 23,
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion2DoesntGzipEncodeIfCompressibleIsFalse()
+    {
+        $body = str_repeat('a', 6 * 1024 * 1024);
+        $response = new HttpResponse($body, [], 200, '2.0', false);
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => base64_encode($body),
+            'headers' => [
+                'Content-Type' => 'text/html',
             ],
         ], $response->getResponseData());
     }
 
     public function testGetResponseDataWithFormatVersion2DoesntGzipEncodeIfContentEncodingHeaderPresent()
     {
-        $response = new HttpResponse('foo', ['content-encoding' => 'foo'], 200, '2.0');
+        $body = str_repeat('a', 6 * 1024 * 1024);
+        $response = new HttpResponse($body, ['content-encoding' => 'foo'], 200, '2.0');
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'Zm9v',
+            'body' => base64_encode($body),
             'headers' => [
                 'Content-Encoding' => 'foo',
                 'Content-Type' => 'text/html',
@@ -269,16 +303,36 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion2DoesntGzipEncodeIfResponseIsntCompressible()
+    public function testGetResponseDataWithFormatVersion2GzipEncodesResponseForHtmlContentType()
     {
-        $response = new HttpResponse('foo', [], 200, '2.0', false);
+        $body = str_repeat('a', 6 * 1024 * 1024);
+        $response = new HttpResponse($body, [], 200, '2.0');
 
         $this->assertSame([
             'isBase64Encoded' => true,
             'statusCode' => 200,
-            'body' => 'Zm9v',
+            'body' => base64_encode(gzencode($body, 9)),
             'headers' => [
                 'Content-Type' => 'text/html',
+                'Content-Encoding' => 'gzip',
+                'Content-Length' => 6132,
+            ],
+        ], $response->getResponseData());
+    }
+
+    public function testGetResponseDataWithFormatVersion2GzipEncodesResponseForJsonContentType()
+    {
+        $body = str_repeat('a', 6 * 1024 * 1024);
+        $response = new HttpResponse($body, ['content-type' => 'application/json'], 200, '2.0');
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => base64_encode(gzencode($body, 9)),
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Content-Encoding' => 'gzip',
+                'Content-Length' => 6132,
             ],
         ], $response->getResponseData());
     }
