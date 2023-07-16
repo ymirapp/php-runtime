@@ -85,7 +85,7 @@ RUN mkdir -p ${BUILD_DIR}  \
 # Needed by:
 #   - curl
 #   - php
-ENV VERSION_OPENSSL=1.1.1t
+ENV VERSION_OPENSSL=1.1.1u
 ENV OPENSSL_BUILD_DIR=${BUILD_DIR}/openssl
 ENV CA_BUNDLE_SOURCE="https://curl.se/ca/cacert.pem"
 ENV CA_BUNDLE="${INSTALL_DIR}/ssl/cert.pem"
@@ -126,7 +126,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_LIBSSH2=1.10.0
+ENV VERSION_LIBSSH2=1.11.0
 ENV LIBSSH2_BUILD_DIR=${BUILD_DIR}/libssh2
 
 RUN set -xe; \
@@ -162,7 +162,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_NGHTTP2=1.52.0
+ENV VERSION_NGHTTP2=1.55.1
 ENV NGHTTP2_BUILD_DIR=${BUILD_DIR}/nghttp2
 
 RUN set -xe; \
@@ -192,7 +192,7 @@ RUN set -xe; \
 #   - libssh2
 # Needed by:
 #   - php
-ENV VERSION_CURL=8.1.1
+ENV VERSION_CURL=8.1.2
 ENV CURL_BUILD_DIR=${BUILD_DIR}/curl
 
 RUN set -xe; \
@@ -235,12 +235,12 @@ RUN set -xe; \
 
 ###############################################################################
 # LIBXML2 Build
-# https://github.com/GNOME/libxml2/releases
+# https://github.com/GNOME/libxml2/tags
 # Uses:
 #   - zlib
 # Needed by:
 #   - php
-ENV VERSION_XML2=2.10.4
+ENV VERSION_XML2=2.11.4
 ENV XML2_BUILD_DIR=${BUILD_DIR}/xml2
 
 RUN set -xe; \
@@ -278,7 +278,7 @@ RUN set -xe; \
 # https://github.com/nih-at/libzip/releases
 # Needed by:
 #   - php
-ENV VERSION_ZIP=1.9.2
+ENV VERSION_ZIP=1.10.0
 ENV ZIP_BUILD_DIR=${BUILD_DIR}/zip
 
 RUN set -xe; \
@@ -340,7 +340,7 @@ RUN set -xe; \
 # Needed by:
 #   - imagick
 ENV LIBDE265_BUILD_DIR=${BUILD_DIR}/libde265
-ENV VERSION_LIBDE265=1.0.11
+ENV VERSION_LIBDE265=1.0.12
 
 RUN set -xe; \
     mkdir -p ${LIBDE265_BUILD_DIR}; \
@@ -362,7 +362,7 @@ RUN set -xe; \
 # Needed by:
 #   - imagick
 ENV LIBHEIF_BUILD_DIR=${BUILD_DIR}/libheif
-ENV VERSION_LIBHEIF=1.15.2
+ENV VERSION_LIBHEIF=1.16.2
 
 RUN set -xe; \
     mkdir -p ${LIBHEIF_BUILD_DIR}; \
@@ -410,7 +410,7 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV RELAY_BUILD_DIR=${BUILD_DIR}/relay
-ENV VERSION_RELAY_EXTENSION=0.6.3
+ENV VERSION_RELAY_EXTENSION=0.6.5
 
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
