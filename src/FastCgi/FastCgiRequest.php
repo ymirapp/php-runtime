@@ -72,7 +72,7 @@ class FastCgiRequest implements ProvidesRequestData
             'PATH_INFO' => $pathInfo,
             'PHP_SELF' => '/'.trim($self, '/'),
             'QUERY_STRING' => $queryString,
-            'REMOTE_ADDR' => $headers['x-forwarded-for'][0] ?? $event->getSourceIp(),
+            'REMOTE_ADDR' => $event->getSourceIp(),
             'REMOTE_PORT' => $port,
             'REQUEST_METHOD' => $method,
             'REQUEST_TIME' => time(),
