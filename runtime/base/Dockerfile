@@ -85,7 +85,7 @@ RUN mkdir -p ${BUILD_DIR}  \
 # Needed by:
 #   - curl
 #   - php
-ENV VERSION_OPENSSL=1.1.1u
+ENV VERSION_OPENSSL=1.1.1w
 ENV OPENSSL_BUILD_DIR=${BUILD_DIR}/openssl
 ENV CA_BUNDLE_SOURCE="https://curl.se/ca/cacert.pem"
 ENV CA_BUNDLE="${INSTALL_DIR}/ssl/cert.pem"
@@ -162,7 +162,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_NGHTTP2=1.55.1
+ENV VERSION_NGHTTP2=1.56.0
 ENV NGHTTP2_BUILD_DIR=${BUILD_DIR}/nghttp2
 
 RUN set -xe; \
@@ -192,7 +192,7 @@ RUN set -xe; \
 #   - libssh2
 # Needed by:
 #   - php
-ENV VERSION_CURL=8.1.2
+ENV VERSION_CURL=8.3.0
 ENV CURL_BUILD_DIR=${BUILD_DIR}/curl
 
 RUN set -xe; \
@@ -240,7 +240,7 @@ RUN set -xe; \
 #   - zlib
 # Needed by:
 #   - php
-ENV VERSION_XML2=2.11.4
+ENV VERSION_XML2=2.11.5
 ENV XML2_BUILD_DIR=${BUILD_DIR}/xml2
 
 RUN set -xe; \
@@ -278,7 +278,7 @@ RUN set -xe; \
 # https://github.com/nih-at/libzip/releases
 # Needed by:
 #   - php
-ENV VERSION_ZIP=1.10.0
+ENV VERSION_ZIP=1.10.1
 ENV ZIP_BUILD_DIR=${BUILD_DIR}/zip
 
 RUN set -xe; \
@@ -309,7 +309,7 @@ RUN set -xe; \
 #
 # Needed by:
 #   - php
-ENV VERSION_LIBSODIUM=1.0.18
+ENV VERSION_LIBSODIUM=1.0.19
 ENV LIBSODIUM_BUILD_DIR=${BUILD_DIR}/libsodium
 
 RUN set -xe; \
@@ -410,7 +410,7 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV RELAY_BUILD_DIR=${BUILD_DIR}/relay
-ENV VERSION_RELAY_EXTENSION=0.6.5
+ENV VERSION_RELAY_EXTENSION=0.6.7
 
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
