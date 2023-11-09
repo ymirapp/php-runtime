@@ -36,8 +36,7 @@
         "phpmd/phpmd": "^2.7",
         "phpro/grumphp": "^1.0",
         "phpstan/phpstan": "^1.0",
-        "phpunit/phpunit": "^9.0",
-        "sebastian/phpcpd": "^6.0"
+        "phpunit/phpunit": "^8.0"
     },
     "config": {
         "allow-plugins": {

@@ -1,5 +1,8 @@
 grumphp:
   process_timeout: 120
+  environment:
+    variables:
+      PHP_CS_FIXER_IGNORE_ENV: '1'
   tasks:
     composer: ~
     git_commit_message:
@@ -19,8 +22,6 @@ grumphp:
             - revert
             - style
             - test
-    phpcpd:
-      directory: ['./src']
     phpcsfixer2:
       allow_risky: true
       config: '.php-cs-fixer.dist.php'
@@ -39,7 +40,6 @@ grumphp:
     code_quality:
       tasks:
         - composer
-        - phpcpd
         - phpcsfixer2
         - phplint
         - phpmd
