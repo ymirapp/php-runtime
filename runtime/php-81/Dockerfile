@@ -16,7 +16,7 @@ FROM --platform=${DOCKER_PLATFORM} ymirapp/${BASE_IMAGE}:${CPU_ARCHITECTURE} as 
 # https://github.com/kkos/oniguruma/releases
 # Needed by:
 #   - php mbstring
-ENV VERSION_ONIG=6.9.8
+ENV VERSION_ONIG=6.9.9
 ENV ONIG_BUILD_DIR=${BUILD_DIR}/oniguruma
 RUN set -xe; \
     mkdir -p ${ONIG_BUILD_DIR}; \
