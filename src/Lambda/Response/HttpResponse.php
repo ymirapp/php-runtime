@@ -152,7 +152,7 @@ class HttpResponse implements ResponseInterface
      */
     private function shouldCompressResponse(string $body, Collection $headers): bool
     {
-        if (!$this->isCompressible() || mb_strlen($body) < 6000000 || isset($headers['Content-Encoding']) || !isset($headers['Content-Type']) || !is_array($headers['Content-Type'])) {
+        if (!$this->isCompressible() || mb_strlen(base64_encode($body)) < 6000000 || isset($headers['Content-Encoding']) || !isset($headers['Content-Type']) || !is_array($headers['Content-Type'])) {
             return false;
         }
 

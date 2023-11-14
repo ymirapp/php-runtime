@@ -108,7 +108,7 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion1DoesntGzipEncodeIfCompressibleIsFalse()
     {
-        $body = str_repeat('a', 6 * 1024 * 1024);
+        $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, [], 200, '1.0', false);
 
         $this->assertSame([
@@ -123,7 +123,7 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion1DoesntGzipEncodeIfContentEncodingHeaderPresent()
     {
-        $body = str_repeat('a', 6 * 1024 * 1024);
+        $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, ['content-encoding' => 'foo']);
 
         $this->assertSame([
@@ -139,7 +139,7 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion1GzipEncodesResponseForHtmlContentType()
     {
-        $body = str_repeat('a', 6 * 1024 * 1024);
+        $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, [], 200, '1.0');
 
         $this->assertSame([
@@ -149,14 +149,14 @@ class HttpResponseTest extends TestCase
             'multiValueHeaders' => [
                 'Content-Type' => ['text/html'],
                 'Content-Encoding' => ['gzip'],
-                'Content-Length' => [6132],
+                'Content-Length' => [5560],
             ],
         ], $response->getResponseData());
     }
 
     public function testGetResponseDataWithFormatVersion1GzipEncodesResponseForJsonContentType()
     {
-        $body = str_repeat('a', 6 * 1024 * 1024);
+        $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, ['content-type' => 'application/json'], 200, '1.0');
 
         $this->assertSame([
@@ -166,7 +166,7 @@ class HttpResponseTest extends TestCase
             'multiValueHeaders' => [
                 'Content-Type' => ['application/json'],
                 'Content-Encoding' => ['gzip'],
-                'Content-Length' => [6132],
+                'Content-Length' => [5560],
             ],
         ], $response->getResponseData());
     }
@@ -274,7 +274,7 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion2DoesntGzipEncodeIfCompressibleIsFalse()
     {
-        $body = str_repeat('a', 6 * 1024 * 1024);
+        $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, [], 200, '2.0', false);
 
         $this->assertSame([
@@ -289,7 +289,7 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion2DoesntGzipEncodeIfContentEncodingHeaderPresent()
     {
-        $body = str_repeat('a', 6 * 1024 * 1024);
+        $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, ['content-encoding' => 'foo'], 200, '2.0');
 
         $this->assertSame([
@@ -305,7 +305,7 @@ class HttpResponseTest extends TestCase
 
     public function testGetResponseDataWithFormatVersion2GzipEncodesResponseForHtmlContentType()
     {
-        $body = str_repeat('a', 6 * 1024 * 1024);
+        $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, [], 200, '2.0');
 
         $this->assertSame([
@@ -315,14 +315,14 @@ class HttpResponseTest extends TestCase
             'headers' => [
                 'Content-Type' => 'text/html',
                 'Content-Encoding' => 'gzip',
-                'Content-Length' => 6132,
+                'Content-Length' => 5560,
             ],
         ], $response->getResponseData());
     }
 
     public function testGetResponseDataWithFormatVersion2GzipEncodesResponseForJsonContentType()
     {
-        $body = str_repeat('a', 6 * 1024 * 1024);
+        $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, ['content-type' => 'application/json'], 200, '2.0');
 
         $this->assertSame([
@@ -332,7 +332,7 @@ class HttpResponseTest extends TestCase
             'headers' => [
                 'Content-Type' => 'application/json',
                 'Content-Encoding' => 'gzip',
-                'Content-Length' => 6132,
+                'Content-Length' => 5560,
             ],
         ], $response->getResponseData());
     }
