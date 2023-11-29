@@ -14,7 +14,8 @@ jobs:
     steps:
       - uses: google-github-actions/release-please-action@v3
         with:
-          release-type: php
-          pull-request-title-pattern: 'chore: release ${version}'
-          skip-labeling: true
           changelog-types: '[{"type":"feat","section":"Features","hidden":false},{"type":"fix","section":"Bug Fixes","hidden":false},{"type":"chore","section":"Miscellaneous","hidden":true}]'
+          bootstrap-sha: 142d5c1a3cb4730cdc3cef4668fa73a8cecd3b22
+          pull-request-title-pattern: 'chore: release ${version}'
+          release-type: php
+          skip-labeling: true
