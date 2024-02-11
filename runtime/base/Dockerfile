@@ -162,7 +162,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_NGHTTP2=1.58.0
+ENV VERSION_NGHTTP2=1.59.0
 ENV NGHTTP2_BUILD_DIR=${BUILD_DIR}/nghttp2
 
 RUN set -xe; \
@@ -192,7 +192,7 @@ RUN set -xe; \
 #   - libssh2
 # Needed by:
 #   - php
-ENV VERSION_CURL=8.4.0
+ENV VERSION_CURL=8.6.0
 ENV CURL_BUILD_DIR=${BUILD_DIR}/curl
 
 RUN set -xe; \
@@ -240,7 +240,7 @@ RUN set -xe; \
 #   - zlib
 # Needed by:
 #   - php
-ENV VERSION_XML2=2.11.5
+ENV VERSION_XML2=2.12.5
 ENV XML2_BUILD_DIR=${BUILD_DIR}/xml2
 
 RUN set -xe; \
@@ -340,7 +340,7 @@ RUN set -xe; \
 # Needed by:
 #   - imagick
 ENV LIBDE265_BUILD_DIR=${BUILD_DIR}/libde265
-ENV VERSION_LIBDE265=1.0.12
+ENV VERSION_LIBDE265=1.0.15
 
 RUN set -xe; \
     mkdir -p ${LIBDE265_BUILD_DIR}; \
@@ -362,7 +362,7 @@ RUN set -xe; \
 # Needed by:
 #   - imagick
 ENV LIBHEIF_BUILD_DIR=${BUILD_DIR}/libheif
-ENV VERSION_LIBHEIF=1.16.2
+ENV VERSION_LIBHEIF=1.17.6
 
 RUN set -xe; \
     mkdir -p ${LIBHEIF_BUILD_DIR}; \
@@ -410,7 +410,7 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV RELAY_BUILD_DIR=${BUILD_DIR}/relay
-ENV VERSION_RELAY_EXTENSION=0.6.7
+ENV VERSION_RELAY_EXTENSION=0.7.0
 
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
