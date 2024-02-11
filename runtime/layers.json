@@ -5,10 +5,12 @@
     "arm-php-80": "Ymir PHP 8.0 runtime (64-bit ARM Architecture)",
     "arm-php-81": "Ymir PHP 8.1 runtime (64-bit ARM Architecture)",
     "arm-php-82": "Ymir PHP 8.2 runtime (64-bit ARM Architecture)",
+    "arm-php-83": "Ymir PHP 8.3 runtime (64-bit ARM Architecture)",
     "php-72": "Ymir PHP 7.2 runtime (64-bit x86 Architecture)",
     "php-73": "Ymir PHP 7.3 runtime (64-bit x86 Architecture)",
     "php-74": "Ymir PHP 7.4 runtime (64-bit x86 Architecture)",
     "php-80": "Ymir PHP 8.0 runtime (64-bit x86 Architecture)",
     "php-81": "Ymir PHP 8.1 runtime (64-bit x86 Architecture)",
-    "php-82": "Ymir PHP 8.2 runtime (64-bit x86 Architecture)"
+    "php-82": "Ymir PHP 8.2 runtime (64-bit x86 Architecture)",
+    "php-83": "Ymir PHP 8.3 runtime (64-bit x86 Architecture)"
 }

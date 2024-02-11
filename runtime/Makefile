@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 .PHONY: build build-images publish
 
-build: build-php-72.zip build-php-73.zip build-php-74.zip build-php-80.zip build-php-81.zip build-php-82.zip
+build: build-php-72.zip build-php-73.zip build-php-74.zip build-php-80.zip build-php-81.zip build-php-82.zip build-php-83.zip
 
 build-php%.zip: publish-images
 	PHP_VERSION=$$(echo $@ | cut -d'.' -f 1 | cut -d'-' -f 2,3); \
@@ -24,7 +24,8 @@ publish-images-%:
 	cd ../php-74 ; depot build -t $$RUNTIME_REPO:php-74 . --load --push --build-arg BASE_IMAGE=base --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
 	cd ../php-80 ; depot build -t $$RUNTIME_REPO:php-80 . --load --push --build-arg BASE_IMAGE=base --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
 	cd ../php-81 ; depot build -t $$RUNTIME_REPO:php-81 . --load --push --build-arg BASE_IMAGE=base --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
-    cd ../php-82 ; depot build -t $$RUNTIME_REPO:php-82 . --load --push --build-arg BASE_IMAGE=base --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE
+    cd ../php-82 ; depot build -t $$RUNTIME_REPO:php-82 . --load --push --build-arg BASE_IMAGE=base --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
+    cd ../php-83 ; depot build -t $$RUNTIME_REPO:php-83 . --load --push --build-arg BASE_IMAGE=base --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE
 
 publish-images: publish-images-linux_amd64-x86_64 publish-images-linux_arm64-arm64
 
@@ -42,7 +43,8 @@ publish-dev-images-%:
 	cd ../php-74 ; depot build -t $$RUNTIME_REPO:php-74 . --load --push --build-arg BASE_IMAGE=base-dev --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
 	cd ../php-80 ; depot build -t $$RUNTIME_REPO:php-80 . --load --push --build-arg BASE_IMAGE=base-dev --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
 	cd ../php-81 ; depot build -t $$RUNTIME_REPO:php-81 . --load --push --build-arg BASE_IMAGE=base-dev --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
-    cd ../php-82 ; depot build -t $$RUNTIME_REPO:php-82 . --load --push --build-arg BASE_IMAGE=base-dev --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE
+    cd ../php-82 ; depot build -t $$RUNTIME_REPO:php-82 . --load --push --build-arg BASE_IMAGE=base-dev --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE; \
+    cd ../php-83 ; depot build -t $$RUNTIME_REPO:php-83 . --load --push --build-arg BASE_IMAGE=base-dev --platform=$$DOCKER_PLATFORM --build-arg DOCKER_PLATFORM=$$DOCKER_PLATFORM --build-arg CPU_ARCHITECTURE=$$CPU_ARCHITECTURE
 
 publish-dev-images: publish-dev-images-linux_amd64-x86_64 publish-dev-images-linux_arm64-arm64
 
