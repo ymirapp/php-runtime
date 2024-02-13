@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/ymirapp/php-runtime/compare/v1.11.2...v1.12.0) (2024-02-13)
+
+
+### Features
+
+* add php 8.3 ([db3ed1c](https://github.com/ymirapp/php-runtime/commit/db3ed1c21cf5395f8e5a5a9fe9b6f9d4c9d2b514))
+
 ## [1.11.2](https://github.com/ymirapp/php-runtime/compare/v1.11.1...v1.11.2) (2023-11-28)
 
 
