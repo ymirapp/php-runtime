@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/ymirapp/php-runtime/compare/v1.12.0...v1.12.1) (2024-02-29)
+
+
+### Bug Fixes
+
+* module api is `20230830` and not `20230831` ([c2bd09a](https://github.com/ymirapp/php-runtime/commit/c2bd09aae6749d3c5e1f22b3be74992c937ae3f2))
+
 ## [1.12.0](https://github.com/ymirapp/php-runtime/compare/v1.11.2...v1.12.0) (2024-02-13)
 
 
