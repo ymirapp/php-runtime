@@ -393,10 +393,10 @@ RUN set -xe; \
     curl -Ls https://github.com/strukturag/libheif/releases/download/v${VERSION_LIBHEIF}/libheif-${VERSION_LIBHEIF}.tar.gz \
     | tar xzC ${LIBHEIF_BUILD_DIR} --strip-components=1
 
-WORKDIR ${LIBHEIF_BUILD_DIR}
+WORKDIR ${LIBHEIF_BUILD_DIR}/build
 
 RUN set -xe; \
-    ./configure --prefix ${INSTALL_DIR} --exec-prefix ${INSTALL_DIR}; \
+    cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} ..; \
     make -j $(nproc); \
     make install
 
