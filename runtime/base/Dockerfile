@@ -184,6 +184,30 @@ RUN set -xe; \
     make install
 
 ###############################################################################
+# LIBPSL
+# This adds support for the public suffix list in curl.
+# https://github.com/rockdaboot/libpsl/releases
+# Needed by:
+#   - curl
+ENV VERSION_LIBPSL=0.21.5
+ENV LIBPSL_BUILD_DIR=${BUILD_DIR}/libpsl
+
+RUN set -xe; \
+    mkdir -p ${LIBPSL_BUILD_DIR}; \
+    curl -Ls https://github.com/rockdaboot/libpsl/releases/download/${VERSION_LIBPSL}/libpsl-${VERSION_LIBPSL}.tar.gz \
+    | tar xzC ${LIBPSL_BUILD_DIR} --strip-components=1
+
+WORKDIR  ${LIBPSL_BUILD_DIR}/
+
+RUN set -xe; \
+    CFLAGS="" \
+    CPPFLAGS="-I${INSTALL_DIR}/include -I/usr/include" \
+    LDFLAGS="-L${INSTALL_DIR}/lib64 -L${INSTALL_DIR}/lib" \
+    ./configure \
+    --prefix=${INSTALL_DIR} \
+  && make -j $(nproc) && make install
+
+###############################################################################
 # CURL Build
 # https://github.com/curl/curl/releases
 # Needs:
