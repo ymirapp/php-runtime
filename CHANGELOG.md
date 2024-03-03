@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.1](https://github.com/ymirapp/php-runtime/compare/v1.12.0...v1.12.1) (2024-03-03)
+
+
+### Bug Fixes
+
+* fix broken curl build by adding libpsl ([70729cf](https://github.com/ymirapp/php-runtime/commit/70729cf630fe180382628870bc57e15c8820fe80))
+* fix libheif build process ([85cb429](https://github.com/ymirapp/php-runtime/commit/85cb429b64dac11ace02fd44d9720ebb8bdfc262))
+
 ## [1.12.1](https://github.com/ymirapp/php-runtime/compare/v1.12.0...v1.12.1) (2024-03-01)
 
 
