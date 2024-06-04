@@ -51,7 +51,7 @@ class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
 
         $path = ltrim($path, '/');
 
-        if ($this->isWebDirectoryMissing($path)) {
+        if (!str_starts_with($path, 'web/')) {
             $path = 'web/'.$path;
         }
 
@@ -88,13 +88,5 @@ class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
         $application = file_get_contents($this->rootDirectory.'/config/application.php');
 
         return is_string($application) && 1 === preg_match('/Config::define\(\s*(\'|\")MULTISITE\1\s*,\s*true\s*\)/', $application);
-    }
-
-    /**
-     * Checks if the given path is missing the "web" directory.
-     */
-    private function isWebDirectoryMissing(string $path): bool
-    {
-        return 0 === stripos($path, 'wp/') || 0 === stripos($path, 'app/');
     }
 }

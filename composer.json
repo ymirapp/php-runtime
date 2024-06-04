@@ -29,6 +29,7 @@
         "monolog/monolog": "^1.0",
         "ralouphie/mimey": "^2.1",
         "symfony/http-client": "^5.4",
+        "symfony/polyfill-php80": "^1.29",
         "symfony/process": "^5.4",
         "tightenco/collect": "^7.19"
     },
