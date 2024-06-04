@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.2](https://github.com/ymirapp/php-runtime/compare/v1.12.1...v1.12.2) (2024-06-04)
+
+
+### Bug Fixes
+
+* event file should always be in the `/web` directory with bedrock ([1620020](https://github.com/ymirapp/php-runtime/commit/16200204b704df165088c24f33042e6a51ae4e9d))
+
 ## [1.12.1](https://github.com/ymirapp/php-runtime/compare/v1.12.0...v1.12.1) (2024-03-01)
 
 
