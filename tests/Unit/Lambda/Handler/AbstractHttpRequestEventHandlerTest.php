@@ -64,14 +64,19 @@ class AbstractHttpRequestEventHandlerTest extends TestCase
     public function testHandleReturnsStaticFileResponse()
     {
         $event = $this->getHttpRequestEventMock();
-        $file = tmpfile();
-        $handler = $this->getMockForAbstractClass(AbstractHttpRequestEventHandler::class, ['/']);
+        $tempDir = sys_get_temp_dir();
+
+        $handler = $this->getMockForAbstractClass(AbstractHttpRequestEventHandler::class, [$tempDir]);
+
+        touch($tempDir.'/foo');
 
         $event->expects($this->once())
               ->method('getPath')
-              ->willReturn(stream_get_meta_data($file)['uri']);
+              ->willReturn('/foo');
 
         $this->assertInstanceOf(StaticFileResponse::class, $handler->handle($event));
+
+        @unlink($tempDir.'/foo');
     }
 
     public function testHandleWithWrongEventType()
