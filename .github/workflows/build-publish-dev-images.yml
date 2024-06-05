@@ -22,7 +22,7 @@ jobs:
     steps:
       # See https://stackoverflow.com/questions/70312490/github-actions-runner-environment-doesnt-build-for-arm-images
       - name: Set up QEMU to run ARM images
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Depot
         uses: depot/setup-action@v1
