@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.13.0](https://github.com/ymirapp/php-runtime/compare/v1.12.2...v1.13.0) (2024-11-22)
+
+
+### Features
+
+* Add php 8.4 ([9488e12](https://github.com/ymirapp/php-runtime/commit/9488e124165eaa63ba962086ca88f7567716ef0e))
+
+
+### Bug Fixes
+
+* Switch to using a compiled version of zlib ([1616505](https://github.com/ymirapp/php-runtime/commit/1616505438930593744947146d114537fda9a6de))
+
 ## [1.12.2](https://github.com/ymirapp/php-runtime/compare/v1.12.1...v1.12.2) (2024-06-04)
 
 
