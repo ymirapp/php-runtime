@@ -1,0 +1,17 @@
+{
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+    "bootstrap-sha": "53c85b142f6383f0e3a8168022b39eec30a95306",
+    "plugins": [ "sentence-case" ],
+    "skip-github-release": true,
+    "packages": {
+        ".": {
+            "release-type": "php",
+            "pull-request-title-pattern": "chore: release ${version}",
+            "changelog-sections": [
+                { "type" :"feat", "section" :"Features", "hidden": false },
+                { "type":"fix", "section": "Bug Fixes", "hidden": false },
+                { "type":"chore", "section": "Miscellaneous" ,"hidden":true }
+            ]
+        }
+    }
+}
