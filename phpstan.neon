@@ -2,13 +2,14 @@ parameters:
     level: max
     paths:
         - src
-    checkMissingIterableValueType: false
     reportUnmatchedIgnoredErrors: false
     excludePaths:
         - src/Lambda/Response/AbstractErrorHttpResponse.php
         - templates/*
         - tests/*
     ignoreErrors:
+        - identifier: missingType.iterableValue
+
         - '#Method [^\s]* has parameter \$[^\s]* with no type specified#'
         - '#CurlHandle\|resource given#'
         - message: '#unknown class CurlHandle|Class CurlHandle not found#'
