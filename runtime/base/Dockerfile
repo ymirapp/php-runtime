@@ -126,7 +126,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_LIBSSH2=1.11.0
+ENV VERSION_LIBSSH2=1.11.1
 ENV LIBSSH2_BUILD_DIR=${BUILD_DIR}/libssh2
 
 RUN set -xe; \
@@ -162,7 +162,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_NGHTTP2=1.62.1
+ENV VERSION_NGHTTP2=1.64.0
 ENV NGHTTP2_BUILD_DIR=${BUILD_DIR}/nghttp2
 
 RUN set -xe; \
@@ -216,7 +216,7 @@ RUN set -xe; \
 #   - libssh2
 # Needed by:
 #   - php
-ENV VERSION_CURL=8.8.0
+ENV VERSION_CURL=8.11.0
 ENV CURL_BUILD_DIR=${BUILD_DIR}/curl
 
 RUN set -xe; \
@@ -264,7 +264,7 @@ RUN set -xe; \
 #   - zlib
 # Needed by:
 #   - php
-ENV VERSION_XML2=2.12.7
+ENV VERSION_XML2=2.13.5
 ENV XML2_BUILD_DIR=${BUILD_DIR}/xml2
 
 RUN set -xe; \
@@ -302,7 +302,7 @@ RUN set -xe; \
 # https://github.com/nih-at/libzip/releases
 # Needed by:
 #   - php
-ENV VERSION_ZIP=1.10.1
+ENV VERSION_ZIP=1.11.2
 ENV ZIP_BUILD_DIR=${BUILD_DIR}/zip
 
 RUN set -xe; \
@@ -386,7 +386,7 @@ RUN set -xe; \
 # Needed by:
 #   - imagick
 ENV LIBHEIF_BUILD_DIR=${BUILD_DIR}/libheif
-ENV VERSION_LIBHEIF=1.17.6
+ENV VERSION_LIBHEIF=1.19.5
 
 RUN set -xe; \
     mkdir -p ${LIBHEIF_BUILD_DIR}; \
@@ -434,7 +434,7 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV RELAY_BUILD_DIR=${BUILD_DIR}/relay
-ENV VERSION_RELAY_EXTENSION=0.8.0
+ENV VERSION_RELAY_EXTENSION=0.9.0
 
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
