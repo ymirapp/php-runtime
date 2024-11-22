@@ -76,8 +76,8 @@ RUN set -xe \
         --with-sodium \
         --with-readline \
         --with-openssl \
-        --with-zlib \
-        --with-zlib-dir \
+        --with-zlib=${INSTALL_DIR} \
+        --with-zlib-dir=${INSTALL_DIR} \
         --with-curl \
         --enable-exif \
         --enable-ftp \
