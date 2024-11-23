@@ -44,7 +44,7 @@ class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
 
         if ($this->isMultisite() && (1 === preg_match('/^(.*)?(\/wp-(content|admin|includes).*)/', $path, $matches) || 1 === preg_match('/^(.*)?(\/.*\.php)$/', $path, $matches))) {
             $path = 'wp/'.ltrim($matches[2], '/');
-        } elseif (1 === preg_match('/^\/(wp-.*.php)$/', $path, $matches) || 1 === preg_match('/\/(wp-(content|admin|includes).*)/', $path, $matches)) {
+        } elseif ('/wp-login.php' !== $path && 1 === preg_match('/^\/(wp-.*.php)$/', $path, $matches) || 1 === preg_match('/\/(wp-(content|admin|includes).*)/', $path, $matches)) {
             $path = 'wp/'.ltrim($matches[1], '/');
         }
 
