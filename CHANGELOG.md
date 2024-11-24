@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.3](https://github.com/ymirapp/php-runtime/compare/v1.12.2...v1.12.3) (2024-11-23)
+
+
+### Bug Fixes
+
+* Don't rewrite `/wp-login.php` requests with bedrock ([fb29448](https://github.com/ymirapp/php-runtime/commit/fb29448fb275e5ca6422c340b36cbce4fc6f23c3))
+
 ## [1.12.2](https://github.com/ymirapp/php-runtime/compare/v1.12.1...v1.12.2) (2024-06-04)
 
 
