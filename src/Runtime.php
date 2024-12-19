@@ -120,7 +120,7 @@ class Runtime
             new LambdaEventHandlerCollection($logger, [
                 new PingLambdaEventHandler(),
                 new WarmUpEventHandler(new LambdaClient(['region' => $region], null, null, $logger)),
-                new ConsoleCommandLambdaEventHandler(),
+                new ConsoleCommandLambdaEventHandler($logger),
                 new WordPressLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
                 new BedrockLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
                 new PhpScriptLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),

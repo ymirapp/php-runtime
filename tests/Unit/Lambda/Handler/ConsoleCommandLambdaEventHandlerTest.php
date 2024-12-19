@@ -18,6 +18,7 @@ use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
 use Ymir\Runtime\Lambda\Response\ProcessResponse;
 use Ymir\Runtime\Tests\Mock\ConsoleCommandEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
+use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 
 /**
  * @covers \Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler
@@ -26,31 +27,31 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
 {
     use ConsoleCommandEventMockTrait;
     use InvocationEventInterfaceMockTrait;
+    use LoggerMockTrait;
 
     public function testCanHandlePingEventType()
     {
-        $handler = new ConsoleCommandLambdaEventHandler();
-
-        $this->assertTrue($handler->canHandle($this->getConsoleCommandEventMock()));
+        $this->assertTrue((new ConsoleCommandLambdaEventHandler($this->getLoggerMock()))->canHandle($this->getConsoleCommandEventMock()));
     }
 
     public function testCanHandleWrongEventType()
     {
-        $handler = new ConsoleCommandLambdaEventHandler();
-
-        $this->assertFalse($handler->canHandle($this->getInvocationEventInterfaceMock()));
+        $this->assertFalse((new ConsoleCommandLambdaEventHandler($this->getLoggerMock()))->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
     public function testHandleWithSuccessfulCommand()
     {
         $event = $this->getConsoleCommandEventMock();
-        $handler = new ConsoleCommandLambdaEventHandler();
+        $logger = $this->getLoggerMock();
 
         $event->expects($this->once())
               ->method('getCommand')
               ->willReturn('ls -la');
 
-        $response = $handler->handle($event);
+        $logger->expects($this->once())
+               ->method('info');
+
+        $response = (new ConsoleCommandLambdaEventHandler($logger))->handle($event);
         $responseData = $response->getResponseData();
 
         $this->assertInstanceOf(ProcessResponse::class, $response);
@@ -61,13 +62,16 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
     public function testHandleWithUnsuccessfulCommand()
     {
         $event = $this->getConsoleCommandEventMock();
-        $handler = new ConsoleCommandLambdaEventHandler();
+        $logger = $this->getLoggerMock();
 
         $event->expects($this->once())
               ->method('getCommand')
               ->willReturn('foo');
 
-        $response = $handler->handle($event);
+        $logger->expects($this->once())
+               ->method('info');
+
+        $response = (new ConsoleCommandLambdaEventHandler($logger))->handle($event);
         $responseData = $response->getResponseData();
 
         $this->assertInstanceOf(ProcessResponse::class, $response);
@@ -80,8 +84,6 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('ConsoleCommandLambdaEventHandler can only handle ConsoleCommandEvent objects');
 
-        $handler = new ConsoleCommandLambdaEventHandler();
-
-        $handler->handle($this->getInvocationEventInterfaceMock());
+        (new ConsoleCommandLambdaEventHandler($this->getLoggerMock()))->handle($this->getInvocationEventInterfaceMock());
     }
 }

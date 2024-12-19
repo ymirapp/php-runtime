@@ -18,12 +18,28 @@ use Ymir\Runtime\Lambda\InvocationEvent\ConsoleCommandEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\ProcessResponse;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
+use Ymir\Runtime\Logger;
 
 /**
  * Lambda invocation event handler for console commands.
  */
 class ConsoleCommandLambdaEventHandler implements LambdaEventHandlerInterface
 {
+    /**
+     * The logger that sends logs to CloudWatch.
+     *
+     * @var Logger
+     */
+    private $logger;
+
+    /**
+     * Constructor.
+     */
+    public function __construct(Logger $logger)
+    {
+        $this->logger = $logger;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -43,7 +59,9 @@ class ConsoleCommandLambdaEventHandler implements LambdaEventHandlerInterface
 
         $process = Process::fromShellCommandline("{$event->getCommand()} 2>&1");
         $process->setTimeout(null);
-        $process->run();
+        $process->run(function ($type, $output) {
+            $this->logger->info($output);
+        });
 
         return new ProcessResponse($process);
     }
