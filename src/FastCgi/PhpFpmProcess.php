@@ -119,8 +119,10 @@ class PhpFpmProcess
             $this->killExistingProcess();
         }
 
-        if (!is_dir(dirname(self::SOCKET_PATH))) {
-            mkdir(dirname(self::SOCKET_PATH));
+        $socketDirectory = dirname(self::SOCKET_PATH);
+
+        if (!is_dir($socketDirectory)) {
+            mkdir($socketDirectory);
         }
 
         $this->logger->info('Starting PHP-FPM process');
