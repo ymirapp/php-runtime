@@ -37,7 +37,7 @@ class InvocationEventFactory
                 return strlen($header);
             }
 
-            list($name, $value) = (array) preg_split('/:\s*/', $header, 2);
+            [$name, $value] = (array) preg_split('/:\s*/', $header, 2);
 
             if ('lambda-runtime-aws-request-id' == strtolower((string) $name)) {
                 $requestId = trim((string) $value);

@@ -35,7 +35,6 @@ $config
         'get_class_to_class_keyword' => false,
         'header_comment' => ['header' => $header],
         'heredoc_to_nowdoc' => true,
-        'list_syntax' => ['syntax' => 'long'],
         'method_chaining_indentation' => false,
         'native_constant_invocation' => false,
         'native_function_invocation' => false,
