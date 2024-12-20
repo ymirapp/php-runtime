@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.4](https://github.com/ymirapp/php-runtime/compare/v1.12.3...v1.12.4) (2024-12-20)
+
+
+### Bug Fixes
+
+* Send output from running console commands to logger ([cfd2460](https://github.com/ymirapp/php-runtime/commit/cfd246014b82be4245436db7f33851e48764eb55))
+
 ## [1.12.3](https://github.com/ymirapp/php-runtime/compare/v1.12.2...v1.12.3) (2024-11-23)
 
 
