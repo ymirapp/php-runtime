@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.13.0](https://github.com/ymirapp/php-runtime/compare/v1.12.4...v1.13.0) (2025-01-20)
+
+
+### Features
+
+* Add php 8.4 ([aa84b11](https://github.com/ymirapp/php-runtime/commit/aa84b11c90af88f4f88f55d448b7835dc7106f2c))
+* Switch to compiling libwebp ([4014aa9](https://github.com/ymirapp/php-runtime/commit/4014aa921c9fe4f4ce39e89e2c8c2d22dd988f52))
+* Switch to compiling sqlite ([247c951](https://github.com/ymirapp/php-runtime/commit/247c9516420673c5542a3e0af680f7727b64113f))
+
+
+### Bug Fixes
+
+* Downgrade libheif to fix build issue ([8448abc](https://github.com/ymirapp/php-runtime/commit/8448abc9a0594ef42d1c06adc1281608677fc774))
+* Fix broken libsodium build ([1cd905f](https://github.com/ymirapp/php-runtime/commit/1cd905f60bbef1bced5de87feff3505e25262ec5))
+
 ## [1.12.4](https://github.com/ymirapp/php-runtime/compare/v1.12.3...v1.12.4) (2024-12-20)
 
 
