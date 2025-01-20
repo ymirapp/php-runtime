@@ -385,17 +385,17 @@ RUN set -xe; \
 # Needed by:
 #   - imagick
 ENV LIBHEIF_BUILD_DIR=${BUILD_DIR}/libheif
-ENV VERSION_LIBHEIF=1.19.5
+ENV VERSION_LIBHEIF=1.13.0
 
 RUN set -xe; \
     mkdir -p ${LIBHEIF_BUILD_DIR}; \
     curl -Ls https://github.com/strukturag/libheif/releases/download/v${VERSION_LIBHEIF}/libheif-${VERSION_LIBHEIF}.tar.gz \
     | tar xzC ${LIBHEIF_BUILD_DIR} --strip-components=1
 
-WORKDIR ${LIBHEIF_BUILD_DIR}/build
+WORKDIR ${LIBHEIF_BUILD_DIR}
 
 RUN set -xe; \
-    cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} ..; \
+    ./configure --prefix ${INSTALL_DIR} --exec-prefix ${INSTALL_DIR}; \
     make -j $(nproc); \
     make install
 
