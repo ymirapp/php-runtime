@@ -29,7 +29,7 @@ RUN set -xe; \
     make install
 
 
-ENV VERSION_PHP=8.3.14
+ENV VERSION_PHP=8.4.3
 
 
 ENV PHP_BUILD_DIR=${BUILD_DIR}/php
@@ -75,7 +75,6 @@ RUN set -xe \
         --with-readline \
         --with-openssl \
         --with-zlib=${INSTALL_DIR} \
-        --with-zlib-dir=${INSTALL_DIR} \
         --with-curl \
         --enable-exif \
         --enable-ftp \
@@ -119,12 +118,12 @@ RUN set -xe; \
 RUN set -xe; \
     mkdir -p ${RELAY_BUILD_DIR}; \
     RELAY_CPU_ARCHITECTURE=$(arch | sed -e 's/arm64/aarch64/;s/amd64\|x86_64/x86-64/') && \
-    curl -L "https://builds.r2.relay.so/v${VERSION_RELAY_EXTENSION}/relay-v${VERSION_RELAY_EXTENSION}-php8.3-centos7-${RELAY_CPU_ARCHITECTURE}.tar.gz" \
+    curl -L "https://builds.r2.relay.so/v${VERSION_RELAY_EXTENSION}/relay-v${VERSION_RELAY_EXTENSION}-php8.4-centos7-${RELAY_CPU_ARCHITECTURE}.tar.gz" \
     | tar xzC ${RELAY_BUILD_DIR} --strip-components=1
 WORKDIR ${RELAY_BUILD_DIR}/
 RUN cp relay.ini ${INSTALL_DIR}/etc/php/conf.d/50-relay.ini; \
-    cp relay-pkg.so ${INSTALL_DIR}/lib/php/extensions/no-debug-non-zts-20230831/relay.so; \
-    sed -i "s/00000000-0000-0000-0000-000000000000/$(cat /proc/sys/kernel/random/uuid)/" ${INSTALL_DIR}/lib/php/extensions/no-debug-non-zts-20230831/relay.so;
+    cp relay-pkg.so ${INSTALL_DIR}/lib/php/extensions/no-debug-non-zts-20240924/relay.so; \
+    sed -i "s/00000000-0000-0000-0000-000000000000/$(cat /proc/sys/kernel/random/uuid)/" ${INSTALL_DIR}/lib/php/extensions/no-debug-non-zts-20240924/relay.so;
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --install-dir=${INSTALL_DIR}/bin/ --filename=composer
