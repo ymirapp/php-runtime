@@ -356,6 +356,31 @@ RUN set -xe; \
     make install
 
 ###############################################################################
+# libwebp Build
+# https://github.com/webmproject/libwebp/tags
+# Needs:
+#
+# Needed by:
+#   - imagick
+ENV LIBWEBP_BUILD_DIR=${BUILD_DIR}/libwebp
+ENV VERSION_LIBWEBP=1.5.0
+
+RUN set -xe; \
+    mkdir -p ${LIBWEBP_BUILD_DIR}; \
+    curl -Ls https://github.com/webmproject/libwebp/archive/refs/tags/v${VERSION_LIBWEBP}.tar.gz \
+    | tar xzC ${LIBWEBP_BUILD_DIR} --strip-components=1
+
+WORKDIR ${LIBWEBP_BUILD_DIR}
+
+RUN set -xe; \
+    autoreconf -i; \
+    automake; \
+    autoconf; \
+    ./configure --prefix ${INSTALL_DIR} --exec-prefix ${INSTALL_DIR}; \
+    make -j $(nproc); \
+    make install
+
+###############################################################################
 # libde265 Build
 # https://github.com/strukturag/libde265/releases
 # Needs:
@@ -411,7 +436,7 @@ ENV IMAGICK_BUILD_DIR=${BUILD_DIR}/imagick
 ENV VERSION_IMAGICK=7.1.0-22
 ENV VERSION_IMAGICK_EXTENSION=3.7.0
 
-RUN LD_LIBRARY_PATH= yum -y install libjpeg-devel libpng-devel libwebp-devel
+RUN LD_LIBRARY_PATH= yum -y install libjpeg-devel libpng-devel
 
 RUN set -xe; \
     mkdir -p ${IMAGICK_BUILD_DIR}; \
@@ -474,5 +499,4 @@ RUN cp /usr/lib64/liblz4.so.1 /opt/ymir/lib/liblz4.so.1
 # Copy ImageMagick shared libs that are not present in amazonlinux2
 RUN cp /usr/lib64/libpng15.so.15 /opt/ymir/lib/libpng15.so.15
 RUN cp /usr/lib64/libjpeg.so.62 /opt/ymir/lib/libjpeg.so.62
-RUN cp /usr/lib64/libwebp.so.4 /opt/ymir/lib/libwebp.so.4
 RUN cp /usr/lib64/libgomp.so.1 /opt/ymir/lib/libgomp.so.1
