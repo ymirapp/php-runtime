@@ -356,6 +356,28 @@ RUN set -xe; \
     make install
 
 ###############################################################################
+# SQLite Build
+# https://github.com/sqlite/sqlite/tags
+# Needs:
+#
+# Needed by:
+#   - php
+ENV VERSION_SQLITE=3.48.0
+ENV SQLITE_BUILD_DIR=${BUILD_DIR}/sqlite
+
+RUN set -xe; \
+    mkdir -p ${SQLITE_BUILD_DIR}; \
+    curl -Ls https://github.com/sqlite/sqlite/archive/refs/tags/version-${VERSION_SQLITE}.tar.gz \
+  | tar xzC ${SQLITE_BUILD_DIR} --strip-components=1
+
+WORKDIR ${SQLITE_BUILD_DIR}
+
+RUN set -xe; \
+    ./configure --prefix=${INSTALL_DIR}; \
+    make; \
+    make install
+
+###############################################################################
 # libwebp Build
 # https://github.com/webmproject/libwebp/tags
 # Needs:
@@ -467,9 +489,8 @@ ENV VERSION_RELAY_EXTENSION=0.9.0
 # libxslt-devel : needed for the XSL extension
 # libzstd-devel: needed for Relay
 # lz4-devel : needed for Relay
-# sqlite-devel : Since PHP 7.4 this must be installed (https://github.com/php/php-src/blob/99b8e67615159fc600a615e1e97f2d1cf18f14cb/UPGRADING#L616-L619)
 # re2c : needed for PHP 7.4
-RUN LD_LIBRARY_PATH= yum install -y re2c readline-devel gettext-devel libicu-devel libxslt-devel libzstd-devel lz4-devel sqlite-devel
+RUN LD_LIBRARY_PATH= yum install -y re2c readline-devel gettext-devel libicu-devel libxslt-devel libzstd-devel lz4-devel
 
 RUN cp -a /usr/lib64/libgcrypt.so* ${INSTALL_DIR}/lib64/
 
@@ -486,9 +507,6 @@ RUN cp -a /usr/lib64/preloadable_libintl.so* ${INSTALL_DIR}/lib64/
 
 # Copy xslt shared libs that are not present in amazonlinux2
 RUN cp -a /usr/lib64/lib*xslt*.so* ${INSTALL_DIR}/lib64/
-
-# Copy sqlite3 shared libs that are not present in amazonlinux2
-RUN cp -a /usr/lib64/libsqlite3*.so* ${INSTALL_DIR}/lib64/
 
 # Copy zstd shared libs that are not present in amazonlinux2
 RUN cp /usr/lib64/libzstd.so.1 /opt/ymir/lib/libzstd.so.1
