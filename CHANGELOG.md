@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.13.0](https://github.com/ymirapp/php-runtime/compare/v1.12.4...v1.13.0) (2025-01-21)
+
+
+### Features
+
+* Add php 8.4 ([ff14738](https://github.com/ymirapp/php-runtime/commit/ff1473811243a5241763832c7c0cdb072f3690a1))
+* Switch to compiling libwebp ([4014aa9](https://github.com/ymirapp/php-runtime/commit/4014aa921c9fe4f4ce39e89e2c8c2d22dd988f52))
+* Switch to compiling sqlite ([ea275ae](https://github.com/ymirapp/php-runtime/commit/ea275ae37fa8917f2a3fc70e401a032e5d178795))
+* Switch to compiling zlib ([e2ebd02](https://github.com/ymirapp/php-runtime/commit/e2ebd02757c1a43fbd3291b1429f64cfcc6786e7))
+
+
+### Bug Fixes
+
+* Downgrade libheif to fix build issue ([8448abc](https://github.com/ymirapp/php-runtime/commit/8448abc9a0594ef42d1c06adc1281608677fc774))
+* Downgrade libxml2 version to fix pear install on older php versions ([796b13c](https://github.com/ymirapp/php-runtime/commit/796b13c95e4e25caf0c8fa9e0b009efdd71ec699))
+* Fix broken libsodium build ([1cd905f](https://github.com/ymirapp/php-runtime/commit/1cd905f60bbef1bced5de87feff3505e25262ec5))
+
 ## [1.12.4](https://github.com/ymirapp/php-runtime/compare/v1.12.3...v1.12.4) (2024-12-20)
 
 
