@@ -78,6 +78,39 @@ RUN mkdir -p ${BUILD_DIR}  \
     ${INSTALL_DIR}/share
 
 ###############################################################################
+# ZLIB Build
+# https://github.com/madler/zlib/releases
+# Needed for:
+#   - openssl
+#   - curl
+#   - php
+# Used By:
+#   - xml2
+ENV VERSION_ZLIB=1.3.1
+ENV ZLIB_BUILD_DIR=${BUILD_DIR}/zlib
+
+RUN set -xe; \
+    mkdir -p ${ZLIB_BUILD_DIR}; \
+    curl -Ls https://github.com/madler/zlib/releases/download/v${VERSION_ZLIB}/zlib-${VERSION_ZLIB}.tar.gz \
+  | tar xzC ${ZLIB_BUILD_DIR} --strip-components=1
+
+# Move into the unpackaged code directory
+WORKDIR  ${ZLIB_BUILD_DIR}/
+
+# Configure the build
+RUN set -xe; \
+    make distclean \
+ && CFLAGS="" \
+    CPPFLAGS="-I${INSTALL_DIR}/include  -I/usr/include" \
+    LDFLAGS="-L${INSTALL_DIR}/lib64 -L${INSTALL_DIR}/lib" \
+    ./configure \
+    --prefix=${INSTALL_DIR}
+
+RUN set -xe; \
+    make install \
+ && rm ${INSTALL_DIR}/lib/libz.a
+
+###############################################################################
 # OPENSSL Build
 # https://github.com/openssl/openssl/releases
 # Needs:
