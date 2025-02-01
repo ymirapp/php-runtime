@@ -25,6 +25,7 @@ use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
 use Ymir\Runtime\Lambda\Handler\PhpScriptLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
+use Ymir\Runtime\Lambda\Handler\RadicleLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\WarmUpEventHandler;
 use Ymir\Runtime\Lambda\Handler\WordPressLambdaEventHandler;
 use Ymir\Runtime\Lambda\RuntimeApiClient;
@@ -123,6 +124,7 @@ class Runtime
                 new ConsoleCommandLambdaEventHandler($logger),
                 new WordPressLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
                 new BedrockLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
+                new RadicleLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
                 new PhpScriptLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
             ]),
             $logger,
