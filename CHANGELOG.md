@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/ymirapp/php-runtime/compare/v1.13.0...v1.14.0) (2025-02-08)
+
+
+### Features
+
+* Add event handler for radicle ([c0bde25](https://github.com/ymirapp/php-runtime/commit/c0bde25e613593d9e692af4fd74a2bd54fb922d3))
+
 ## [1.13.0](https://github.com/ymirapp/php-runtime/compare/v1.12.4...v1.13.0) (2025-01-21)
 
 
