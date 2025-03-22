@@ -195,7 +195,7 @@ RUN set -xe; \
 #   - OpenSSL
 # Needed by:
 #   - curl
-ENV VERSION_NGHTTP2=1.64.0
+ENV VERSION_NGHTTP2=1.65.0
 ENV NGHTTP2_BUILD_DIR=${BUILD_DIR}/nghttp2
 
 RUN set -xe; \
@@ -249,7 +249,7 @@ RUN set -xe; \
 #   - libssh2
 # Needed by:
 #   - php
-ENV VERSION_CURL=8.11.0
+ENV VERSION_CURL=8.12.1
 ENV CURL_BUILD_DIR=${BUILD_DIR}/curl
 
 RUN set -xe; \
@@ -297,7 +297,7 @@ RUN set -xe; \
 #   - zlib
 # Needed by:
 #   - php
-ENV VERSION_XML2=2.12.9
+ENV VERSION_XML2=2.12.10
 ENV XML2_BUILD_DIR=${BUILD_DIR}/xml2
 
 RUN set -xe; \
@@ -335,7 +335,7 @@ RUN set -xe; \
 # https://github.com/nih-at/libzip/releases
 # Needed by:
 #   - php
-ENV VERSION_ZIP=1.11.2
+ENV VERSION_ZIP=1.11.3
 ENV ZIP_BUILD_DIR=${BUILD_DIR}/zip
 
 RUN set -xe; \
@@ -395,7 +395,7 @@ RUN set -xe; \
 #
 # Needed by:
 #   - php
-ENV VERSION_SQLITE=3.48.0
+ENV VERSION_SQLITE=3.49.1
 ENV SQLITE_BUILD_DIR=${BUILD_DIR}/sqlite
 
 RUN set -xe; \
@@ -513,7 +513,7 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV RELAY_BUILD_DIR=${BUILD_DIR}/relay
-ENV VERSION_RELAY_EXTENSION=0.10.0
+ENV VERSION_RELAY_EXTENSION=0.10.1
 
 # Install some dev files for using old libraries already on the system
 # readline-devel : needed for the --with-libedit flag
