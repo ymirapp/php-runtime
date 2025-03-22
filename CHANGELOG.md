@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.0](https://github.com/ymirapp/php-runtime/compare/v1.13.0...v1.14.0) (2025-03-22)
+
+
+### Features
+
+* Add event handler for radicle ([c0bde25](https://github.com/ymirapp/php-runtime/commit/c0bde25e613593d9e692af4fd74a2bd54fb922d3))
+* Turn on jit opcache for all php 8 releases ([12ac157](https://github.com/ymirapp/php-runtime/commit/12ac1575ed93e16052a3c57f742de36851a5efe1))
+
 ## [1.13.0](https://github.com/ymirapp/php-runtime/compare/v1.12.4...v1.13.0) (2025-01-21)
 
 
