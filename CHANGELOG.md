@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.15.0](https://github.com/ymirapp/php-runtime/compare/v1.14.0...v1.15.0) (2025-04-15)
+
+
+### Features
+
+* Don't display deprecation notices when the runtime is starting ([abd781b](https://github.com/ymirapp/php-runtime/commit/abd781beacb6e720312fe4c9103d85c3dcce93db))
+
+
+### Bug Fixes
+
+* Revert `jit` option to default `tracing` mode ([39d0fff](https://github.com/ymirapp/php-runtime/commit/39d0fffe21389165eb01387ed07036f10c228639))
+
 ## [1.14.0](https://github.com/ymirapp/php-runtime/compare/v1.13.0...v1.14.0) (2025-03-22)
 
 
