@@ -14,7 +14,7 @@ declare(strict_types=1);
 use Ymir\Runtime\Runtime;
 
 ini_set('display_errors', '1');
-error_reporting(E_ALL);
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 
 fwrite(STDERR, 'Cold start'.PHP_EOL);
 
