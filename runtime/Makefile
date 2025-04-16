@@ -7,8 +7,8 @@ build-php%.zip: publish-images
 	PHP_VERSION=$$(echo $@ | cut -d'.' -f 1 | cut -d'-' -f 2,3); \
 	rm ${PWD}/../build/$$PHP_VERSION.zip; \
 	rm ${PWD}/../build/arm-$$PHP_VERSION.zip; \
-	docker run --rm --entrypoint "/export.sh" --env ARCHIVE_FILENAME=$$PHP_VERSION --volume ${PWD}/../:/ymir --volume ${PWD}/export.sh:/export.sh:ro ymirapp/php-runtime:$$PHP_VERSION .; \
-	docker run --rm --entrypoint "/export.sh" --env ARCHIVE_FILENAME=arm-$$PHP_VERSION --volume ${PWD}/../:/ymir --volume ${PWD}/export.sh:/export.sh:ro ymirapp/arm-php-runtime:$$PHP_VERSION .
+	docker run --rm --platform linux/amd64 --entrypoint "/export.sh" --env ARCHIVE_FILENAME=$$PHP_VERSION --volume ${PWD}/../:/ymir --volume ${PWD}/export.sh:/export.sh:ro ymirapp/php-runtime:$$PHP_VERSION .; \
+	docker run --rm --platform linux/arm64 --entrypoint "/export.sh" --env ARCHIVE_FILENAME=arm-$$PHP_VERSION --volume ${PWD}/../:/ymir --volume ${PWD}/export.sh:/export.sh:ro ymirapp/arm-php-runtime:$$PHP_VERSION .
 
 publish-images-%:
 	CPU_ARCHITECTURE=$$(echo '$*' | cut -d '-' -f 2); \
