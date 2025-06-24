@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.1](https://github.com/ymirapp/php-runtime/compare/v1.15.0...v1.15.1) (2025-06-24)
+
+
+### Bug Fixes
+
+* `jit_buffer_size` cannot go over 128M on aarch64 ([6ae62bb](https://github.com/ymirapp/php-runtime/commit/6ae62bbcd47d3ca6ce593e501483dda9bb276463))
+
 ## [1.15.0](https://github.com/ymirapp/php-runtime/compare/v1.14.0...v1.15.0) (2025-04-15)
 
 
