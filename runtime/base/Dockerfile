@@ -488,7 +488,7 @@ RUN set -xe; \
 # Needed by:
 #   - php
 ENV IMAGICK_BUILD_DIR=${BUILD_DIR}/imagick
-ENV VERSION_IMAGICK=7.1.0-22
+ENV VERSION_IMAGICK=7.1.1-47
 ENV VERSION_IMAGICK_EXTENSION=3.7.0
 
 RUN LD_LIBRARY_PATH= yum -y install libjpeg-devel libpng-devel
