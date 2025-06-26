@@ -482,7 +482,7 @@ RUN set -xe; \
 
 ###############################################################################
 # Imagick Build
-# https://github.com/ImageMagick/ImageMagick6/releases
+# https://github.com/ImageMagick/ImageMagick/releases
 # Needs:
 #
 # Needed by:
