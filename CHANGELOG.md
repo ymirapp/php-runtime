@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.15.2](https://github.com/ymirapp/php-runtime/compare/v1.15.1...v1.15.2) (2025-06-27)
+
+
+### Dependency Changes
+
+* Upgrade curl to 8.14.1 ([17a6a2c](https://github.com/ymirapp/php-runtime/commit/17a6a2cf3cfc1d1c3c98122b752e6bb5920e5758))
+* Upgrade imagick extension to 3.8.0 ([5091e1f](https://github.com/ymirapp/php-runtime/commit/5091e1f41b0cd3b262b0f958f8ceccd41e6c5e48))
+* Upgrade imagick to 7.1.1-47 ([6e92b87](https://github.com/ymirapp/php-runtime/commit/6e92b8728c2c5b3c0e8efc067dcf34687ca19722))
+* Upgrade libzip to 1.11.4 ([0c0ae5d](https://github.com/ymirapp/php-runtime/commit/0c0ae5d763e3eb6266843cc4176f1fd490fc13a7))
+* Upgrade relay to 0.11.0 ([239fad2](https://github.com/ymirapp/php-runtime/commit/239fad2a72e7c986a4fa0ef48f9cca585e530b58))
+
 ## [1.15.1](https://github.com/ymirapp/php-runtime/compare/v1.15.0...v1.15.1) (2025-06-24)
 
 
