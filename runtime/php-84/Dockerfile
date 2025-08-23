@@ -29,7 +29,7 @@ RUN set -xe; \
     make install
 
 
-ENV VERSION_PHP=8.4.5
+ENV VERSION_PHP=8.4.11
 
 
 ENV PHP_BUILD_DIR=${BUILD_DIR}/php
