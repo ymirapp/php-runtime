@@ -443,7 +443,7 @@ RUN set -xe; \
 # Needed by:
 #   - imagick
 ENV LIBDE265_BUILD_DIR=${BUILD_DIR}/libde265
-ENV VERSION_LIBDE265=1.0.15
+ENV VERSION_LIBDE265=1.0.16
 
 RUN set -xe; \
     mkdir -p ${LIBDE265_BUILD_DIR}; \
