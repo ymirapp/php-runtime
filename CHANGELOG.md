@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.15.3](https://github.com/ymirapp/php-runtime/compare/v1.15.2...v1.15.3) (2025-08-23)
+
+
+### Dependency Changes
+
+* Updated composer dependencies ([ab7968c](https://github.com/ymirapp/php-runtime/commit/ab7968c78179ca2c18945c53ab59f32fc903a201))
+* Upgrade curl to 8.15.0 ([21a750c](https://github.com/ymirapp/php-runtime/commit/21a750c691909a85b782cead845b0a7748b0be41))
+* Upgrade imagick to 7.1.2-1 ([f88bd21](https://github.com/ymirapp/php-runtime/commit/f88bd21fcf5ab7e57781afb202575a53381726f2))
+* Upgrade libde265 to 1.0.16 ([8f76dca](https://github.com/ymirapp/php-runtime/commit/8f76dca04b93b973aa0d89ea199f6fb66247ebce))
+* Upgrade libwebp to 1.6.0 ([0acc651](https://github.com/ymirapp/php-runtime/commit/0acc6510cfce23a0a0c9a13895e887036a04a571))
+* Upgrade nghttp2 to 1.66.0 ([d4328b6](https://github.com/ymirapp/php-runtime/commit/d4328b69760b0b1fff88df20d503c1596407d2f6))
+* Upgrade php versions ([688b610](https://github.com/ymirapp/php-runtime/commit/688b610b311d754e0624310a7c50e9983222a894))
+* Upgrade relay to 0.11.1 ([ffca105](https://github.com/ymirapp/php-runtime/commit/ffca105f00c45e4babd228d47081ca9651da20f0))
+* Upgrade sqlite to 3.50.4 ([1aa0a61](https://github.com/ymirapp/php-runtime/commit/1aa0a618ed4537a3ea5a98a94f67f3c501457f04))
+
 ## [1.15.2](https://github.com/ymirapp/php-runtime/compare/v1.15.1...v1.15.2) (2025-06-27)
 
 
