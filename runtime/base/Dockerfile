@@ -418,7 +418,7 @@ RUN set -xe; \
 # Needed by:
 #   - imagick
 ENV LIBWEBP_BUILD_DIR=${BUILD_DIR}/libwebp
-ENV VERSION_LIBWEBP=1.5.0
+ENV VERSION_LIBWEBP=1.6.0
 
 RUN set -xe; \
     mkdir -p ${LIBWEBP_BUILD_DIR}; \
