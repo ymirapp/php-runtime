@@ -395,7 +395,7 @@ RUN set -xe; \
 #
 # Needed by:
 #   - php
-ENV VERSION_SQLITE=3.50.4
+ENV VERSION_SQLITE=3.51.0
 ENV SQLITE_BUILD_DIR=${BUILD_DIR}/sqlite
 
 RUN set -xe; \
