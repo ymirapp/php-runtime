@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.16.0](https://github.com/ymirapp/php-runtime/compare/v1.15.4...v1.16.0) (2026-01-07)
+
+
+### Features
+
+* Add php 8.5 ([28eb125](https://github.com/ymirapp/php-runtime/commit/28eb1252f8e8761f4f2d78e4c02ee9374a480267))
+
+
+### Bug Fixes
+
+* Kill the lambda container if we get a `ReadFailedException` exception ([1c95fcb](https://github.com/ymirapp/php-runtime/commit/1c95fcb1e07b6d40a6fcaab10c984cc0346c17f3))
+
+
+### Dependency Changes
+
+* Upgrade imagick extension to 3.8.1 ([a9a710b](https://github.com/ymirapp/php-runtime/commit/a9a710b53a26ba6b248ebd79f8a76defb070da0c))
+* Upgrade imagick to 7.1.2-12 ([83500ed](https://github.com/ymirapp/php-runtime/commit/83500ed1c0bc24a88ab7d5b79ee12a360c1334c8))
+* Upgrade relay to 0.20.0 ([758a083](https://github.com/ymirapp/php-runtime/commit/758a0834b8217cd97eaaa45c5d82ecd58e456aa5)), closes [#35](https://github.com/ymirapp/php-runtime/issues/35)
+* Upgrade sqlite to 3.51.1 ([10c244c](https://github.com/ymirapp/php-runtime/commit/10c244c48c3ac160aec03ca6518666006bd968ca))
+* Upgrade to php 8.1.34 ([9e6343c](https://github.com/ymirapp/php-runtime/commit/9e6343c01af3014e6e1d1f9685c27c6024f7e131))
+* Upgrade to php 8.2.30 ([40802b0](https://github.com/ymirapp/php-runtime/commit/40802b026636905290e3401be2c35c688a79f0a8))
+* Upgrade to php 8.3.29 ([6dcac6e](https://github.com/ymirapp/php-runtime/commit/6dcac6ec67e932011c0186976189ceb539aad11d))
+* Upgrade to php 8.4.16 ([a944801](https://github.com/ymirapp/php-runtime/commit/a9448017fa7bbd7aa97b749605fdeb0b086bb9a4))
+
 ## [1.15.4](https://github.com/ymirapp/php-runtime/compare/v1.15.3...v1.15.4) (2025-11-16)
 
 
