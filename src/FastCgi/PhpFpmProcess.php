@@ -31,13 +31,6 @@ class PhpFpmProcess
     private const DEFAULT_CONFIG_PATH = '/opt/ymir/etc/php-fpm.d/php-fpm.conf';
 
     /**
-     * Path to the PHP-FPM PID file.
-     *
-     * @var string
-     */
-    private const PID_PATH = '/tmp/.ymir/php-fpm.pid';
-
-    /**
      * Path to the PHP-FPM socket file.
      *
      * @var string
@@ -115,10 +108,6 @@ class PhpFpmProcess
      */
     public function start(): void
     {
-        if ($this->isStarted()) {
-            $this->killExistingProcess();
-        }
-
         $socketDirectory = dirname(self::SOCKET_PATH);
 
         if (!is_dir($socketDirectory)) {
@@ -149,51 +138,6 @@ class PhpFpmProcess
         clearstatcache(false, self::SOCKET_PATH);
 
         return file_exists(self::SOCKET_PATH);
-    }
-
-    /**
-     * Kill an existing PHP-FPM process.
-     */
-    private function killExistingProcess(): void
-    {
-        $this->logger->info('Killing existing PHP-FPM process');
-
-        if (!file_exists(self::PID_PATH)) {
-            unlink(self::SOCKET_PATH);
-
-            return;
-        }
-
-        $pid = (int) file_get_contents(self::PID_PATH);
-
-        if (0 <= $pid || false === posix_getpgid($pid)) {
-            $this->removeProcessFiles();
-
-            return;
-        }
-
-        $result = posix_kill($pid, SIGTERM);
-
-        if (false === $result) {
-            $this->removeProcessFiles();
-
-            return;
-        }
-
-        $this->wait(function () use ($pid) {
-            return false !== posix_getpgid($pid);
-        }, 'Timeout while waiting for PHP-FPM process to stop', 1000000);
-
-        $this->removeProcessFiles();
-    }
-
-    /**
-     * Removes all the files associated with the PHP-FPM process.
-     */
-    private function removeProcessFiles(): void
-    {
-        unlink(self::SOCKET_PATH);
-        unlink(self::PID_PATH);
     }
 
     /**
