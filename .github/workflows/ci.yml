@@ -43,5 +43,5 @@ jobs:
           php-version: ${{ matrix.php-versions }}
       - name: Install dependencies
         run: composer install --no-ansi --no-interaction --no-scripts --no-suggest --prefer-dist
-      - name: Run unit tests
-        run: composer tests-unit
+      - name: Run PHPUnit tests
+        run: composer phpunit
