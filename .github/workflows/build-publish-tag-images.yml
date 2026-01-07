@@ -5,7 +5,6 @@ on:
     tags:
       - '*'
 
-# Required for Depot OIDC token authentication
 permissions:
   id-token: write
   contents: read
@@ -14,11 +13,16 @@ env:
   DEPOT_PROJECT_ID: ${{ secrets.DEPOT_PROJECT_ID }}
 
 jobs:
-  publish:
-    name: Build and publish images
+  build-and-export:
+    name: Build and export PHP ${{ matrix.php }} (${{ matrix.arch }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["7.2", "7.3", "7.4", "8.0", "8.1", "8.2", "8.3", "8.4", "8.5"]
+        arch: [x86_64, arm64]
+    
     steps:
-      # See https://stackoverflow.com/questions/70312490/github-actions-runner-environment-doesnt-build-for-arm-images
       - name: Set up QEMU to run ARM images
         uses: docker/setup-qemu-action@v3
 
@@ -29,18 +33,83 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Publish images
-        run: make publish-images
+      - name: Determine Platform and Directory
+        id: meta
+        run: |
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+            echo "repo=ymirapp/php-runtime" >> $GITHUB_OUTPUT
+            echo "platform=linux/amd64" >> $GITHUB_OUTPUT
+            echo "archive_filename=php-${{ matrix.php }}" >> $GITHUB_OUTPUT
+          else
+            echo "repo=ymirapp/arm-php-runtime" >> $GITHUB_OUTPUT
+            echo "platform=linux/arm64" >> $GITHUB_OUTPUT
+            echo "archive_filename=arm-php-${{ matrix.php }}" >> $GITHUB_OUTPUT
+          fi
+          echo "tag=php-${{ matrix.php }}" >> $GITHUB_OUTPUT
+          echo "dir=php-$(echo ${{ matrix.php }} | sed 's/\.//g')" >> $GITHUB_OUTPUT
 
-      - name: Build layers
-        run: make build
+      - name: Build and Load Image
+        uses: depot/build-push-action@v1
+        with:
+          project: ${{ secrets.DEPOT_PROJECT_ID }}
+          context: runtime
+          file: runtime/${{ steps.meta.outputs.dir }}/Dockerfile
+          platforms: ${{ steps.meta.outputs.platform }}
+          load: true
+          tags: ${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.tag }}
+          build-args: |
+            CPU_ARCHITECTURE=${{ matrix.arch }}
+            DOCKER_PLATFORM=${{ steps.meta.outputs.platform }}
 
-      - name: Upload layers
+      - name: Verify Image
+        run: ./runtime/test-image.sh ${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.tag }} ${{ steps.meta.outputs.platform }}
+
+      - name: Build and Push Image
+        uses: depot/build-push-action@v1
+        with:
+          project: ${{ secrets.DEPOT_PROJECT_ID }}
+          context: runtime
+          file: runtime/${{ steps.meta.outputs.dir }}/Dockerfile
+          platforms: ${{ steps.meta.outputs.platform }}
+          push: true
+          tags: ${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.tag }}
+          build-args: |
+            CPU_ARCHITECTURE=${{ matrix.arch }}
+            DOCKER_PLATFORM=${{ steps.meta.outputs.platform }}
+
+      - name: Export Layer ZIP
+        run: |
+          mkdir -p build
+          docker run --rm --platform ${{ steps.meta.outputs.platform }} --entrypoint "/export.sh" \
+            --env ARCHIVE_FILENAME=${{ steps.meta.outputs.archive_filename }} \
+            --volume ${{ github.workspace }}:/ymir \
+            --volume ${{ github.workspace }}/runtime/export.sh:/export.sh:ro \
+            ${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.tag }} .
+
+      - name: Upload Individual Layer
+        uses: actions/upload-artifact@v4
+        with:
+          name: layer-${{ steps.meta.outputs.archive_filename }}
+          path: build/${{ steps.meta.outputs.archive_filename }}.zip
+
+  collect-layers:
+    name: Collect and Save Layers
+    needs: build-and-export
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all layer artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+          pattern: layer-*
+          merge-multiple: true
+
+      - name: Upload final layers artifact
         uses: actions/upload-artifact@v4
         with:
           name: layers
