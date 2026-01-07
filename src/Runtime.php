@@ -182,7 +182,7 @@ class Runtime
 
         if ($this->invocations >= $this->maxInvocations) {
             $this->logger->info(sprintf('Killing Lambda container. Container has processed %s invocation events. (%s)', $this->maxInvocations, $event->getId()));
-            exit(0);
+            $this->terminate(0);
         }
     }
 
@@ -197,7 +197,15 @@ class Runtime
             $this->logger->exception($exception);
             $this->client->sendInitializationError($exception);
 
-            exit(1);
+            $this->terminate(1);
         }
+    }
+
+    /**
+     * Terminate the runtime.
+     */
+    protected function terminate(int $code): void
+    {
+        exit($code);
     }
 }
