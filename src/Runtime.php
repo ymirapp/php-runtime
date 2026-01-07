@@ -17,6 +17,7 @@ use AsyncAws\Lambda\LambdaClient;
 use AsyncAws\Ssm\Input\GetParametersByPathRequest;
 use AsyncAws\Ssm\SsmClient;
 use AsyncAws\Ssm\ValueObject\Parameter;
+use hollodotme\FastCGI\Exceptions\ReadFailedException;
 use Tightenco\Collect\Support\Arr;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\Handler\BedrockLambdaEventHandler;
@@ -28,6 +29,7 @@ use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\RadicleLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\WarmUpEventHandler;
 use Ymir\Runtime\Lambda\Handler\WordPressLambdaEventHandler;
+use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
 use Ymir\Runtime\Lambda\RuntimeApiClient;
 
 /**
@@ -175,6 +177,13 @@ class Runtime
             $this->client->sendResponse($event, $this->handler->handle($event));
 
             ++$this->invocations;
+        } catch (ReadFailedException $exception) {
+            $this->logger->exception($exception);
+
+            $this->client->sendResponse($event, new BadGatewayHttpResponse('The process handling the request crashed unexpectedly'));
+
+            $this->logger->info('Killing Lambda container. PHP-FPM process has crashed.');
+            $this->terminate(1);
         } catch (\Throwable $exception) {
             $this->logger->exception($exception);
             $this->client->sendEventError($event, $exception);
