@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.0](https://github.com/ymirapp/php-runtime/compare/v1.16.0...v1.17.0) (2026-01-08)
+
+
+### Features
+
+* Upgrade to al2023 ([581a307](https://github.com/ymirapp/php-runtime/commit/581a3072ec85e64b55bb36aef36bf5c1846cf016))
+
 ## [1.16.0](https://github.com/ymirapp/php-runtime/compare/v1.15.4...v1.16.0) (2026-01-07)
 
 
