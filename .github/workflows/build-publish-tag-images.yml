@@ -41,17 +41,18 @@ jobs:
       - name: Determine Platform and Directory
         id: meta
         run: |
+          VERSION_CLEAN=$(echo ${{ matrix.php }} | sed 's/\.//g')
           if [ "${{ matrix.arch }}" = "x86_64" ]; then
             echo "repo=ymirapp/php-runtime" >> $GITHUB_OUTPUT
             echo "platform=linux/amd64" >> $GITHUB_OUTPUT
-            echo "archive_filename=php-${{ matrix.php }}" >> $GITHUB_OUTPUT
+            echo "archive_filename=php-$VERSION_CLEAN" >> $GITHUB_OUTPUT
           else
             echo "repo=ymirapp/arm-php-runtime" >> $GITHUB_OUTPUT
             echo "platform=linux/arm64" >> $GITHUB_OUTPUT
-            echo "archive_filename=arm-php-${{ matrix.php }}" >> $GITHUB_OUTPUT
+            echo "archive_filename=arm-php-$VERSION_CLEAN" >> $GITHUB_OUTPUT
           fi
           echo "tag=php-${{ matrix.php }}" >> $GITHUB_OUTPUT
-          echo "dir=php-$(echo ${{ matrix.php }} | sed 's/\.//g')" >> $GITHUB_OUTPUT
+          echo "dir=php-$VERSION_CLEAN" >> $GITHUB_OUTPUT
 
       - name: Build and Load Image
         uses: depot/build-push-action@v1
