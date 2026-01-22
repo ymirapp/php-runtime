@@ -1,9 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
+/*
+ * This file is part of Ymir PHP Runtime.
+ *
+ * (c) Carl Alexander <support@ymirapp.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 /**
  * This script is adapted from Bref's copy-dependencies.php
+ *
  * It finds all shared library dependencies of a set of binaries/libraries
- * and copies them to a target directory.
+ * and copies them to a target directory. It is recursive to ensure all
+ * transient dependencies are captured.
  */
 
 if ($argc < 3) {
@@ -18,8 +31,9 @@ if (!is_dir($targetLibDir)) {
     mkdir($targetLibDir, 0755, true);
 }
 
-$dependencies = [];
-
+/**
+ * Get all shared library dependencies of a file.
+ */
 function get_dependencies(string $path): array {
     if (!is_file($path)) {
         return [];
@@ -27,11 +41,15 @@ function get_dependencies(string $path): array {
     
     // Check if it's a binary or shared library
     $fileInfo = shell_exec("file -b " . escapeshellarg($path));
-    if (strpos($fileInfo, 'ELF') === false) {
+    if (false === $fileInfo || strpos($fileInfo, 'ELF') === false) {
         return [];
     }
 
     $output = shell_exec("ldd " . escapeshellarg($path));
+    if (empty($output)) {
+        return [];
+    }
+
     $lines = explode("\n", $output);
     $libs = [];
 
@@ -54,34 +72,43 @@ function get_dependencies(string $path): array {
                (strpos($lib, '/lib64') === 0 || 
                 strpos($lib, '/lib') === 0 ||
                 strpos($lib, '/usr/lib64') === 0 ||
-                strpos($lib, '/usr/lib') === 0);
+                strpos($lib, '/usr/lib') === 0 ||
+                strpos($lib, '/opt/ymir/lib') === 0);
     });
 }
 
-$filesToProcess = [];
+$toProcess = [];
 if (is_dir($source)) {
     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source));
     foreach ($iterator as $file) {
         if ($file->isFile()) {
-            $filesToProcess[] = $file->getPathname();
+            $toProcess[] = $file->getPathname();
         }
     }
 } else {
-    $filesToProcess[] = $source;
+    $toProcess[] = $source;
 }
 
-foreach ($filesToProcess as $file) {
+$processed = [];
+
+while (!empty($toProcess)) {
+    $file = array_shift($toProcess);
+    
+    if (isset($processed[$file])) {
+        continue;
+    }
+    $processed[$file] = true;
+
     $deps = get_dependencies($file);
     foreach ($deps as $dep) {
-        if (!isset($dependencies[$dep])) {
-            $dependencies[$dep] = true;
-            $libName = basename($dep);
-            $targetPath = $targetLibDir . '/' . $libName;
-            
-            if (!file_exists($targetPath)) {
-                echo "Copying $dep to $targetPath\n";
-                copy($dep, $targetPath);
-            }
+        $libName = basename($dep);
+        $targetPath = $targetLibDir . '/' . $libName;
+        
+        if (!file_exists($targetPath)) {
+            echo "Copying $dep to $targetPath\n";
+            copy($dep, $targetPath);
+            // We need to process the dependency we just copied to find its own dependencies
+            $toProcess[] = $targetPath;
         }
     }
 }
