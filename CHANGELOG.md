@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.2](https://github.com/ymirapp/php-runtime/compare/v1.17.1...v1.17.2) (2026-01-23)
+
+
+### Bug Fixes
+
+* Reduce zip layer size ([2953929](https://github.com/ymirapp/php-runtime/commit/2953929ccf4a91b2c4431443bae0ec28a1d94e83))
+
 ## [1.17.1](https://github.com/ymirapp/php-runtime/compare/v1.17.0...v1.17.1) (2026-01-23)
 
 
