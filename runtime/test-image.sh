@@ -50,11 +50,11 @@ fi
 
 # 5. Modules (with standard Lambda LD_LIBRARY_PATH)
 LAMBDA_LD_PATH="/opt/lib:/lib64:/usr/lib64"
-MODULES=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -m)
-PHP_VER=$(docker run --rm --platform "$PLATFORM" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "echo PHP_VERSION_ID;")
+MODULES=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -m 2>/dev/null)
+PHP_VER=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "echo PHP_VERSION_ID;" 2>/dev/null)
 
 REQUIRED=("apcu" "igbinary" "zstd" "imagick" "intl" "pdo_mysql")
-if [ "$PHP_VER" -ge 70400 ]; then
+if [ -n "$PHP_VER" ] && [ "$PHP_VER" -ge 70400 ]; then
     REQUIRED+=("relay" "msgpack")
 else
     REQUIRED+=("redis")
