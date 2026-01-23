@@ -11,10 +11,14 @@ echo "Testing $IMAGE on $PLATFORM..."
 
 FAILED=0
 
-# 1. Size (<200MB)
+# 1. Size
 OPT_SIZE_MB=$(( $(docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "du -sk /opt | cut -f1") / 1024 ))
-if [ "$OPT_SIZE_MB" -gt 200 ]; then
-    echo "  [FAIL] Size: ${OPT_SIZE_MB}MB"
+
+if [ "$OPT_SIZE_MB" -gt 250 ]; then
+    echo "  [FAIL] Size: ${OPT_SIZE_MB}MB (exceeds 250MB Lambda limit)"
+    FAILED=1
+elif [ "$OPT_SIZE_MB" -gt 150 ]; then
+    echo "  [FAIL] Size: ${OPT_SIZE_MB}MB (zip too large)"
     FAILED=1
 else
     echo "  [OK] Size: ${OPT_SIZE_MB}MB"

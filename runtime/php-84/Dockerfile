@@ -81,7 +81,7 @@ RUN cp relay.ini ${INSTALL_DIR}/etc/php/conf.d/50-relay.ini; PHP_EXT_DIR=$(${INS
 RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --install-dir=${INSTALL_DIR}/bin/ --filename=composer
 RUN git clone https://github.com/ymirapp/php-runtime.git /tmp/runtime-build && cd /tmp/runtime-build && git checkout tags/v1.17.1 && cd /opt \
  && cp -R /tmp/runtime-build/composer.json /tmp/runtime-build/composer.lock /tmp/runtime-build/runtime/bootstrap /tmp/runtime-build/runtime/runtime.php /tmp/runtime-build/src /tmp/runtime-build/templates ./ \
- && chmod 0555 /opt/bootstrap /opt/runtime.php && /opt/ymir/bin/php /opt/ymir/bin/composer install --no-dev
+ && chmod 0555 /opt/bootstrap /opt/runtime.php && /opt/ymir/bin/php /opt/ymir/bin/composer install --no-dev --optimize-autoloader --no-ansi --no-interaction && find /opt/vendor -type d -name "tests" -exec rm -rf {} + && find /opt/vendor -type d -name "test" -exec rm -rf {} + && find /opt/vendor -type d -name "docs" -exec rm -rf {} + && find /opt/vendor -type f -name "*.md" -delete && find /opt/vendor -type f -name "phpunit.xml*" -delete
 
 # Layer Assembly
 RUN mkdir -p /tmp/layer/bin /tmp/layer/ymir/bin /tmp/layer/lib /tmp/layer/ymir/etc/php/conf.d /tmp/layer/ymir/etc/php-fpm.d && rm -rf /tmp/layer/ymir/lib && ln -s ../lib /tmp/layer/ymir/lib
@@ -93,7 +93,7 @@ RUN cp ${INSTALL_DIR}/lib/libsqlite3.so* /tmp/layer/lib/ && cp ${INSTALL_DIR}/li
     cp ${INSTALL_DIR}/lib/libMagickWand-7.Q16HDRI.so* /tmp/layer/lib/ && cp ${INSTALL_DIR}/lib/libMagickCore-7.Q16HDRI.so* /tmp/layer/lib/
 COPY shared/copy-dependencies.php /tmp/copy-dependencies.php
 RUN ${INSTALL_DIR}/bin/php /tmp/copy-dependencies.php /tmp/layer/ymir/bin /tmp/layer/lib && ${INSTALL_DIR}/bin/php /tmp/copy-dependencies.php /tmp/layer/lib/php/extensions /tmp/layer/lib
-RUN find /tmp/layer/ymir/bin -type f -exec strip --strip-all {} + || true && find /tmp/layer/lib -type f -name "*.so*" -exec strip --strip-unneeded {} + || true
+RUN find /tmp/layer/ymir/bin -type f -exec strip --strip-all {} + || true && find /tmp/layer/lib -type f -name "*.so*" -exec strip --strip-unneeded {} + || true && find /tmp/layer/lib -type f -name "*.a" -delete && find /tmp/layer/lib -type f -name "*.la" -delete
 COPY shared/php.ini /tmp/layer/ymir/etc/php/php.ini
 COPY shared/php-fpm.conf /tmp/layer/ymir/etc/php-fpm.d/php-fpm.conf
 
