@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.1](https://github.com/ymirapp/php-runtime/compare/v1.17.0...v1.17.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* Fix missing transient dependencies and autoloader paths in zip layers ([20088de](https://github.com/ymirapp/php-runtime/commit/20088de7524a059ea4e578b97829562f98e2ffec))
+
 ## [1.17.0](https://github.com/ymirapp/php-runtime/compare/v1.16.0...v1.17.0) (2026-01-08)
 
 
