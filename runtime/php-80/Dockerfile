@@ -101,6 +101,8 @@ COPY shared/php-fpm.conf /tmp/layer/ymir/etc/php-fpm.d/php-fpm.conf
 
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE}
 ENV PATH="/opt/bin:${PATH}" LD_LIBRARY_PATH="/opt/lib"
-COPY --from=build-environment /opt/bootstrap /opt/runtime.php /opt/composer.json /opt/composer.lock /opt/src /opt/templates /opt/
+COPY --from=build-environment /opt/bootstrap /opt/runtime.php /opt/composer.json /opt/composer.lock /opt/
+COPY --from=build-environment /opt/src /opt/src
+COPY --from=build-environment /opt/templates /opt/templates
 COPY --from=build-environment /opt/vendor /opt/vendor
 COPY --from=build-environment /tmp/layer /opt

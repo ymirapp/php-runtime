@@ -30,7 +30,7 @@ docker run --rm --platform "$PLATFORM" --entrypoint /opt/ymir/bin/php "$IMAGE" -
 echo "--------------------------------------------------------------------------------"
 
 # 3. Filesystem layout
-FILES_TO_CHECK=("/opt/bootstrap" "/opt/runtime.php" "/opt/vendor" "/opt/vendor/autoload.php")
+FILES_TO_CHECK=("/opt/bootstrap" "/opt/runtime.php" "/opt/vendor" "/opt/vendor/autoload.php" "/opt/src" "/opt/templates")
 for file in "${FILES_TO_CHECK[@]}"; do
     if docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "[ -e $file ]"; then
         echo "  [OK] File exists: $file"
@@ -40,11 +40,20 @@ for file in "${FILES_TO_CHECK[@]}"; do
     fi
 done
 
-# 4. Autoloader
-if docker run --rm --platform "$PLATFORM" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "require '/opt/vendor/autoload.php';" 2>/dev/null; then
-    echo "  [OK] Autoloader loadable"
+# 4. Runtime Entry Point Verification
+ENTRY_POINT_LOG=$(docker run --rm --platform "$PLATFORM" \
+    -e AWS_LAMBDA_RUNTIME_API="localhost" \
+    -e AWS_REGION="us-east-1" \
+    -e LAMBDA_TASK_ROOT="/var/task" \
+    --entrypoint /opt/ymir/bin/php "$IMAGE" /opt/runtime.php 2>&1 | head -n 20 || true)
+
+if echo "$ENTRY_POINT_LOG" | grep -q "Loaded runtime Composer autoload file"; then
+    echo "  [OK] Runtime entry point loadable"
 else
-    echo "  [FAIL] Autoloader failed to load"
+    echo "  [FAIL] Runtime entry point failed to boot"
+    echo "--------------------------------------------------------------------------------"
+    echo "$ENTRY_POINT_LOG"
+    echo "--------------------------------------------------------------------------------"
     FAILED=1
 fi
 
