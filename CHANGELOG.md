@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.3](https://github.com/ymirapp/php-runtime/compare/v1.17.2...v1.17.3) (2026-01-24)
+
+
+### Bug Fixes
+
+* Preserve `src` and `templates` directory structure in zip layers ([0ce0e58](https://github.com/ymirapp/php-runtime/commit/0ce0e583c2036e85abff8ce1668c3b8e2eb95050))
+
 ## [1.17.2](https://github.com/ymirapp/php-runtime/compare/v1.17.1...v1.17.2) (2026-01-23)
 
 
