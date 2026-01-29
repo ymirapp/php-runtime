@@ -20,15 +20,8 @@ use AsyncAws\Ssm\ValueObject\Parameter;
 use hollodotme\FastCGI\Exceptions\ReadFailedException;
 use Tightenco\Collect\Support\Arr;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
-use Ymir\Runtime\Lambda\Handler\BedrockLambdaEventHandler;
-use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
-use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
+use Ymir\Runtime\Lambda\Handler;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
-use Ymir\Runtime\Lambda\Handler\PhpScriptLambdaEventHandler;
-use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
-use Ymir\Runtime\Lambda\Handler\RadicleLambdaEventHandler;
-use Ymir\Runtime\Lambda\Handler\WarmUpEventHandler;
-use Ymir\Runtime\Lambda\Handler\WordPressLambdaEventHandler;
 use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
 use Ymir\Runtime\Lambda\RuntimeApiClient;
 
@@ -120,14 +113,22 @@ class Runtime
 
         return new self(
             new RuntimeApiClient($apiUrl, $logger),
-            new LambdaEventHandlerCollection($logger, [
-                new PingLambdaEventHandler(),
-                new WarmUpEventHandler(new LambdaClient(['region' => $region], null, null, $logger)),
-                new ConsoleCommandLambdaEventHandler($logger),
-                new WordPressLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
-                new BedrockLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
-                new RadicleLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
-                new PhpScriptLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
+            new Handler\LambdaEventHandlerCollection($logger, [
+                // Internal handlers
+                new Handler\PingLambdaEventHandler(),
+                new Handler\WarmUpEventHandler(new LambdaClient(['region' => $region], null, null, $logger)),
+
+                // Specialized event type handlers
+                new Handler\ConsoleCommandLambdaEventHandler($logger),
+
+                // Application/Framework specific handlers
+                new Handler\WordPressLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
+                new Handler\BedrockLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
+                new Handler\RadicleLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
+                new Handler\LaravelLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
+
+                // Fallback handlers
+                new Handler\PhpScriptLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
             ]),
             $logger,
             $phpFpmProcess,
