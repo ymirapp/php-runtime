@@ -11,15 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-use Ymir\Runtime\Runtime;
+namespace Ymir\Runtime;
 
-ini_set('display_errors', '1');
-error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
-
-require __DIR__.'/vendor/autoload.php';
-
-$runtime = Runtime::create();
-
-while (true) {
-    $runtime->processNextEvent();
+interface RuntimeInterface
+{
+    /**
+     * Process the next Lambda runtime API event.
+     */
+    public function processNextEvent(): void;
 }

@@ -11,21 +11,21 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
+namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Http;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
-use Ymir\Runtime\Lambda\Handler\PhpScriptLambdaEventHandler;
+use Ymir\Runtime\Lambda\Handler\Http\PhpScriptHttpEventHandler;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
 /**
- * @covers \Ymir\Runtime\Lambda\Handler\PhpScriptLambdaEventHandler
+ * @covers \Ymir\Runtime\Lambda\Handler\Http\PhpScriptHttpEventHandler
  */
-class PhpScriptLambdaEventHandlerTest extends TestCase
+class PhpScriptHttpEventHandlerTest extends TestCase
 {
     use HttpRequestEventMockTrait;
     use InvocationEventInterfaceMockTrait;
@@ -36,7 +36,7 @@ class PhpScriptLambdaEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        $handler = new PhpScriptLambdaEventHandler($this->getLoggerMock(), $process, '/', '/tmp/tmp.php');
+        $handler = new PhpScriptHttpEventHandler($this->getLoggerMock(), $process, '/', '/tmp/tmp.php');
 
         $this->assertFalse($handler->canHandle($this->getHttpRequestEventMock()));
     }
@@ -50,7 +50,7 @@ class PhpScriptLambdaEventHandlerTest extends TestCase
 
         rename($filePath, $phpFilePath);
 
-        $handler = new PhpScriptLambdaEventHandler($this->getLoggerMock(), $process, '', $phpFilePath);
+        $handler = new PhpScriptHttpEventHandler($this->getLoggerMock(), $process, '', $phpFilePath);
 
         $this->assertTrue($handler->canHandle($this->getHttpRequestEventMock()));
     }
@@ -64,7 +64,7 @@ class PhpScriptLambdaEventHandlerTest extends TestCase
 
         rename($filePath, $phpFilePath);
 
-        $handler = new PhpScriptLambdaEventHandler($this->getLoggerMock(), $process, '/', $phpFilePath);
+        $handler = new PhpScriptHttpEventHandler($this->getLoggerMock(), $process, '/', $phpFilePath);
 
         $this->assertFalse($handler->canHandle($this->getInvocationEventInterfaceMock()));
     }
@@ -73,7 +73,7 @@ class PhpScriptLambdaEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        $handler = new PhpScriptLambdaEventHandler($this->getLoggerMock(), $process, '/', '/tmp/tmp');
+        $handler = new PhpScriptHttpEventHandler($this->getLoggerMock(), $process, '/', '/tmp/tmp');
 
         $this->assertFalse($handler->canHandle($this->getHttpRequestEventMock()));
     }
@@ -100,7 +100,7 @@ class PhpScriptLambdaEventHandlerTest extends TestCase
                 ->method('handle')
                 ->with($this->isInstanceOf(FastCgiRequest::class));
 
-        $handler = new PhpScriptLambdaEventHandler($this->getLoggerMock(), $process, '/', $phpFilePath);
+        $handler = new PhpScriptHttpEventHandler($this->getLoggerMock(), $process, '/', $phpFilePath);
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
     }
@@ -127,7 +127,7 @@ class PhpScriptLambdaEventHandlerTest extends TestCase
                 ->method('handle')
                 ->with($this->isInstanceOf(FastCgiRequest::class));
 
-        $handler = new PhpScriptLambdaEventHandler($this->getLoggerMock(), $process, '/', $phpFilePath);
+        $handler = new PhpScriptHttpEventHandler($this->getLoggerMock(), $process, '/', $phpFilePath);
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
     }

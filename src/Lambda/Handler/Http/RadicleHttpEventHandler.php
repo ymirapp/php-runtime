@@ -11,15 +11,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Lambda\Handler;
+namespace Ymir\Runtime\Lambda\Handler\Http;
 
 use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 
 /**
- * Lambda invocation event handler for a Bedrock WordPress installation.
+ * Lambda invocation event handler for a Radicle WordPress installation.
  */
-class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
+class RadicleHttpEventHandler extends AbstractPhpFpmRequestEventHandler
 {
     /**
      * {@inheritdoc}
@@ -27,8 +27,8 @@ class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
     public function canHandle(InvocationEventInterface $event): bool
     {
         return parent::canHandle($event)
-            && (file_exists($this->rootDirectory.'/web/app/mu-plugins/bedrock-autoloader.php')
-                || (is_dir($this->rootDirectory.'/web/app/') && file_exists($this->rootDirectory.'/web/wp-config.php') && file_exists($this->rootDirectory.'/config/application.php')));
+            && (file_exists($this->rootDirectory.'/public/content/mu-plugins/bedrock-autoloader.php')
+                || (is_dir($this->rootDirectory.'/public/') && file_exists($this->rootDirectory.'/public/wp-config.php') && file_exists($this->rootDirectory.'/bedrock/application.php')));
     }
 
     /**
@@ -50,8 +50,8 @@ class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
 
         $path = ltrim($path, '/');
 
-        if (!str_starts_with($path, 'web/')) {
-            $path = 'web/'.$path;
+        if (!str_starts_with($path, 'public/')) {
+            $path = 'public/'.$path;
         }
 
         return $this->rootDirectory.'/'.$path;
@@ -68,7 +68,7 @@ class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
             $filePath = rtrim($filePath, '/').'/index.php';
         }
 
-        return file_exists($filePath) ? $filePath : $this->rootDirectory.'/web/index.php';
+        return file_exists($filePath) ? $filePath : $this->rootDirectory.'/public/index.php';
     }
 
     /**
@@ -84,7 +84,7 @@ class BedrockLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
      */
     private function isMultisite(): bool
     {
-        $application = file_get_contents($this->rootDirectory.'/config/application.php');
+        $application = file_get_contents($this->rootDirectory.'/bedrock/application.php');
 
         return is_string($application) && 1 === preg_match('/Config::define\(\s*(\'|\")MULTISITE\1\s*,\s*true\s*\)/', $application);
     }

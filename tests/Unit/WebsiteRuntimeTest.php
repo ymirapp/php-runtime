@@ -16,18 +16,18 @@ namespace Ymir\Runtime\Tests\Unit;
 use hollodotme\FastCGI\Exceptions\ReadFailedException;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
-use Ymir\Runtime\Runtime;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaEventHandlerInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaRuntimeApiClientMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 use Ymir\Runtime\Tests\Mock\ResponseInterfaceMockTrait;
+use Ymir\Runtime\WebsiteRuntime;
 
 /**
- * @covers \Ymir\Runtime\Runtime
+ * @covers \Ymir\Runtime\WebsiteRuntime
  */
-class RuntimeTest extends TestCase
+class WebsiteRuntimeTest extends TestCase
 {
     use InvocationEventInterfaceMockTrait;
     use LambdaEventHandlerInterfaceMockTrait;
@@ -46,10 +46,10 @@ class RuntimeTest extends TestCase
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
-        new Runtime($client, $handler, $logger, $process, 0);
+        new WebsiteRuntime($client, $handler, $logger, $process, 0);
     }
 
-    public function testProcessNextEvent()
+    public function testProcessNextEventWithMaxInvocationsReached()
     {
         $client = $this->getLambdaRuntimeApiClientMock();
         $event = $this->getInvocationEventInterfaceMock();
@@ -58,7 +58,10 @@ class RuntimeTest extends TestCase
         $process = $this->getPhpFpmProcessMock();
         $response = $this->getResponseInterfaceMock();
 
-        $runtime = new Runtime($client, $handler, $logger, $process);
+        $runtime = $this->getMockBuilder(WebsiteRuntime::class)
+                        ->setConstructorArgs([$client, $handler, $logger, $process, 1])
+                        ->setMethods(['terminate'])
+                        ->getMock();
 
         $client->expects($this->once())
                ->method('getNextEvent')
@@ -66,6 +69,10 @@ class RuntimeTest extends TestCase
         $client->expects($this->once())
                 ->method('sendResponse')
                 ->with($this->identicalTo($event), $this->identicalTo($response));
+
+        $event->expects($this->once())
+              ->method('getId')
+              ->willReturn('test-id');
 
         $handler->expects($this->once())
                 ->method('canHandle')
@@ -75,6 +82,14 @@ class RuntimeTest extends TestCase
                 ->method('handle')
                 ->with($this->identicalTo($event))
                 ->willReturn($response);
+
+        $logger->expects($this->once())
+               ->method('info')
+               ->with('Killing Lambda container. Container has processed 1 invocation events. (test-id)');
+
+        $runtime->expects($this->once())
+                 ->method('terminate')
+                 ->with(0);
 
         $runtime->processNextEvent();
     }
@@ -87,7 +102,7 @@ class RuntimeTest extends TestCase
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
-        $runtime = $this->getMockBuilder(Runtime::class)
+        $runtime = $this->getMockBuilder(WebsiteRuntime::class)
                         ->setConstructorArgs([$client, $handler, $logger, $process])
                         ->setMethods(['terminate'])
                         ->getMock();
@@ -117,10 +132,42 @@ class RuntimeTest extends TestCase
                ->with($this->identicalTo($event), $this->isInstanceOf(BadGatewayHttpResponse::class));
 
         $runtime->expects($this->once())
-                ->method('terminate')
-                ->with(1);
+                 ->method('terminate')
+                 ->with(1);
 
         $runtime->processNextEvent();
+    }
+
+    public function testStartWithException()
+    {
+        $client = $this->getLambdaRuntimeApiClientMock();
+        $exception = new \Exception('test exception');
+        $handler = $this->getLambdaEventHandlerInterfaceMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $process->expects($this->once())
+                ->method('start')
+                ->willThrowException($exception);
+
+        $logger->expects($this->once())
+               ->method('exception')
+               ->with($this->identicalTo($exception));
+
+        $client->expects($this->once())
+               ->method('sendInitializationError')
+               ->with($this->identicalTo($exception));
+
+        $runtime = $this->getMockBuilder(WebsiteRuntime::class)
+                        ->setConstructorArgs([$client, $handler, $logger, $process])
+                        ->setMethods(['terminate'])
+                        ->getMock();
+
+        $runtime->expects($this->once())
+                 ->method('terminate')
+                 ->with(1);
+
+        $runtime->start();
     }
 
     public function testStartWithNoException()
@@ -133,8 +180,13 @@ class RuntimeTest extends TestCase
         $process->expects($this->once())
                 ->method('start');
 
-        $runtime = new Runtime($client, $handler, $logger, $process);
+        $runtime = new WebsiteRuntime($client, $handler, $logger, $process);
 
         $runtime->start();
+    }
+
+    public function testType()
+    {
+        $this->assertSame('website', WebsiteRuntime::TYPE);
     }
 }

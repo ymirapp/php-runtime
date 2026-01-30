@@ -1,0 +1,108 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Ymir PHP Runtime.
+ *
+ * (c) Carl Alexander <support@ymirapp.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Ymir\Runtime;
+
+use hollodotme\FastCGI\Exceptions\ReadFailedException;
+use Ymir\Runtime\FastCgi\PhpFpmProcess;
+use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
+use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
+use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
+
+/**
+ * Runtime for "website" functions.
+ */
+class WebsiteRuntime extends AbstractRuntime
+{
+    /**
+     * The function type that the runtime handles.
+     */
+    public const TYPE = 'website';
+
+    /**
+     * The current number of invocations.
+     *
+     * @var int
+     */
+    private $invocations;
+
+    /**
+     * The maximum number of invocations.
+     *
+     * @var int|null
+     */
+    private $maxInvocations;
+
+    /**
+     * The PHP-FPM process used by the runtime.
+     *
+     * @var PhpFpmProcess
+     */
+    private $phpFpmProcess;
+
+    public function __construct(RuntimeApiClient $client, LambdaEventHandlerInterface $handler, Logger $logger, PhpFpmProcess $phpFpmProcess, ?int $maxInvocations = null)
+    {
+        parent::__construct($client, $handler, $logger);
+
+        if (is_int($maxInvocations) && $maxInvocations < 1) {
+            throw new \InvalidArgumentException('"maxInvocations" must be greater than 0');
+        }
+
+        $this->invocations = 0;
+        $this->maxInvocations = $maxInvocations;
+        $this->phpFpmProcess = $phpFpmProcess;
+    }
+
+    /**
+     * Start the Lambda runtime.
+     */
+    public function start(): void
+    {
+        try {
+            $this->phpFpmProcess->start();
+        } catch (\Throwable $exception) {
+            $this->logger->exception($exception);
+            $this->client->sendInitializationError($exception);
+
+            $this->terminate(1);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function handleEvent(InvocationEventInterface $event): void
+    {
+        try {
+            parent::handleEvent($event);
+
+            if (is_int($this->maxInvocations)) {
+                ++$this->invocations;
+            }
+        } catch (ReadFailedException $exception) {
+            $this->logger->exception($exception);
+
+            $this->client->sendResponse($event, new BadGatewayHttpResponse('The process handling the request crashed unexpectedly'));
+
+            $this->logger->info('Killing Lambda container. PHP-FPM process has crashed.');
+
+            $this->terminate(1);
+        }
+
+        if (is_int($this->maxInvocations) && $this->invocations >= $this->maxInvocations) {
+            $this->logger->info(sprintf('Killing Lambda container. Container has processed %s invocation events. (%s)', $this->maxInvocations, $event->getId()));
+
+            $this->terminate(0);
+        }
+    }
+}

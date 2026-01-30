@@ -11,13 +11,13 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
+namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Http;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
-use Ymir\Runtime\Lambda\Handler\LaravelLambdaEventHandler;
+use Ymir\Runtime\Lambda\Handler\Http\LaravelHttpEventHandler;
 use Ymir\Runtime\Lambda\Response\NotFoundHttpResponse;
 use Ymir\Runtime\Lambda\Response\StaticFileResponse;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
@@ -26,9 +26,9 @@ use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
 /**
- * @covers \Ymir\Runtime\Lambda\Handler\LaravelLambdaEventHandler
+ * @covers \Ymir\Runtime\Lambda\Handler\Http\LaravelHttpEventHandler
  */
-class LaravelLambdaEventHandlerTest extends TestCase
+class LaravelHttpEventHandlerTest extends TestCase
 {
     use HttpRequestEventMockTrait;
     use InvocationEventInterfaceMockTrait;
@@ -76,7 +76,7 @@ class LaravelLambdaEventHandlerTest extends TestCase
     {
         touch($this->tempDir.'/public/index.php');
 
-        $this->assertFalse((new LaravelLambdaEventHandler($this->getLoggerMock(), $this->getPhpFpmProcessMock(), $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
+        $this->assertFalse((new LaravelHttpEventHandler($this->getLoggerMock(), $this->getPhpFpmProcessMock(), $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
         @unlink($this->tempDir.'/public/index.php');
     }
@@ -85,7 +85,7 @@ class LaravelLambdaEventHandlerTest extends TestCase
     {
         touch($this->tempDir.'/artisan');
 
-        $this->assertFalse((new LaravelLambdaEventHandler($this->getLoggerMock(), $this->getPhpFpmProcessMock(), $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
+        $this->assertFalse((new LaravelHttpEventHandler($this->getLoggerMock(), $this->getPhpFpmProcessMock(), $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
         @unlink($this->tempDir.'/artisan');
     }
@@ -95,7 +95,7 @@ class LaravelLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/public/index.php');
         touch($this->tempDir.'/artisan');
 
-        $this->assertTrue((new LaravelLambdaEventHandler($this->getLoggerMock(), $this->getPhpFpmProcessMock(), $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
+        $this->assertTrue((new LaravelHttpEventHandler($this->getLoggerMock(), $this->getPhpFpmProcessMock(), $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
 
         @unlink($this->tempDir.'/public/index.php');
         @unlink($this->tempDir.'/artisan');
@@ -124,7 +124,7 @@ class LaravelLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/public/index.php');
         touch($this->tempDir.'/artisan');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new LaravelLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new LaravelHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/public/index.php');
         @unlink($this->tempDir.'/artisan');
@@ -154,7 +154,7 @@ class LaravelLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/artisan');
         touch($this->tempDir.'/public/test.php');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new LaravelLambdaEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new LaravelHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/public/index.php');
         @unlink($this->tempDir.'/artisan');
@@ -177,7 +177,7 @@ class LaravelLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/public/storage/image.jpg');
         touch($this->tempDir.'/storage/app/public/image.jpg');
 
-        $handler = new LaravelLambdaEventHandler($logger, $process, $this->tempDir);
+        $handler = new LaravelHttpEventHandler($logger, $process, $this->tempDir);
         $response = $handler->handle($event);
 
         $this->assertInstanceOf(StaticFileResponse::class, $response);
@@ -203,7 +203,7 @@ class LaravelLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/artisan');
         touch($this->tempDir.'/storage/app/public/image.jpg');
 
-        $handler = new LaravelLambdaEventHandler($logger, $process, $this->tempDir);
+        $handler = new LaravelHttpEventHandler($logger, $process, $this->tempDir);
         $response = $handler->handle($event);
 
         $this->assertInstanceOf(StaticFileResponse::class, $response);
@@ -229,7 +229,7 @@ class LaravelLambdaEventHandlerTest extends TestCase
         touch($this->tempDir.'/artisan');
         touch($this->tempDir.'/public'.$filePath);
 
-        $this->assertInstanceOf(NotFoundHttpResponse::class, (new LaravelLambdaEventHandler($this->getLoggerMock(), $process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(NotFoundHttpResponse::class, (new LaravelHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/public/index.php');
         @unlink($this->tempDir.'/artisan');

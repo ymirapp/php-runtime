@@ -11,17 +11,17 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
+namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Http;
 
 use PHPUnit\Framework\TestCase;
-use Ymir\Runtime\Lambda\Handler\AbstractHttpRequestEventHandler;
+use Ymir\Runtime\Lambda\Handler\Http\AbstractHttpRequestEventHandler;
 use Ymir\Runtime\Lambda\Response\StaticFileResponse;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpResponseMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 
 /**
- * @covers \Ymir\Runtime\Lambda\Handler\AbstractHttpRequestEventHandler
+ * @covers \Ymir\Runtime\Lambda\Handler\Http\AbstractHttpRequestEventHandler
  */
 class AbstractHttpRequestEventHandlerTest extends TestCase
 {

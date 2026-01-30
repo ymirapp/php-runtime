@@ -11,13 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Lambda;
+namespace Ymir\Runtime;
 
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\ForbiddenHttpResponse;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
-use Ymir\Runtime\Logger;
 
 /**
  * Client for interacting with the AWS Lambda runtime API.

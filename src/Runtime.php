@@ -17,123 +17,86 @@ use AsyncAws\Lambda\LambdaClient;
 use AsyncAws\Ssm\Input\GetParametersByPathRequest;
 use AsyncAws\Ssm\SsmClient;
 use AsyncAws\Ssm\ValueObject\Parameter;
-use hollodotme\FastCGI\Exceptions\ReadFailedException;
 use Tightenco\Collect\Support\Arr;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
-use Ymir\Runtime\Lambda\Handler;
-use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
-use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
-use Ymir\Runtime\Lambda\RuntimeApiClient;
+use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
+use Ymir\Runtime\Lambda\Handler\Http as HttpHandler;
+use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
+use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
+use Ymir\Runtime\Lambda\Handler\WarmUpEventHandler;
 
 /**
- * The Ymir PHP runtime.
+ * Ymir Runtime factory.
  */
 class Runtime
 {
     /**
-     * The Lambda runtime API client.
-     *
-     * @var RuntimeApiClient
-     */
-    private $client;
-
-    /**
-     * The Lambda invocation event handler used by the runtime.
-     *
-     * @var LambdaEventHandlerInterface
-     */
-    private $handler;
-
-    /**
-     * The current number of invocations.
-     *
-     * @var int
-     */
-    private $invocations;
-
-    /**
-     * The logger that sends logs to CloudWatch.
-     *
-     * @var Logger
-     */
-    private $logger;
-
-    /**
-     * The maximum number of invocations.
-     *
-     * @var int
-     */
-    private $maxInvocations;
-
-    /**
-     * The PHP-FPM process used by the runtime.
-     *
-     * @var PhpFpmProcess
-     */
-    private $phpFpmProcess;
-
-    /**
-     * Constructor.
-     */
-    public function __construct(RuntimeApiClient $client, LambdaEventHandlerInterface $handler, Logger $logger, PhpFpmProcess $phpFpmProcess, int $maxInvocations = 100)
-    {
-        if (0 >= $maxInvocations) {
-            throw new \InvalidArgumentException('"maxInvocations" must be greater than 0');
-        }
-
-        $this->client = $client;
-        $this->handler = $handler;
-        $this->invocations = 0;
-        $this->logger = $logger;
-        $this->maxInvocations = $maxInvocations;
-        $this->phpFpmProcess = $phpFpmProcess;
-    }
-
-    /**
      * Create new runtime from the Lambda environment variable.
      */
-    public static function createFromEnvironmentVariable(): self
+    public static function create(): RuntimeInterface
     {
-        $apiUrl = getenv('AWS_LAMBDA_RUNTIME_API');
+        $coldStart = microtime(true);
         $logger = new Logger(getenv('YMIR_RUNTIME_LOG_LEVEL') ?: Logger::INFO);
-        $maxInvocations = getenv('YMIR_RUNTIME_MAX_INVOCATIONS') ?: 100;
-        $phpFpmProcess = PhpFpmProcess::createForConfig($logger);
-        $region = getenv('AWS_REGION');
-        $rootDirectory = getenv('LAMBDA_TASK_ROOT');
+        $runtimeApiClient = new RuntimeApiClient((string) getenv('AWS_LAMBDA_RUNTIME_API'), $logger);
 
-        if (!is_string($apiUrl)) {
-            throw new \Exception('The "AWS_LAMBDA_RUNTIME_API" environment variable is missing');
-        } elseif (!is_string($rootDirectory)) {
-            throw new \Exception('The "LAMBDA_TASK_ROOT" environment variable is missing');
-        } elseif (!is_string($region)) {
-            throw new \Exception('The "AWS_REGION" environment variable is missing');
+        try {
+            $functionType = getenv('YMIR_FUNCTION_TYPE');
+            $region = getenv('AWS_REGION');
+            $rootDirectory = getenv('LAMBDA_TASK_ROOT');
+
+            if (!is_string($functionType)) {
+                throw new \Exception('The "YMIR_FUNCTION_TYPE" environment variable is missing');
+            } elseif (!is_string($rootDirectory)) {
+                throw new \Exception('The "LAMBDA_TASK_ROOT" environment variable is missing');
+            } elseif (!is_string($region)) {
+                throw new \Exception('The "AWS_REGION" environment variable is missing');
+            }
+
+            self::injectSecretEnvironmentVariables($logger, $region);
+
+            $handlers = [
+                new PingLambdaEventHandler(),
+                new WarmUpEventHandler(new LambdaClient(['region' => $region], null, null, $logger)),
+            ];
+
+            switch ($functionType) {
+                case ConsoleRuntime::TYPE:
+                    $runtime = new ConsoleRuntime($runtimeApiClient, new LambdaEventHandlerCollection($logger, array_merge($handlers, [
+                        new ConsoleCommandLambdaEventHandler($logger),
+                    ])), $logger);
+
+                    break;
+                case WebsiteRuntime::TYPE:
+                    $maxInvocations = ((int) getenv('YMIR_RUNTIME_MAX_INVOCATIONS')) ?: null;
+                    $phpFpmProcess = PhpFpmProcess::createForConfig($logger);
+
+                    $runtime = new WebsiteRuntime($runtimeApiClient, new LambdaEventHandlerCollection($logger, array_merge($handlers, [
+                        // Application/Framework specific handlers
+                        new HttpHandler\WordPressHttpEventHandler($logger, $phpFpmProcess, $rootDirectory),
+                        new HttpHandler\BedrockHttpEventHandler($logger, $phpFpmProcess, $rootDirectory),
+                        new HttpHandler\RadicleHttpEventHandler($logger, $phpFpmProcess, $rootDirectory),
+                        new HttpHandler\LaravelHttpEventHandler($logger, $phpFpmProcess, $rootDirectory),
+
+                        // Fallback handlers
+                        new HttpHandler\PhpScriptHttpEventHandler($logger, $phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
+                    ])), $logger, $phpFpmProcess, $maxInvocations);
+
+                    $runtime->start();
+
+                    break;
+                default:
+                    throw new \Exception(sprintf('Unknown function type: "%s"', $functionType));
+            }
+
+            $logger->info(sprintf('Ymir PHP Runtime (%s) initialized in %dms', $functionType, (microtime(true) - $coldStart) * 1000));
+
+            return $runtime;
+        } catch (\Throwable $exception) {
+            $logger->exception($exception);
+            $runtimeApiClient->sendInitializationError($exception);
+
+            exit(1);
         }
-
-        self::injectSecretEnvironmentVariables($logger, $region);
-
-        return new self(
-            new RuntimeApiClient($apiUrl, $logger),
-            new Handler\LambdaEventHandlerCollection($logger, [
-                // Internal handlers
-                new Handler\PingLambdaEventHandler(),
-                new Handler\WarmUpEventHandler(new LambdaClient(['region' => $region], null, null, $logger)),
-
-                // Specialized event type handlers
-                new Handler\ConsoleCommandLambdaEventHandler($logger),
-
-                // Application/Framework specific handlers
-                new Handler\WordPressLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
-                new Handler\BedrockLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
-                new Handler\RadicleLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
-                new Handler\LaravelLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory),
-
-                // Fallback handlers
-                new Handler\PhpScriptLambdaEventHandler($logger, $phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
-            ]),
-            $logger,
-            $phpFpmProcess,
-            (int) $maxInvocations
-        );
     }
 
     /**
@@ -161,61 +124,5 @@ class Runtime
             $logger->debug(sprintf('Injecting [%s] secret environment variable into runtime', $name));
             $_ENV[$name] = $value;
         });
-    }
-
-    /**
-     * Process the next Lambda runtime API event.
-     */
-    public function processNextEvent(): void
-    {
-        $event = $this->client->getNextEvent();
-
-        try {
-            if (!$this->handler->canHandle($event)) {
-                throw new \Exception('Unable to handle the given event');
-            }
-
-            $this->client->sendResponse($event, $this->handler->handle($event));
-
-            ++$this->invocations;
-        } catch (ReadFailedException $exception) {
-            $this->logger->exception($exception);
-
-            $this->client->sendResponse($event, new BadGatewayHttpResponse('The process handling the request crashed unexpectedly'));
-
-            $this->logger->info('Killing Lambda container. PHP-FPM process has crashed.');
-            $this->terminate(1);
-        } catch (\Throwable $exception) {
-            $this->logger->exception($exception);
-            $this->client->sendEventError($event, $exception);
-        }
-
-        if ($this->invocations >= $this->maxInvocations) {
-            $this->logger->info(sprintf('Killing Lambda container. Container has processed %s invocation events. (%s)', $this->maxInvocations, $event->getId()));
-            $this->terminate(0);
-        }
-    }
-
-    /**
-     * Start the Lambda runtime.
-     */
-    public function start(): void
-    {
-        try {
-            $this->phpFpmProcess->start();
-        } catch (\Throwable $exception) {
-            $this->logger->exception($exception);
-            $this->client->sendInitializationError($exception);
-
-            $this->terminate(1);
-        }
-    }
-
-    /**
-     * Terminate the runtime.
-     */
-    protected function terminate(int $code): void
-    {
-        exit($code);
     }
 }

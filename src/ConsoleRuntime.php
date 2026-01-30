@@ -11,15 +11,15 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-use Ymir\Runtime\Runtime;
+namespace Ymir\Runtime;
 
-ini_set('display_errors', '1');
-error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
-
-require __DIR__.'/vendor/autoload.php';
-
-$runtime = Runtime::create();
-
-while (true) {
-    $runtime->processNextEvent();
+/**
+ * Runtime for "console" functions.
+ */
+class ConsoleRuntime extends AbstractRuntime
+{
+    /**
+     * The function type that the runtime handles.
+     */
+    public const TYPE = 'console';
 }

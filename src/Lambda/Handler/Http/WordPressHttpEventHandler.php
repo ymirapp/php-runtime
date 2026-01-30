@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Lambda\Handler;
+namespace Ymir\Runtime\Lambda\Handler\Http;
 
 use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
@@ -19,7 +19,7 @@ use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 /**
  * Lambda invocation event handler for a regular WordPress installation.
  */
-class WordPressLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
+class WordPressHttpEventHandler extends AbstractPhpFpmRequestEventHandler
 {
     /**
      * {@inheritdoc}

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Lambda\Handler;
+namespace Ymir\Runtime\Lambda\Handler\Http;
 
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
@@ -21,7 +21,7 @@ use Ymir\Runtime\Logger;
 /**
  * Lambda invocation event handler for a specific PHP script.
  */
-class PhpScriptLambdaEventHandler extends AbstractPhpFpmRequestEventHandler
+class PhpScriptHttpEventHandler extends AbstractPhpFpmRequestEventHandler
 {
     /**
      * The path to the PHP script that this event handler uses.
