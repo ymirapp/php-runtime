@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
 
 use PHPUnit\Framework\TestCase;
+use Ymir\Runtime\Exception\UnsupportedEventException;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaEventHandlerInterfaceMockTrait;
@@ -114,7 +115,7 @@ class LambdaEventHandlerCollectionTest extends TestCase
 
     public function testHandleWithHandlerNotFound(): void
     {
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(UnsupportedEventException::class);
         $this->expectExceptionMessage('No handler found to handle the event');
 
         $event = $this->getInvocationEventInterfaceMock();

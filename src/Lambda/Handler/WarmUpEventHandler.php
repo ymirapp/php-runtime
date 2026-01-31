@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Lambda\Handler;
 
 use AsyncAws\Lambda\LambdaClient;
+use Ymir\Runtime\Exception\InvalidConfigurationException;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent;
 use Ymir\Runtime\Lambda\Response\HttpResponse;
@@ -65,7 +66,7 @@ class WarmUpEventHandler implements LambdaEventHandlerInterface
         $functionName = getenv('AWS_LAMBDA_FUNCTION_NAME');
 
         if (!is_string($functionName)) {
-            throw new \RuntimeException('"AWS_LAMBDA_FUNCTION_NAME" environment variable is\'t set');
+            throw new InvalidConfigurationException('"AWS_LAMBDA_FUNCTION_NAME" environment variable is\'t set');
         }
 
         // The first Lambda function invoked will be the one running this code. So, if we want the number of concurrent

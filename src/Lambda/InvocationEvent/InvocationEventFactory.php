@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Lambda\InvocationEvent;
 
+use Ymir\Runtime\Exception\RuntimeApiException;
+use Ymir\Runtime\Exception\UnsupportedEventException;
 use Ymir\Runtime\Logger;
 
 /**
@@ -28,7 +30,7 @@ class InvocationEventFactory
     public static function createFromApi($handle, Logger $logger): InvocationEventInterface
     {
         if (!self::isHandle($handle)) {
-            throw new \RuntimeException('The given "handle" must be a resource or a CurlHandle object');
+            throw new RuntimeApiException('The given "handle" must be a resource or a CurlHandle object');
         }
 
         $requestId = '';
@@ -56,17 +58,17 @@ class InvocationEventFactory
         curl_exec($handle);
 
         if (curl_error($handle)) {
-            throw new \Exception('Failed to get the next Lambda invocation: '.curl_error($handle));
+            throw new RuntimeApiException('Failed to get the next Lambda invocation: '.curl_error($handle));
         } elseif ('' === $requestId) {
-            throw new \Exception('Unable to parse the Lambda invocation ID');
+            throw new RuntimeApiException('Unable to parse the Lambda invocation ID');
         } elseif ('' === $body) {
-            throw new \Exception('Unable to parse the Lambda runtime API response');
+            throw new RuntimeApiException('Unable to parse the Lambda runtime API response');
         }
 
         $event = json_decode($body, true);
 
         if (!is_array($event)) {
-            throw new \Exception('Unable to decode the Lambda runtime API response');
+            throw new RuntimeApiException('Unable to decode the Lambda runtime API response');
         }
 
         $logger->debug('Lambda event received:', $event);
@@ -94,7 +96,7 @@ class InvocationEventFactory
         }
 
         if (!$invocationEvent instanceof InvocationEventInterface) {
-            throw new \InvalidArgumentException('Unknown Lambda event type');
+            throw new UnsupportedEventException('Unknown Lambda event type');
         }
 
         return $invocationEvent;

@@ -15,6 +15,7 @@ namespace Ymir\Runtime\Tests\Unit;
 
 use hollodotme\FastCGI\Exceptions\ReadFailedException;
 use PHPUnit\Framework\TestCase;
+use Ymir\Runtime\Exception\InvalidConfigurationException;
 use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaEventHandlerInterfaceMockTrait;
@@ -38,7 +39,7 @@ class WebsiteRuntimeTest extends TestCase
 
     public function testConstructorWithMaxInvocationLessThan1(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessage('"maxInvocations" must be greater than 0');
 
         $client = $this->getLambdaRuntimeApiClientMock();

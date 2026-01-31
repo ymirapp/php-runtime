@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime;
 
 use hollodotme\FastCGI\Exceptions\ReadFailedException;
+use Ymir\Runtime\Exception\InvalidConfigurationException;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
@@ -55,7 +56,7 @@ class WebsiteRuntime extends AbstractRuntime
         parent::__construct($client, $handler, $logger);
 
         if (is_int($maxInvocations) && $maxInvocations < 1) {
-            throw new \InvalidArgumentException('"maxInvocations" must be greater than 0');
+            throw new InvalidConfigurationException('"maxInvocations" must be greater than 0');
         }
 
         $this->invocations = 0;

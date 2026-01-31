@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime;
 
+use Ymir\Runtime\Exception\UnsupportedEventException;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 
@@ -73,7 +74,7 @@ abstract class AbstractRuntime implements RuntimeInterface
     protected function handleEvent(InvocationEventInterface $event): void
     {
         if (!$this->handler->canHandle($event)) {
-            throw new \Exception('Unable to handle the given event');
+            throw new UnsupportedEventException('Unable to handle the given event');
         }
 
         $this->client->sendResponse($event, $this->handler->handle($event));

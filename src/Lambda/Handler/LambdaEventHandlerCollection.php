@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Lambda\Handler;
 
+use Ymir\Runtime\Exception\UnsupportedEventException;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
 use Ymir\Runtime\Logger;
@@ -72,7 +73,7 @@ class LambdaEventHandlerCollection implements LambdaEventHandlerInterface
         $handler = $this->getHandlerForEvent($event);
 
         if (!$handler instanceof LambdaEventHandlerInterface) {
-            throw new \RuntimeException('No handler found to handle the event');
+            throw new UnsupportedEventException('No handler found to handle the event');
         }
 
         $this->logger->debug(sprintf('"%s" handler selected for the event', get_class($handler)));

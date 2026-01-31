@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime;
 
+use Ymir\Runtime\Exception\RuntimeApiException;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\ForbiddenHttpResponse;
@@ -52,7 +53,7 @@ class RuntimeApiClient
         $handle = curl_init("http://$apiUrl/2018-06-01/runtime/invocation/next");
 
         if (false === $handle) {
-            throw new \RuntimeException('Failed to connect to the AWS Lambda next invocation API');
+            throw new RuntimeApiException('Failed to connect to the AWS Lambda next invocation API');
         }
 
         curl_setopt($handle, CURLOPT_FOLLOWLOCATION, true);
@@ -133,14 +134,14 @@ class RuntimeApiClient
         $json = json_encode($data);
 
         if (false === $json) {
-            throw new \Exception('Error encoding JSON data: '.json_last_error_msg());
+            throw new RuntimeApiException('Error encoding JSON data: '.json_last_error_msg());
         }
 
         $url = "http://{$this->apiUrl}/2018-06-01/runtime/".ltrim($uri, '/');
         $handle = curl_init($url);
 
         if (false === $handle) {
-            throw new \Exception('Unable to initialize curl session for: '.$url);
+            throw new RuntimeApiException('Unable to initialize curl session for: '.$url);
         }
 
         curl_setopt($handle, CURLOPT_CUSTOMREQUEST, 'POST');
@@ -156,7 +157,7 @@ class RuntimeApiClient
         if (curl_error($handle)) {
             $errorMessage = curl_error($handle);
 
-            throw new \Exception('Error sending data to the Lambda runtime API: '.$errorMessage);
+            throw new RuntimeApiException('Error sending data to the Lambda runtime API: '.$errorMessage);
         }
 
         curl_setopt($handle, CURLOPT_HEADERFUNCTION, null);

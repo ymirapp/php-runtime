@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\InvocationEvent;
 
 use PHPUnit\Framework\TestCase;
+use Ymir\Runtime\Exception\UnsupportedEventException;
 use Ymir\Runtime\Lambda\InvocationEvent\ConsoleCommandEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
@@ -28,7 +29,7 @@ class InvocationEventFactoryTest extends TestCase
 {
     public function testCreateFromInvocationEventFails(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(UnsupportedEventException::class);
         $this->expectExceptionMessage('Unknown Lambda event type');
 
         InvocationEventFactory::createFromInvocationEvent('id', []);

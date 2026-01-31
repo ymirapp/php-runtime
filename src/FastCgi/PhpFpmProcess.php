@@ -16,6 +16,7 @@ namespace Ymir\Runtime\FastCgi;
 use hollodotme\FastCGI\Interfaces\ProvidesRequestData;
 use hollodotme\FastCGI\Interfaces\ProvidesResponseData;
 use Symfony\Component\Process\Process;
+use Ymir\Runtime\Exception\PhpFpmException;
 use Ymir\Runtime\Logger;
 
 /**
@@ -97,7 +98,7 @@ class PhpFpmProcess
 
         // This also triggers "updateStatus" inside the Symfony process which will make it output the logs from PHP-FPM.
         if (!$this->process->isRunning()) {
-            throw new \Exception('PHP-FPM has stopped unexpectedly');
+            throw new PhpFpmException('PHP-FPM has stopped unexpectedly');
         }
 
         return $response;
@@ -123,7 +124,7 @@ class PhpFpmProcess
 
         $this->wait(function () {
             if (!$this->process->isRunning()) {
-                throw new \Exception('PHP-FPM process failed to start');
+                throw new PhpFpmException('PHP-FPM process failed to start');
             }
 
             return !$this->isStarted();
@@ -164,7 +165,7 @@ class PhpFpmProcess
             $elapsed += $wait;
 
             if ($elapsed > $timeout) {
-                throw new \Exception($message);
+                throw new PhpFpmException($message);
             }
         }
     }

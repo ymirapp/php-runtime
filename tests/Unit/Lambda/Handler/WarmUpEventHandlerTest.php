@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
 
 use PHPUnit\Framework\TestCase;
+use Ymir\Runtime\Exception\InvalidConfigurationException;
 use Ymir\Runtime\Lambda\Handler\WarmUpEventHandler;
 use Ymir\Runtime\Lambda\Response\HttpResponse;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
@@ -105,7 +106,7 @@ class WarmUpEventHandlerTest extends TestCase
 
     public function testHandleWithNoEnvironmentVariable(): void
     {
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessage('"AWS_LAMBDA_FUNCTION_NAME" environment variable is\'t set');
 
         $event = $this->getWarmUpEventMock();

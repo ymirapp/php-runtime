@@ -15,6 +15,7 @@ namespace Ymir\Runtime\Lambda\Response;
 
 use Mimey\MimeTypes;
 use Mimey\MimeTypesInterface;
+use Ymir\Runtime\Exception\FileNotReadableException;
 
 /**
  * A Lambda response for a static file.
@@ -52,7 +53,7 @@ class StaticFileResponse implements ResponseInterface
         $file = file_get_contents($this->filePath);
 
         if (!is_string($file)) {
-            throw new \RuntimeException(sprintf('Unable to get the contents of "%s"', $this->filePath));
+            throw new FileNotReadableException(sprintf('Unable to get the contents of "%s"', $this->filePath));
         }
 
         $contentType = null;

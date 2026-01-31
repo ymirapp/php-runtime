@@ -18,6 +18,7 @@ use AsyncAws\Ssm\Input\GetParametersByPathRequest;
 use AsyncAws\Ssm\SsmClient;
 use AsyncAws\Ssm\ValueObject\Parameter;
 use Tightenco\Collect\Support\Arr;
+use Ymir\Runtime\Exception\InvalidConfigurationException;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\Http as HttpHandler;
@@ -45,11 +46,11 @@ class Runtime
             $rootDirectory = getenv('LAMBDA_TASK_ROOT');
 
             if (!is_string($functionType)) {
-                throw new \Exception('The "YMIR_FUNCTION_TYPE" environment variable is missing');
+                throw new InvalidConfigurationException('The "YMIR_FUNCTION_TYPE" environment variable is missing');
             } elseif (!is_string($rootDirectory)) {
-                throw new \Exception('The "LAMBDA_TASK_ROOT" environment variable is missing');
+                throw new InvalidConfigurationException('The "LAMBDA_TASK_ROOT" environment variable is missing');
             } elseif (!is_string($region)) {
-                throw new \Exception('The "AWS_REGION" environment variable is missing');
+                throw new InvalidConfigurationException('The "AWS_REGION" environment variable is missing');
             }
 
             self::injectSecretEnvironmentVariables($logger, $region);
@@ -85,7 +86,7 @@ class Runtime
 
                     break;
                 default:
-                    throw new \Exception(sprintf('Unknown function type: "%s"', $functionType));
+                    throw new InvalidConfigurationException(sprintf('Unknown function type: "%s"', $functionType));
             }
 
             $logger->info(sprintf('Ymir PHP Runtime (%s) initialized in %dms', $functionType, (microtime(true) - $coldStart) * 1000));
