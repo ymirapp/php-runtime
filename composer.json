@@ -26,7 +26,7 @@
         "async-aws/lambda": "^1.0",
         "async-aws/ssm": "^1.0",
         "hollodotme/fast-cgi-client": "^3.0",
-        "monolog/monolog": "^1.0",
+        "monolog/monolog": "^2.0",
         "ralouphie/mimey": "^2.1",
         "symfony/http-client": "^5.4",
         "symfony/polyfill-php80": "^1.29",

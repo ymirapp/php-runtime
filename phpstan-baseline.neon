@@ -43,6 +43,12 @@ parameters:
 			path: src/Logger.php
 
 		-
+			message: '#^Parameter \#2 \$level of class Monolog\\Handler\\StreamHandler constructor expects 100\|200\|250\|300\|400\|500\|550\|600\|''ALERT''\|''alert''\|''CRITICAL''\|''critical''\|''DEBUG''\|''debug''\|''EMERGENCY''\|''emergency''\|''ERROR''\|''error''\|''INFO''\|''info''\|''NOTICE''\|''notice''\|''WARNING''\|''warning'', int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Logger.php
+
+		-
 			message: '#^Possibly invalid array key type mixed\.$#'
 			identifier: array.invalidKey
 			count: 1

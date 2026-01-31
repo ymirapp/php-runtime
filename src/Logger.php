@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime;
 
+use Monolog\DateTimeImmutable;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger as MonologLogger;
@@ -50,17 +51,17 @@ class Logger extends MonologLogger
     /**
      * {@inheritdoc}
      */
-    public function addRecord($level, $message, array $context = []): bool
+    public function addRecord(int $level, string $message, array $context = [], ?DateTimeImmutable $datetime = null): bool
     {
         // When killing the Lambda container, it appears that PHP closes the stream with the `__destruct` method before
         // we're done sending logs. We use a try/catch block here in order to reset the stream handler that way we can
         // send the final logs during the shutdown.
         try {
-            return parent::addRecord($level, $message, $context);
+            return parent::addRecord($level, $message, $context, $datetime);
         } catch (\LogicException $exception) {
             $this->setHandlers([$this->getStreamHandler()]);
 
-            return parent::addRecord($level, $message, $context);
+            return parent::addRecord($level, $message, $context, $datetime);
         }
     }
 
