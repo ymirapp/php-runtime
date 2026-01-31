@@ -79,7 +79,18 @@ for mod in "${REQUIRED[@]}"; do
     fi
 done
 
-# 6. Warnings
+# 6. Relay Configuration
+if [ -n "$PHP_VER" ] && [ "$PHP_VER" -ge 70400 ]; then
+    EVICTION_POLICY=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "echo ini_get('relay.eviction_policy');" 2>/dev/null)
+    if [ "$EVICTION_POLICY" = "lru" ]; then
+        echo "  [OK] relay.eviction_policy is lru"
+    else
+        echo "  [FAIL] relay.eviction_policy is '$EVICTION_POLICY' (expected lru)"
+        FAILED=1
+    fi
+fi
+
+# 7. Warnings
 WARNINGS=$(docker run --rm --platform "$PLATFORM" --entrypoint /opt/ymir/bin/php "$IMAGE" -v 2>&1 >/dev/null || true)
 if [ -n "$WARNINGS" ]; then
     echo "  [FAIL] Warnings: $WARNINGS"
@@ -88,7 +99,7 @@ else
     echo "  [OK] No warnings"
 fi
 
-# 7. PHP-FPM
+# 8. PHP-FPM
 FPM_BIN="/opt/ymir/bin/php-fpm"
 FPM_CONF="/opt/ymir/etc/php-fpm.d/php-fpm.conf"
 
