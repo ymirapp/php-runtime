@@ -29,21 +29,21 @@ class AbstractHttpRequestEventHandlerTest extends TestCase
     use HttpResponseMockTrait;
     use InvocationEventInterfaceMockTrait;
 
-    public function testCanHandleHttpRequestEventType()
+    public function testCanHandleHttpRequestEventType(): void
     {
         $handler = $this->getMockForAbstractClass(AbstractHttpRequestEventHandler::class, ['/']);
 
         $this->assertTrue($handler->canHandle($this->getHttpRequestEventMock()));
     }
 
-    public function testCanHandleWrongEventType()
+    public function testCanHandleWrongEventType(): void
     {
         $handler = $this->getMockForAbstractClass(AbstractHttpRequestEventHandler::class, ['/']);
 
         $this->assertFalse($handler->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
-    public function testHandleCallsCreateLambdaEventResponse()
+    public function testHandleCallsCreateLambdaEventResponse(): void
     {
         $event = $this->getHttpRequestEventMock();
         $handler = $this->getMockForAbstractClass(AbstractHttpRequestEventHandler::class, ['/']);
@@ -61,7 +61,7 @@ class AbstractHttpRequestEventHandlerTest extends TestCase
         $this->assertSame($response, $handler->handle($event));
     }
 
-    public function testHandleReturnsStaticFileResponse()
+    public function testHandleReturnsStaticFileResponse(): void
     {
         $event = $this->getHttpRequestEventMock();
         $tempDir = sys_get_temp_dir();
@@ -79,7 +79,7 @@ class AbstractHttpRequestEventHandlerTest extends TestCase
         @unlink($tempDir.'/foo');
     }
 
-    public function testHandleWithWrongEventType()
+    public function testHandleWithWrongEventType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessageMatches('/[^\s]* cannot handle the given invocation event object/');

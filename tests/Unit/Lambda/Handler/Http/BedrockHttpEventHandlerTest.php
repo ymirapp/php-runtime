@@ -57,7 +57,7 @@ class BedrockHttpEventHandlerTest extends TestCase
             $this->tempDir.'/web/tmp',
             $this->tempDir.'/web/wp/tmp',
             $this->tempDir.'/web/wp/wp-admin',
-        ])->each(function (string $directory) {
+        ])->each(function (string $directory): void {
             $filesystem = new Filesystem();
 
             if ($filesystem->exists($directory)) {
@@ -79,7 +79,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         ];
     }
 
-    public function testCanHandleWithApplicationAndWpConfigPresent()
+    public function testCanHandleWithApplicationAndWpConfigPresent(): void
     {
         $process = $this->getPhpFpmProcessMock();
 
@@ -92,7 +92,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp-config.php');
     }
 
-    public function testCanHandleWithBedrockAutoloaderPresent()
+    public function testCanHandleWithBedrockAutoloaderPresent(): void
     {
         $process = $this->getPhpFpmProcessMock();
 
@@ -105,7 +105,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
     }
 
-    public function testCanHandleWithMissingApplicationConfig()
+    public function testCanHandleWithMissingApplicationConfig(): void
     {
         $process = $this->getPhpFpmProcessMock();
 
@@ -116,7 +116,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp-config.php');
     }
 
-    public function testCanHandleWithMissingWpConfig()
+    public function testCanHandleWithMissingWpConfig(): void
     {
         $process = $this->getPhpFpmProcessMock();
 
@@ -127,21 +127,21 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/config/application.php');
     }
 
-    public function testCanHandleWithNoBedrockAutoloaderOrApplicationOrWordPressConfig()
+    public function testCanHandleWithNoBedrockAutoloaderOrApplicationOrWordPressConfig(): void
     {
         $process = $this->getPhpFpmProcessMock();
 
         $this->assertFalse((new BedrockHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
     }
 
-    public function testCanHandleWrongEventType()
+    public function testCanHandleWrongEventType(): void
     {
         $process = $this->getPhpFpmProcessMock();
 
         $this->assertFalse((new BedrockHttpEventHandler($this->getLoggerMock(), $process, ''))->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
-    public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion1()
+    public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -175,7 +175,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/tmp/index.php');
     }
 
-    public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion2()
+    public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -209,7 +209,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/tmp/index.php');
     }
 
-    public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion1()
+    public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -241,7 +241,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
     }
 
-    public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion2()
+    public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -273,7 +273,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
     }
 
-    public function testHandleCreatesFastCgiRequestToWebDirectoryWithAppPathsWithPayloadVersion1()
+    public function testHandleCreatesFastCgiRequestToWebDirectoryWithAppPathsWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -307,7 +307,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/app/plugins/file.php');
     }
 
-    public function testHandleCreatesFastCgiRequestToWebDirectoryWithAppPathsWithPayloadVersion2()
+    public function testHandleCreatesFastCgiRequestToWebDirectoryWithAppPathsWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -341,7 +341,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/app/plugins/file.php');
     }
 
-    public function testHandleCreatesFastCgiRequestToWebDirectoryWithWpPathsWithPayloadVersion1()
+    public function testHandleCreatesFastCgiRequestToWebDirectoryWithWpPathsWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -375,7 +375,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/tmp/index.php');
     }
 
-    public function testHandleCreatesFastCgiRequestToWebDirectoryWithWpPathsWithPayloadVersion2()
+    public function testHandleCreatesFastCgiRequestToWebDirectoryWithWpPathsWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -409,7 +409,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/tmp/index.php');
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForFileOutsideWebDirectoryWithPayloadVersion1()
+    public function testHandleDoesntReturnStaticFileResponseForFileOutsideWebDirectoryWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -442,7 +442,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         $this->assertFalse($response->isCompressible());
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForFileOutsideWebDirectoryWithPayloadVersion2()
+    public function testHandleDoesntReturnStaticFileResponseForFileOutsideWebDirectoryWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -475,7 +475,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         $this->assertFalse($response->isCompressible());
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion1()
+    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -508,7 +508,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         $this->assertFalse($response->isCompressible());
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion2()
+    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -540,7 +540,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         $this->assertFalse($response->isCompressible());
     }
 
-    public function testHandleDoesntRewriteWpLoginUrlWithoutWpPrefixAndWithPayloadVersion1()
+    public function testHandleDoesntRewriteWpLoginUrlWithoutWpPrefixAndWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -574,7 +574,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/wp-login.php');
     }
 
-    public function testHandleDoesntRewriteWpLoginUrlWithoutWpPrefixAndWithPayloadVersion2()
+    public function testHandleDoesntRewriteWpLoginUrlWithoutWpPrefixAndWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -611,7 +611,7 @@ class BedrockHttpEventHandlerTest extends TestCase
     /**
      * @dataProvider inaccessibleFilesProvider
      */
-    public function testHandleReturnsNotFoundHttpResponseForInaccessibleFiles(string $filePath)
+    public function testHandleReturnsNotFoundHttpResponseForInaccessibleFiles(string $filePath): void
     {
         $event = $this->getHttpRequestEventMock();
         $process = $this->getPhpFpmProcessMock();
@@ -631,7 +631,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.$filePath);
     }
 
-    public function testHandleReturnsStaticFileResponseForFileInsideWebDirectory()
+    public function testHandleReturnsStaticFileResponseForFileInsideWebDirectory(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -654,7 +654,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/foo');
     }
 
-    public function testHandleRewritesWpAdminUrlWithPayloadVersion1()
+    public function testHandleRewritesWpAdminUrlWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -688,7 +688,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/wp-admin/index.php');
     }
 
-    public function testHandleRewritesWpAdminUrlWithPayloadVersion2()
+    public function testHandleRewritesWpAdminUrlWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -722,7 +722,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/wp-admin/index.php');
     }
 
-    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion1()
+    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -758,7 +758,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/wp-admin/index.php');
     }
 
-    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion2()
+    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -794,7 +794,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/wp-admin/index.php');
     }
 
-    public function testHandleRewritesWpLoginUrlWithSubdirectoryMultisiteWithPayloadVersion1()
+    public function testHandleRewritesWpLoginUrlWithSubdirectoryMultisiteWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -830,7 +830,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/wp-login.php');
     }
 
-    public function testHandleRewritesWpLoginUrlWithSubdirectoryMultisiteWithPayloadVersion2()
+    public function testHandleRewritesWpLoginUrlWithSubdirectoryMultisiteWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -866,7 +866,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/wp-login.php');
     }
 
-    public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion1()
+    public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -901,7 +901,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/wp-login.php');
     }
 
-    public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion2()
+    public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -936,7 +936,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/wp-login.php');
     }
 
-    public function testHandleWpLoginUrlWithPayloadVersion1()
+    public function testHandleWpLoginUrlWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -970,7 +970,7 @@ class BedrockHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/web/wp/wp-login.php');
     }
 
-    public function testHandleWpLoginUrlWithPayloadVersion2()
+    public function testHandleWpLoginUrlWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();

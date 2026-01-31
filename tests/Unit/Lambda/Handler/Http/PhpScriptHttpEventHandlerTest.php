@@ -32,7 +32,7 @@ class PhpScriptHttpEventHandlerTest extends TestCase
     use LoggerMockTrait;
     use PhpFpmProcessMockTrait;
 
-    public function testCanHandleNonExistentScriptFile()
+    public function testCanHandleNonExistentScriptFile(): void
     {
         $process = $this->getPhpFpmProcessMock();
 
@@ -41,7 +41,7 @@ class PhpScriptHttpEventHandlerTest extends TestCase
         $this->assertFalse($handler->canHandle($this->getHttpRequestEventMock()));
     }
 
-    public function testCanHandleWithValidScriptFile()
+    public function testCanHandleWithValidScriptFile(): void
     {
         $file = tmpfile();
         $filePath = stream_get_meta_data($file)['uri'];
@@ -55,7 +55,7 @@ class PhpScriptHttpEventHandlerTest extends TestCase
         $this->assertTrue($handler->canHandle($this->getHttpRequestEventMock()));
     }
 
-    public function testCanHandleWrongEventType()
+    public function testCanHandleWrongEventType(): void
     {
         $file = tmpfile();
         $filePath = stream_get_meta_data($file)['uri'];
@@ -69,7 +69,7 @@ class PhpScriptHttpEventHandlerTest extends TestCase
         $this->assertFalse($handler->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
-    public function testCanHandleWrongScriptFileType()
+    public function testCanHandleWrongScriptFileType(): void
     {
         $process = $this->getPhpFpmProcessMock();
 
@@ -78,7 +78,7 @@ class PhpScriptHttpEventHandlerTest extends TestCase
         $this->assertFalse($handler->canHandle($this->getHttpRequestEventMock()));
     }
 
-    public function testHandleCreatesFastCgiHttpResponseWithPayloadVersion1()
+    public function testHandleCreatesFastCgiHttpResponseWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $file = tmpfile();
@@ -105,7 +105,7 @@ class PhpScriptHttpEventHandlerTest extends TestCase
         $this->assertInstanceOf(FastCgiHttpResponse::class, $handler->handle($event));
     }
 
-    public function testHandleCreatesFastCgiHttpResponseWithPayloadVersion2()
+    public function testHandleCreatesFastCgiHttpResponseWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $file = tmpfile();

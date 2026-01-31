@@ -27,28 +27,28 @@ class PingLambdaEventHandlerTest extends TestCase
     use InvocationEventInterfaceMockTrait;
     use PingEventMockTrait;
 
-    public function testCanHandlePingEventType()
+    public function testCanHandlePingEventType(): void
     {
         $handler = new PingLambdaEventHandler();
 
         $this->assertTrue($handler->canHandle($this->getPingEventMock()));
     }
 
-    public function testCanHandleWrongEventType()
+    public function testCanHandleWrongEventType(): void
     {
         $handler = new PingLambdaEventHandler();
 
         $this->assertFalse($handler->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
-    public function testHandleWithPingEvent()
+    public function testHandleWithPingEvent(): void
     {
         $handler = new PingLambdaEventHandler();
 
         $this->assertInstanceOf(HttpResponse::class, $handler->handle($this->getPingEventMock()));
     }
 
-    public function testHandleWithWrongEventType()
+    public function testHandleWithWrongEventType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('PingLambdaEventHandler can only handle PingEvent objects');

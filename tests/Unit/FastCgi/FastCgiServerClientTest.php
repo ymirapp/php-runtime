@@ -31,7 +31,7 @@ class FastCgiServerClientTest extends TestCase
     use ProvidesRequestDataMockTrait;
     use ProvidesResponseDataMockTrait;
 
-    public function testCreateFromSocketPath()
+    public function testCreateFromSocketPath(): void
     {
         $fastCgiServerClient = FastCgiServerClient::createFromSocketPath('/tmp/.ymir/php-fpm.sock');
 
@@ -46,7 +46,7 @@ class FastCgiServerClientTest extends TestCase
         $this->assertSame('unix:///tmp/.ymir/php-fpm.sock', $socketConnection->getSocketAddress());
     }
 
-    public function testHandle()
+    public function testHandle(): void
     {
         $connection = $this->getConfiguresSocketConnectionMock();
         $client = $this->getFastCgiClientMock();

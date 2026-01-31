@@ -30,7 +30,7 @@ class LambdaEventHandlerCollectionTest extends TestCase
     use LoggerMockTrait;
     use ResponseInterfaceMockTrait;
 
-    public function testCanHandleWithHandlerFound()
+    public function testCanHandleWithHandlerFound(): void
     {
         $event = $this->getInvocationEventInterfaceMock();
         $handler1 = $this->getLambdaEventHandlerInterfaceMock();
@@ -52,7 +52,7 @@ class LambdaEventHandlerCollectionTest extends TestCase
         $this->assertTrue($collection->canHandle($event));
     }
 
-    public function testCanHandleWithHandlerNotFound()
+    public function testCanHandleWithHandlerNotFound(): void
     {
         $event = $this->getInvocationEventInterfaceMock();
         $handler1 = $this->getLambdaEventHandlerInterfaceMock();
@@ -74,7 +74,7 @@ class LambdaEventHandlerCollectionTest extends TestCase
         $this->assertFalse($collection->canHandle($event));
     }
 
-    public function testHandleWithHandlerFound()
+    public function testHandleWithHandlerFound(): void
     {
         $event = $this->getInvocationEventInterfaceMock();
         $handler1 = $this->getLambdaEventHandlerInterfaceMock();
@@ -112,7 +112,7 @@ class LambdaEventHandlerCollectionTest extends TestCase
         $this->assertSame($response, $collection->handle($event));
     }
 
-    public function testHandleWithHandlerNotFound()
+    public function testHandleWithHandlerNotFound(): void
     {
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('No handler found to handle the event');

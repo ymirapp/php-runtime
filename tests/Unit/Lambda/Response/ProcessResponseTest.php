@@ -24,7 +24,7 @@ class ProcessResponseTest extends TestCase
 {
     use ProcessMockTrait;
 
-    public function testGetResponseData()
+    public function testGetResponseData(): void
     {
         $process = $this->getProcessMock();
 

@@ -59,7 +59,7 @@ class ConsoleCommandLambdaEventHandler implements LambdaEventHandlerInterface
 
         $process = Process::fromShellCommandline("{$event->getCommand()} 2>&1");
         $process->setTimeout(null);
-        $process->run(function ($type, $output) {
+        $process->run(function ($type, $output): void {
             $this->logger->info($output);
         });
 

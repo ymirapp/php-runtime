@@ -120,7 +120,7 @@ class Runtime
             'WithDecryption' => true,
         ])), false))->mapWithKeys(function (Parameter $parameter) {
             return [Arr::last(explode('/', (string) $parameter->getName())) => (string) $parameter->getValue()];
-        })->filter()->each(function ($value, $name) use ($logger) {
+        })->filter()->each(function ($value, $name) use ($logger): void {
             $logger->debug(sprintf('Injecting [%s] secret environment variable into runtime', $name));
             $_ENV[$name] = $value;
         });

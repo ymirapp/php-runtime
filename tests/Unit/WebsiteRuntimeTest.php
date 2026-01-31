@@ -36,7 +36,7 @@ class WebsiteRuntimeTest extends TestCase
     use PhpFpmProcessMockTrait;
     use ResponseInterfaceMockTrait;
 
-    public function testConstructorWithMaxInvocationLessThan1()
+    public function testConstructorWithMaxInvocationLessThan1(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('"maxInvocations" must be greater than 0');
@@ -49,7 +49,7 @@ class WebsiteRuntimeTest extends TestCase
         new WebsiteRuntime($client, $handler, $logger, $process, 0);
     }
 
-    public function testProcessNextEventWithMaxInvocationsReached()
+    public function testProcessNextEventWithMaxInvocationsReached(): void
     {
         $client = $this->getLambdaRuntimeApiClientMock();
         $event = $this->getInvocationEventInterfaceMock();
@@ -94,7 +94,7 @@ class WebsiteRuntimeTest extends TestCase
         $runtime->processNextEvent();
     }
 
-    public function testProcessNextEventWithReadFailedException()
+    public function testProcessNextEventWithReadFailedException(): void
     {
         $client = $this->getLambdaRuntimeApiClientMock();
         $event = $this->getInvocationEventInterfaceMock();
@@ -138,7 +138,7 @@ class WebsiteRuntimeTest extends TestCase
         $runtime->processNextEvent();
     }
 
-    public function testStartWithException()
+    public function testStartWithException(): void
     {
         $client = $this->getLambdaRuntimeApiClientMock();
         $exception = new \Exception('test exception');
@@ -170,7 +170,7 @@ class WebsiteRuntimeTest extends TestCase
         $runtime->start();
     }
 
-    public function testStartWithNoException()
+    public function testStartWithNoException(): void
     {
         $client = $this->getLambdaRuntimeApiClientMock();
         $handler = $this->getLambdaEventHandlerInterfaceMock();
@@ -185,7 +185,7 @@ class WebsiteRuntimeTest extends TestCase
         $runtime->start();
     }
 
-    public function testType()
+    public function testType(): void
     {
         $this->assertSame('website', WebsiteRuntime::TYPE);
     }

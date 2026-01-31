@@ -24,7 +24,7 @@ class PhpFpmProcessTest extends TestCase
 {
     use LoggerMockTrait;
 
-    public function testCreateForConfigWithCustomValue()
+    public function testCreateForConfigWithCustomValue(): void
     {
         $logger = $this->getLoggerMock();
         $phpFpmProcess = PhpFpmProcess::createForConfig($logger, '/foo/bar');
@@ -37,7 +37,7 @@ class PhpFpmProcessTest extends TestCase
         $this->assertSame("'php-fpm' '--nodaemonize' '--force-stderr' '--fpm-config' '/foo/bar'", $process->getCommandLine());
     }
 
-    public function testCreateForConfigWithDefault()
+    public function testCreateForConfigWithDefault(): void
     {
         $logger = $this->getLoggerMock();
         $phpFpmProcess = PhpFpmProcess::createForConfig($logger);

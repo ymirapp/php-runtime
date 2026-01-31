@@ -21,7 +21,7 @@ use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
  */
 class BadGatewayHttpResponseTest extends TestCase
 {
-    public function testGetDataWhenTemplateFound()
+    public function testGetDataWhenTemplateFound(): void
     {
         $message = 'foo';
         $statusCode = 502;
@@ -43,7 +43,7 @@ class BadGatewayHttpResponseTest extends TestCase
         ], (new BadGatewayHttpResponse($message, $templatesDirectory))->getResponseData());
     }
 
-    public function testGetResponseDataWhenTemplateNotFound()
+    public function testGetResponseDataWhenTemplateNotFound(): void
     {
         $this->assertSame([
             'isBase64Encoded' => true,

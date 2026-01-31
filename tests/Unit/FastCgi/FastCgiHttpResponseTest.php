@@ -24,7 +24,7 @@ class FastCgiHttpResponseTest extends TestCase
 {
     use ProvidesResponseDataMockTrait;
 
-    public function testGetResponseDataWhenResponseIsntCompressible()
+    public function testGetResponseDataWhenResponseIsntCompressible(): void
     {
         $response = $this->getProvidesResponseDataMock();
 
@@ -48,7 +48,7 @@ class FastCgiHttpResponseTest extends TestCase
         ], $fastCgiResponse->getResponseData());
     }
 
-    public function testGetResponseDataWithDefaults()
+    public function testGetResponseDataWithDefaults(): void
     {
         $response = $this->getProvidesResponseDataMock();
 
@@ -72,7 +72,7 @@ class FastCgiHttpResponseTest extends TestCase
         ], $fastCgiResponse->getResponseData());
     }
 
-    public function testGetResponseDataWithStatusHeader()
+    public function testGetResponseDataWithStatusHeader(): void
     {
         $response = $this->getProvidesResponseDataMock();
 

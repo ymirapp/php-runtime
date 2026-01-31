@@ -50,7 +50,7 @@ class LaravelHttpEventHandlerTest extends TestCase
         collect([
             $this->tempDir.'/public',
             $this->tempDir.'/storage/app/public',
-        ])->each(function (string $directory) {
+        ])->each(function (string $directory): void {
             $filesystem = new Filesystem();
 
             if ($filesystem->exists($directory)) {
@@ -72,7 +72,7 @@ class LaravelHttpEventHandlerTest extends TestCase
         ];
     }
 
-    public function testCanHandleWithMissingArtisan()
+    public function testCanHandleWithMissingArtisan(): void
     {
         touch($this->tempDir.'/public/index.php');
 
@@ -81,7 +81,7 @@ class LaravelHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/public/index.php');
     }
 
-    public function testCanHandleWithMissingPublicIndex()
+    public function testCanHandleWithMissingPublicIndex(): void
     {
         touch($this->tempDir.'/artisan');
 
@@ -90,7 +90,7 @@ class LaravelHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/artisan');
     }
 
-    public function testCanHandleWithPublicIndexAndArtisanPresent()
+    public function testCanHandleWithPublicIndexAndArtisanPresent(): void
     {
         touch($this->tempDir.'/public/index.php');
         touch($this->tempDir.'/artisan');
@@ -101,7 +101,7 @@ class LaravelHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/artisan');
     }
 
-    public function testHandleCreatesFastCgiRequestToPublicIndexPhpByDefault()
+    public function testHandleCreatesFastCgiRequestToPublicIndexPhpByDefault(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -130,7 +130,7 @@ class LaravelHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/artisan');
     }
 
-    public function testHandleCreatesFastCgiRequestToSpecificPhpFileIfItExists()
+    public function testHandleCreatesFastCgiRequestToSpecificPhpFileIfItExists(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -161,7 +161,7 @@ class LaravelHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/public/test.php');
     }
 
-    public function testHandlePrioritizesPublicOverStorage()
+    public function testHandlePrioritizesPublicOverStorage(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -189,7 +189,7 @@ class LaravelHttpEventHandlerTest extends TestCase
         @rmdir($this->tempDir.'/public/storage');
     }
 
-    public function testHandleResolvesStoragePathIfFileDoesNotExistInPublic()
+    public function testHandleResolvesStoragePathIfFileDoesNotExistInPublic(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -216,7 +216,7 @@ class LaravelHttpEventHandlerTest extends TestCase
     /**
      * @dataProvider inaccessibleFilesProvider
      */
-    public function testHandleReturnsNotFoundHttpResponseForInaccessibleFiles(string $filePath)
+    public function testHandleReturnsNotFoundHttpResponseForInaccessibleFiles(string $filePath): void
     {
         $event = $this->getHttpRequestEventMock();
         $process = $this->getPhpFpmProcessMock();

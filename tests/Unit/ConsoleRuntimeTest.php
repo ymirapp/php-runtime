@@ -21,7 +21,7 @@ use Ymir\Runtime\ConsoleRuntime;
  */
 class ConsoleRuntimeTest extends TestCase
 {
-    public function testType()
+    public function testType(): void
     {
         $this->assertSame('console', ConsoleRuntime::TYPE);
     }

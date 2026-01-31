@@ -21,7 +21,7 @@ use Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent;
  */
 class WarmUpEventTest extends TestCase
 {
-    public function testGetConcurrency()
+    public function testGetConcurrency(): void
     {
         $this->assertSame(5, (new WarmUpEvent('id', 5))->getConcurrency());
     }

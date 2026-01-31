@@ -21,7 +21,7 @@ use Ymir\Runtime\Lambda\Response\ForbiddenHttpResponse;
  */
 class ForbiddenHttpResponseTest extends TestCase
 {
-    public function testGetDataWhenTemplateFound()
+    public function testGetDataWhenTemplateFound(): void
     {
         $message = 'foo';
         $statusCode = 403;
@@ -43,7 +43,7 @@ class ForbiddenHttpResponseTest extends TestCase
         ], (new ForbiddenHttpResponse($message, $templatesDirectory))->getResponseData());
     }
 
-    public function testGetResponseDataWhenTemplateNotFound()
+    public function testGetResponseDataWhenTemplateNotFound(): void
     {
         $this->assertSame([
             'isBase64Encoded' => true,

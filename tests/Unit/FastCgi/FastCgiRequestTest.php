@@ -26,7 +26,7 @@ class FastCgiRequestTest extends TestCase
     use FunctionMockTrait;
     use HttpRequestEventMockTrait;
 
-    public function testCreateFromInvocationEventSetsContentLengthWithTraceMethod()
+    public function testCreateFromInvocationEventSetsContentLengthWithTraceMethod(): void
     {
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
@@ -96,7 +96,7 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
-    public function testCreateFromInvocationEventSetsContentTypeWithPostMethod()
+    public function testCreateFromInvocationEventSetsContentTypeWithPostMethod(): void
     {
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
@@ -168,7 +168,7 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
-    public function testCreateFromInvocationEventWithContentLengthHeader()
+    public function testCreateFromInvocationEventWithContentLengthHeader(): void
     {
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
@@ -240,7 +240,7 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
-    public function testCreateFromInvocationEventWithContentTypeHeader()
+    public function testCreateFromInvocationEventWithContentTypeHeader(): void
     {
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
@@ -313,7 +313,7 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
-    public function testCreateFromInvocationEventWithDefaults()
+    public function testCreateFromInvocationEventWithDefaults(): void
     {
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
@@ -384,7 +384,7 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
-    public function testCreateFromInvocationEventWithHostHeader()
+    public function testCreateFromInvocationEventWithHostHeader(): void
     {
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
@@ -455,7 +455,7 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
-    public function testCreateFromInvocationEventWithPathAndQueryString()
+    public function testCreateFromInvocationEventWithPathAndQueryString(): void
     {
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
@@ -526,7 +526,7 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
-    public function testCreateFromInvocationEventWithPathInfoAndQueryString()
+    public function testCreateFromInvocationEventWithPathInfoAndQueryString(): void
     {
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
@@ -597,7 +597,7 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
-    public function testCreateFromInvocationEventWithQueryString()
+    public function testCreateFromInvocationEventWithQueryString(): void
     {
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
@@ -668,7 +668,7 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
-    public function testCreateFromInvocationEventWithXForwardedHostHeader()
+    public function testCreateFromInvocationEventWithXForwardedHostHeader(): void
     {
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
@@ -740,7 +740,7 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
-    public function testCreateFromInvocationEventWithXForwardedProto()
+    public function testCreateFromInvocationEventWithXForwardedProto(): void
     {
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
@@ -813,284 +813,284 @@ class FastCgiRequestTest extends TestCase
         ], $request->getParams());
     }
 
-    public function testGetAcceptableEncodingsWithAcceptEncodingHeader()
+    public function testGetAcceptableEncodingsWithAcceptEncodingHeader(): void
     {
         $this->assertSame(['deflate', 'gzip'], (new FastCgiRequest('', ['HTTP_ACCEPT_ENCODING' => 'Deflate, gzip']))->getAcceptableEncodings());
     }
 
-    public function testGetAcceptableEncodingsWithoutAcceptEncodingHeader()
+    public function testGetAcceptableEncodingsWithoutAcceptEncodingHeader(): void
     {
         $this->assertEmpty((new FastCgiRequest())->getAcceptableEncodings());
     }
 
-    public function testGetContent()
+    public function testGetContent(): void
     {
         $request = new FastCgiRequest('foo', []);
 
         $this->assertSame('foo', $request->getContent());
     }
 
-    public function testGetContentLengthCastsValue()
+    public function testGetContentLengthCastsValue(): void
     {
         $request = new FastCgiRequest('', ['content_length' => '1']);
 
         $this->assertSame(1, $request->getContentLength());
     }
 
-    public function testGetContentLengthDefaultValue()
+    public function testGetContentLengthDefaultValue(): void
     {
         $this->assertSame(0, (new FastCgiRequest())->getContentLength());
     }
 
-    public function testGetContentLengthWithValue()
+    public function testGetContentLengthWithValue(): void
     {
         $request = new FastCgiRequest('', ['content_length' => 42]);
 
         $this->assertSame(42, $request->getContentLength());
     }
 
-    public function testGetContentTypeCastsValue()
+    public function testGetContentTypeCastsValue(): void
     {
         $request = new FastCgiRequest('', ['content_type' => 1]);
 
         $this->assertSame('1', $request->getContentType());
     }
 
-    public function testGetContentTypeDefaultValue()
+    public function testGetContentTypeDefaultValue(): void
     {
         $this->assertSame('application/x-www-form-urlencoded', (new FastCgiRequest())->getContentType());
     }
 
-    public function testGetContentTypeWithValue()
+    public function testGetContentTypeWithValue(): void
     {
         $request = new FastCgiRequest('', ['content_type' => 'text/html']);
 
         $this->assertSame('text/html', $request->getContentType());
     }
 
-    public function testGetCustomVars()
+    public function testGetCustomVars(): void
     {
         $this->assertSame(['FOO' => 'bar'], (new FastCgiRequest('', ['foo' => 'bar']))->getCustomVars());
     }
 
-    public function testGetGatewayInterfaceCastsValue()
+    public function testGetGatewayInterfaceCastsValue(): void
     {
         $request = new FastCgiRequest('', ['gateway_interface' => 1]);
 
         $this->assertSame('1', $request->getGatewayInterface());
     }
 
-    public function testGetGatewayInterfaceDefaultValue()
+    public function testGetGatewayInterfaceDefaultValue(): void
     {
         $this->assertSame('FastCGI/1.0', (new FastCgiRequest())->getGatewayInterface());
     }
 
-    public function testGetGatewayInterfaceWithValue()
+    public function testGetGatewayInterfaceWithValue(): void
     {
         $request = new FastCgiRequest('', ['gateway_interface' => 'FastCGI/2.0']);
 
         $this->assertSame('FastCGI/2.0', $request->getGatewayInterface());
     }
 
-    public function testGetParams()
+    public function testGetParams(): void
     {
         $this->assertSame(['FOO' => 'bar'], (new FastCgiRequest('', ['foo' => 'bar']))->getParams());
     }
 
-    public function testGetPassThroughCallback()
+    public function testGetPassThroughCallback(): void
     {
         $this->assertSame([], (new FastCgiRequest())->getPassThroughCallbacks());
     }
 
-    public function testGetRemoteAddressCastsValue()
+    public function testGetRemoteAddressCastsValue(): void
     {
         $request = new FastCgiRequest('', ['remote_addr' => 1]);
 
         $this->assertSame('1', $request->getRemoteAddress());
     }
 
-    public function testGetRemoteAddressDefaultValue()
+    public function testGetRemoteAddressDefaultValue(): void
     {
         $this->assertSame('192.168.0.1', (new FastCgiRequest())->getRemoteAddress());
     }
 
-    public function testGetRemoteAddressWithValue()
+    public function testGetRemoteAddressWithValue(): void
     {
         $request = new FastCgiRequest('', ['remote_addr' => '192.168.1.1']);
 
         $this->assertSame('192.168.1.1', $request->getRemoteAddress());
     }
 
-    public function testGetRemotePortCastsValue()
+    public function testGetRemotePortCastsValue(): void
     {
         $request = new FastCgiRequest('', ['remote_port' => '1']);
 
         $this->assertSame(1, $request->getRemotePort());
     }
 
-    public function testGetRemotePortDefaultValue()
+    public function testGetRemotePortDefaultValue(): void
     {
         $this->assertSame(9985, (new FastCgiRequest())->getRemotePort());
     }
 
-    public function testGetRemotePortWithValue()
+    public function testGetRemotePortWithValue(): void
     {
         $request = new FastCgiRequest('', ['remote_port' => 42]);
 
         $this->assertSame(42, $request->getRemotePort());
     }
 
-    public function testGetRequestMethodCastsValue()
+    public function testGetRequestMethodCastsValue(): void
     {
         $request = new FastCgiRequest('', ['request_method' => 1]);
 
         $this->assertSame('1', $request->getRequestMethod());
     }
 
-    public function testGetRequestMethodDefaultValue()
+    public function testGetRequestMethodDefaultValue(): void
     {
         $this->assertSame('GET', (new FastCgiRequest())->getRequestMethod());
     }
 
-    public function testGetRequestMethodWithValue()
+    public function testGetRequestMethodWithValue(): void
     {
         $request = new FastCgiRequest('', ['request_method' => 'post']);
 
         $this->assertSame('POST', $request->getRequestMethod());
     }
 
-    public function testGetRequestUriCastsValue()
+    public function testGetRequestUriCastsValue(): void
     {
         $request = new FastCgiRequest('', ['request_uri' => 1]);
 
         $this->assertSame('1', $request->getRequestUri());
     }
 
-    public function testGetRequestUriDefaultValue()
+    public function testGetRequestUriDefaultValue(): void
     {
         $this->assertSame('', (new FastCgiRequest())->getRequestUri());
     }
 
-    public function testGetRequestUriWithValue()
+    public function testGetRequestUriWithValue(): void
     {
         $request = new FastCgiRequest('', ['request_uri' => '/']);
 
         $this->assertSame('/', $request->getRequestUri());
     }
 
-    public function testGetResponseCallbacks()
+    public function testGetResponseCallbacks(): void
     {
         $this->assertSame([], (new FastCgiRequest())->getResponseCallbacks());
     }
 
-    public function testGetScriptFilenameCastsValue()
+    public function testGetScriptFilenameCastsValue(): void
     {
         $request = new FastCgiRequest('', ['script_filename' => 1]);
 
         $this->assertSame('1', $request->getScriptFilename());
     }
 
-    public function testGetScriptFilenameDefaultValue()
+    public function testGetScriptFilenameDefaultValue(): void
     {
         $this->assertSame('', (new FastCgiRequest())->getScriptFilename());
     }
 
-    public function testGetScriptFilenameWithValue()
+    public function testGetScriptFilenameWithValue(): void
     {
         $request = new FastCgiRequest('', ['script_filename' => 'index.php']);
 
         $this->assertSame('index.php', $request->getScriptFilename());
     }
 
-    public function testGetServerAddressCastsValue()
+    public function testGetServerAddressCastsValue(): void
     {
         $request = new FastCgiRequest('', ['server_addr' => 1]);
 
         $this->assertSame('1', $request->getServerAddress());
     }
 
-    public function testGetServerAddressDefaultValue()
+    public function testGetServerAddressDefaultValue(): void
     {
         $this->assertSame('127.0.0.1', (new FastCgiRequest())->getServerAddress());
     }
 
-    public function testGetServerAddressWithValue()
+    public function testGetServerAddressWithValue(): void
     {
         $request = new FastCgiRequest('', ['server_addr' => '127.0.1.1']);
 
         $this->assertSame('127.0.1.1', $request->getServerAddress());
     }
 
-    public function testGetServerNameCastsValue()
+    public function testGetServerNameCastsValue(): void
     {
         $request = new FastCgiRequest('', ['server_name' => 1]);
 
         $this->assertSame('1', $request->getServerName());
     }
 
-    public function testGetServerNameDefaultValue()
+    public function testGetServerNameDefaultValue(): void
     {
         $this->assertSame('localhost', (new FastCgiRequest())->getServerName());
     }
 
-    public function testGetServerNameWithValue()
+    public function testGetServerNameWithValue(): void
     {
         $request = new FastCgiRequest('', ['server_name' => 'ymir.local']);
 
         $this->assertSame('ymir.local', $request->getServerName());
     }
 
-    public function testGetServerPortCastsValue()
+    public function testGetServerPortCastsValue(): void
     {
         $request = new FastCgiRequest('', ['server_port' => '1']);
 
         $this->assertSame(1, $request->getServerPort());
     }
 
-    public function testGetServerPortDefaultValue()
+    public function testGetServerPortDefaultValue(): void
     {
         $this->assertSame(80, (new FastCgiRequest())->getServerPort());
     }
 
-    public function testGetServerPortWithValue()
+    public function testGetServerPortWithValue(): void
     {
         $request = new FastCgiRequest('', ['server_port' => 22]);
 
         $this->assertSame(22, $request->getServerPort());
     }
 
-    public function testGetServerProtocolCastsValue()
+    public function testGetServerProtocolCastsValue(): void
     {
         $request = new FastCgiRequest('', ['server_protocol' => 1]);
 
         $this->assertSame('1', $request->getServerProtocol());
     }
 
-    public function testGetServerProtocolDefaultValue()
+    public function testGetServerProtocolDefaultValue(): void
     {
         $this->assertSame('HTTP/1.1', (new FastCgiRequest())->getServerProtocol());
     }
 
-    public function testGetServerProtocolWithValue()
+    public function testGetServerProtocolWithValue(): void
     {
         $request = new FastCgiRequest('', ['server_protocol' => 'HTTP/1.0']);
 
         $this->assertSame('HTTP/1.0', $request->getServerProtocol());
     }
 
-    public function testGetServerSoftwareCastsValue()
+    public function testGetServerSoftwareCastsValue(): void
     {
         $request = new FastCgiRequest('', ['server_software' => 1]);
 
         $this->assertSame('1', $request->getServerSoftware());
     }
 
-    public function testGetServerSoftwareDefaultValue()
+    public function testGetServerSoftwareDefaultValue(): void
     {
         $this->assertSame('ymir', (new FastCgiRequest())->getServerSoftware());
     }
 
-    public function testGetServerSoftwareWithValue()
+    public function testGetServerSoftwareWithValue(): void
     {
         $request = new FastCgiRequest('', ['server_software' => 'foo']);
 

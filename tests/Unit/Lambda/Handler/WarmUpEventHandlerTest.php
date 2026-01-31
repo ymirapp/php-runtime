@@ -31,17 +31,17 @@ class WarmUpEventHandlerTest extends TestCase
     use LambdaClientMockTrait;
     use WarmUpEventMockTrait;
 
-    public function testCanHandleWarmUpEventType()
+    public function testCanHandleWarmUpEventType(): void
     {
         $this->assertTrue((new WarmUpEventHandler($this->getLambdaClientMock()))->canHandle($this->getWarmUpEventMock()));
     }
 
-    public function testCanHandleWrongEventType()
+    public function testCanHandleWrongEventType(): void
     {
         $this->assertFalse((new WarmUpEventHandler($this->getLambdaClientMock()))->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
-    public function testHandleDoesntInvokeAdditionalFunctionsWhenConcurrencyIsOne()
+    public function testHandleDoesntInvokeAdditionalFunctionsWhenConcurrencyIsOne(): void
     {
         $event = $this->getWarmUpEventMock();
         $lambdaClient = $this->getLambdaClientMock();
@@ -66,7 +66,7 @@ class WarmUpEventHandlerTest extends TestCase
         ], $reponse->getResponseData());
     }
 
-    public function testHandleInvokesAdditionalFunctions()
+    public function testHandleInvokesAdditionalFunctions(): void
     {
         $event = $this->getWarmUpEventMock();
         $getenv = $this->getFunctionMock($this->getNamespace(WarmUpEventHandler::class), 'getenv');
@@ -103,7 +103,7 @@ class WarmUpEventHandlerTest extends TestCase
         ], $reponse->getResponseData());
     }
 
-    public function testHandleWithNoEnvironmentVariable()
+    public function testHandleWithNoEnvironmentVariable(): void
     {
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('"AWS_LAMBDA_FUNCTION_NAME" environment variable is\'t set');
@@ -117,7 +117,7 @@ class WarmUpEventHandlerTest extends TestCase
         (new WarmUpEventHandler($this->getLambdaClientMock()))->handle($event);
     }
 
-    public function testHandleWithWrongEventType()
+    public function testHandleWithWrongEventType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('WarmUpEventHandler can only handle WarmUpEvent objects');

@@ -30,7 +30,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
     use LoggerMockTrait;
     use PhpFpmProcessMockTrait;
 
-    public function testHandleCreatesCompressibleFastCgiHttpResponseWithGzipAcceptEncodingHeader()
+    public function testHandleCreatesCompressibleFastCgiHttpResponseWithGzipAcceptEncodingHeader(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -68,7 +68,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
         $this->assertTrue($response->isCompressible());
     }
 
-    public function testHandleCreatesFastCgiHttpResponse()
+    public function testHandleCreatesFastCgiHttpResponse(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -102,7 +102,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
         $this->assertFalse($response->isCompressible());
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion1()
+    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $file = tmpfile();
@@ -132,7 +132,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
         $this->assertFalse($response->isCompressible());
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion2()
+    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $file = tmpfile();

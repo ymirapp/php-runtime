@@ -21,7 +21,7 @@ use Ymir\Runtime\Lambda\InvocationEvent\PhpConsoleCommandEvent;
  */
 class PhpConsoleCommandEventTest extends TestCase
 {
-    public function testGetCommand()
+    public function testGetCommand(): void
     {
         $this->assertSame('/opt/bin/php foo', (new PhpConsoleCommandEvent('id', 'foo'))->getCommand());
     }

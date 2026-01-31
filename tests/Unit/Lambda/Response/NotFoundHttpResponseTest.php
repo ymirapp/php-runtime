@@ -21,7 +21,7 @@ use Ymir\Runtime\Lambda\Response\NotFoundHttpResponse;
  */
 class NotFoundHttpResponseTest extends TestCase
 {
-    public function testGetDataWhenTemplateFound()
+    public function testGetDataWhenTemplateFound(): void
     {
         $message = 'foo';
         $statusCode = 404;
@@ -43,7 +43,7 @@ class NotFoundHttpResponseTest extends TestCase
         ], (new NotFoundHttpResponse($message, $templatesDirectory))->getResponseData());
     }
 
-    public function testGetResponseDataWhenTemplateNotFound()
+    public function testGetResponseDataWhenTemplateNotFound(): void
     {
         $this->assertSame([
             'isBase64Encoded' => true,

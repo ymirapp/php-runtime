@@ -114,7 +114,7 @@ class HttpRequestEvent extends AbstractEvent
         $queryString = '';
 
         if ('1.0' === $payloadVersion) {
-            collect($this->event['multiValueQueryStringParameters'] ?? $this->event['queryStringParameters'] ?? [])->each(function ($values, $key) use (&$queryString) {
+            collect($this->event['multiValueQueryStringParameters'] ?? $this->event['queryStringParameters'] ?? [])->each(function ($values, $key) use (&$queryString): void {
                 $queryString .= array_reduce((array) $values, function ($carry, $value) use ($key) {
                     return $carry.$key.'='.urlencode($value).'&';
                 });

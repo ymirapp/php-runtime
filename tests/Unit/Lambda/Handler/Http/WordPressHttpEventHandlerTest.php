@@ -50,7 +50,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         collect([
             $this->tempDir.'/tmp',
             $this->tempDir.'/wp-admin',
-        ])->each(function (string $directory) {
+        ])->each(function (string $directory): void {
             $filesystem = new Filesystem();
 
             if ($filesystem->exists($directory)) {
@@ -72,7 +72,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         ];
     }
 
-    public function testCanHandleWithIndexAndWpConfigPresent()
+    public function testCanHandleWithIndexAndWpConfigPresent(): void
     {
         $process = $this->getPhpFpmProcessMock();
 
@@ -85,7 +85,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/wp-config.php');
     }
 
-    public function testCanHandleWithMissingIndex()
+    public function testCanHandleWithMissingIndex(): void
     {
         $process = $this->getPhpFpmProcessMock();
 
@@ -96,7 +96,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/wp-config.php');
     }
 
-    public function testCanHandleWithMissingWpConfig()
+    public function testCanHandleWithMissingWpConfig(): void
     {
         $process = $this->getPhpFpmProcessMock();
 
@@ -107,14 +107,14 @@ class WordPressHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/index.php');
     }
 
-    public function testCanHandleWrongEventType()
+    public function testCanHandleWrongEventType(): void
     {
         $process = $this->getPhpFpmProcessMock();
 
         $this->assertFalse((new WordPressHttpEventHandler($this->getLoggerMock(), $process, ''))->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
-    public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion1()
+    public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -148,7 +148,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/tmp/index.php');
     }
 
-    public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion2()
+    public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -182,7 +182,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/tmp/index.php');
     }
 
-    public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion1()
+    public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -214,7 +214,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/wp-config.php');
     }
 
-    public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion2()
+    public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -249,7 +249,7 @@ class WordPressHttpEventHandlerTest extends TestCase
     /**
      * @dataProvider inaccessibleFilesProvider
      */
-    public function testHandleReturnsNotFoundHttpResponseForInaccessibleFiles(string $filePath)
+    public function testHandleReturnsNotFoundHttpResponseForInaccessibleFiles(string $filePath): void
     {
         $event = $this->getHttpRequestEventMock();
         $process = $this->getPhpFpmProcessMock();
@@ -269,7 +269,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.$filePath);
     }
 
-    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion1()
+    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -305,7 +305,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/wp-admin/index.php');
     }
 
-    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion2()
+    public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -341,7 +341,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/wp-admin/index.php');
     }
 
-    public function testHandleRewritesWpLoginUrlWithMultisiteWithPayloadVersion1()
+    public function testHandleRewritesWpLoginUrlWithMultisiteWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -377,7 +377,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/wp-login.php');
     }
 
-    public function testHandleRewritesWpLoginUrlWithMultisiteWithPayloadVersion2()
+    public function testHandleRewritesWpLoginUrlWithMultisiteWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -413,7 +413,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/wp-login.php');
     }
 
-    public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion1()
+    public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -448,7 +448,7 @@ class WordPressHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/wp-login.php');
     }
 
-    public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion2()
+    public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();

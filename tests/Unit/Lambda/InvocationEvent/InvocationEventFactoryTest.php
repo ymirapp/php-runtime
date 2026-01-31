@@ -26,7 +26,7 @@ use Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent;
  */
 class InvocationEventFactoryTest extends TestCase
 {
-    public function testCreateFromInvocationEventFails()
+    public function testCreateFromInvocationEventFails(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unknown Lambda event type');
@@ -34,32 +34,32 @@ class InvocationEventFactoryTest extends TestCase
         InvocationEventFactory::createFromInvocationEvent('id', []);
     }
 
-    public function testCreatesConsoleCommandEvent()
+    public function testCreatesConsoleCommandEvent(): void
     {
         $this->assertInstanceOf(ConsoleCommandEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['command' => 'foo']));
     }
 
-    public function testCreatesHttpRequestEventWithPayloadVersion1()
+    public function testCreatesHttpRequestEventWithPayloadVersion1(): void
     {
         $this->assertInstanceOf(HttpRequestEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['httpMethod' => 'get']));
     }
 
-    public function testCreatesHttpRequestEventWithPayloadVersion2()
+    public function testCreatesHttpRequestEventWithPayloadVersion2(): void
     {
         $this->assertInstanceOf(HttpRequestEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['requestContext' => ['http' => ['method' => 'get']]]));
     }
 
-    public function testCreatesPhpConsoleCommandEvent()
+    public function testCreatesPhpConsoleCommandEvent(): void
     {
         $this->assertInstanceOf(PhpConsoleCommandEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['php' => 'foo']));
     }
 
-    public function testCreatesPingEvent()
+    public function testCreatesPingEvent(): void
     {
         $this->assertInstanceOf(PingEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['ping' => true]));
     }
 
-    public function testCreatesWarmUpEvent()
+    public function testCreatesWarmUpEvent(): void
     {
         $this->assertInstanceOf(WarmUpEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['warmup' => '5']));
     }

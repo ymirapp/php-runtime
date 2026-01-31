@@ -21,7 +21,7 @@ use Ymir\Runtime\Lambda\Response\HttpResponse;
  */
 class HttpResponseTest extends TestCase
 {
-    public function testGetResponseDataWithFormatVersion1And304Status()
+    public function testGetResponseDataWithFormatVersion1And304Status(): void
     {
         $response = new HttpResponse('foo', [], 304);
 
@@ -31,7 +31,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion1AndBody()
+    public function testGetResponseDataWithFormatVersion1AndBody(): void
     {
         $body = 'foo';
         $response = new HttpResponse($body);
@@ -46,7 +46,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion1AndContentTypeHeader()
+    public function testGetResponseDataWithFormatVersion1AndContentTypeHeader(): void
     {
         $response = new HttpResponse('foo', ['content-type' => 'bar']);
 
@@ -60,7 +60,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion1AndHeaders()
+    public function testGetResponseDataWithFormatVersion1AndHeaders(): void
     {
         $body = 'foo';
         $response = new HttpResponse($body, ['foo' => 'bar']);
@@ -76,7 +76,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion1AndHtmlCharsetContentTypeHeader()
+    public function testGetResponseDataWithFormatVersion1AndHtmlCharsetContentTypeHeader(): void
     {
         $body = 'foo';
         $response = new HttpResponse($body, ['content-type' => 'text/html; charset=UTF-8']);
@@ -91,7 +91,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion1AndJsonContentTypeHeader()
+    public function testGetResponseDataWithFormatVersion1AndJsonContentTypeHeader(): void
     {
         $body = 'foo';
         $response = new HttpResponse($body, ['content-type' => 'application/json']);
@@ -106,7 +106,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion1DoesntGzipEncodeIfCompressibleIsFalse()
+    public function testGetResponseDataWithFormatVersion1DoesntGzipEncodeIfCompressibleIsFalse(): void
     {
         $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, [], 200, '1.0', false);
@@ -121,7 +121,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion1DoesntGzipEncodeIfContentEncodingHeaderPresent()
+    public function testGetResponseDataWithFormatVersion1DoesntGzipEncodeIfContentEncodingHeaderPresent(): void
     {
         $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, ['content-encoding' => 'foo']);
@@ -137,7 +137,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion1GzipEncodesResponseForHtmlContentType()
+    public function testGetResponseDataWithFormatVersion1GzipEncodesResponseForHtmlContentType(): void
     {
         $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, [], 200, '1.0');
@@ -154,7 +154,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion1GzipEncodesResponseForJsonContentType()
+    public function testGetResponseDataWithFormatVersion1GzipEncodesResponseForJsonContentType(): void
     {
         $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, ['content-type' => 'application/json'], 200, '1.0');
@@ -171,7 +171,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion2And304Status()
+    public function testGetResponseDataWithFormatVersion2And304Status(): void
     {
         $response = new HttpResponse('foo', [], 304, '2.0');
 
@@ -181,7 +181,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion2AndBody()
+    public function testGetResponseDataWithFormatVersion2AndBody(): void
     {
         $body = 'foo';
         $response = new HttpResponse($body, [], 200, '2.0');
@@ -196,7 +196,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion2AndContentTypeHeader()
+    public function testGetResponseDataWithFormatVersion2AndContentTypeHeader(): void
     {
         $response = new HttpResponse('foo', ['content-type' => 'bar'], 200, '2.0');
 
@@ -210,7 +210,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion2AndHeaders()
+    public function testGetResponseDataWithFormatVersion2AndHeaders(): void
     {
         $body = 'foo';
         $response = new HttpResponse($body, ['foo' => 'bar'], 200, '2.0');
@@ -226,7 +226,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion2AndHtmlCharsetContentTypeHeader()
+    public function testGetResponseDataWithFormatVersion2AndHtmlCharsetContentTypeHeader(): void
     {
         $body = 'foo';
         $response = new HttpResponse($body, ['content-type' => 'text/html; charset=UTF-8'], 200, '2.0');
@@ -241,7 +241,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion2AndJsonContentTypeHeader()
+    public function testGetResponseDataWithFormatVersion2AndJsonContentTypeHeader(): void
     {
         $body = 'foo';
         $response = new HttpResponse($body, ['content-type' => 'application/json'], 200, '2.0');
@@ -256,7 +256,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion2AndSetCookieHeaders()
+    public function testGetResponseDataWithFormatVersion2AndSetCookieHeaders(): void
     {
         $body = 'foo';
         $response = new HttpResponse($body, ['set-cookie' => ['foo', 'bar']], 200, '2.0');
@@ -272,7 +272,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion2DoesntGzipEncodeIfCompressibleIsFalse()
+    public function testGetResponseDataWithFormatVersion2DoesntGzipEncodeIfCompressibleIsFalse(): void
     {
         $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, [], 200, '2.0', false);
@@ -287,7 +287,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion2DoesntGzipEncodeIfContentEncodingHeaderPresent()
+    public function testGetResponseDataWithFormatVersion2DoesntGzipEncodeIfContentEncodingHeaderPresent(): void
     {
         $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, ['content-encoding' => 'foo'], 200, '2.0');
@@ -303,7 +303,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion2GzipEncodesResponseForHtmlContentType()
+    public function testGetResponseDataWithFormatVersion2GzipEncodesResponseForHtmlContentType(): void
     {
         $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, [], 200, '2.0');
@@ -320,7 +320,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFormatVersion2GzipEncodesResponseForJsonContentType()
+    public function testGetResponseDataWithFormatVersion2GzipEncodesResponseForJsonContentType(): void
     {
         $body = str_repeat('yep', 1900000);
         $response = new HttpResponse($body, ['content-type' => 'application/json'], 200, '2.0');
@@ -337,7 +337,7 @@ class HttpResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testIsCompressible()
+    public function testIsCompressible(): void
     {
         $this->assertFalse((new HttpResponse('foo', [], 200, '1.0', false))->isCompressible());
     }

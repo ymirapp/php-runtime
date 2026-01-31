@@ -117,7 +117,7 @@ class PhpFpmProcess
         $this->logger->info('Starting PHP-FPM process');
 
         $this->process->setTimeout(null);
-        $this->process->start(function ($type, $output) {
+        $this->process->start(function ($type, $output): void {
             $this->logger->info($output);
         });
 

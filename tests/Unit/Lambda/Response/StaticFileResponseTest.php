@@ -21,7 +21,7 @@ use Ymir\Runtime\Lambda\Response\StaticFileResponse;
  */
 class StaticFileResponseTest extends TestCase
 {
-    public function testGetResponseDataWithCorrectFileExtensionMimeType()
+    public function testGetResponseDataWithCorrectFileExtensionMimeType(): void
     {
         $filePath = stream_get_meta_data(tmpfile())['uri'].'.png';
 
@@ -39,7 +39,7 @@ class StaticFileResponseTest extends TestCase
         ], $response->getResponseData());
     }
 
-    public function testGetResponseDataWithFileWithNoExtension()
+    public function testGetResponseDataWithFileWithNoExtension(): void
     {
         $filePath = stream_get_meta_data(tmpfile())['uri'];
 

@@ -32,7 +32,7 @@ class AbstractRuntimeTest extends TestCase
     use LoggerMockTrait;
     use ResponseInterfaceMockTrait;
 
-    public function testProcessNextEvent()
+    public function testProcessNextEvent(): void
     {
         $client = $this->getLambdaRuntimeApiClientMock();
         $event = $this->getInvocationEventInterfaceMock();
@@ -61,7 +61,7 @@ class AbstractRuntimeTest extends TestCase
         $runtime->processNextEvent();
     }
 
-    public function testProcessNextEventWithException()
+    public function testProcessNextEventWithException(): void
     {
         $client = $this->getLambdaRuntimeApiClientMock();
         $event = $this->getInvocationEventInterfaceMock();
@@ -94,7 +94,7 @@ class AbstractRuntimeTest extends TestCase
         $runtime->processNextEvent();
     }
 
-    public function testProcessNextEventWithUnhandledEvent()
+    public function testProcessNextEventWithUnhandledEvent(): void
     {
         $client = $this->getLambdaRuntimeApiClientMock();
         $event = $this->getInvocationEventInterfaceMock();

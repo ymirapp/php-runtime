@@ -29,17 +29,17 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
     use InvocationEventInterfaceMockTrait;
     use LoggerMockTrait;
 
-    public function testCanHandlePingEventType()
+    public function testCanHandlePingEventType(): void
     {
         $this->assertTrue((new ConsoleCommandLambdaEventHandler($this->getLoggerMock()))->canHandle($this->getConsoleCommandEventMock()));
     }
 
-    public function testCanHandleWrongEventType()
+    public function testCanHandleWrongEventType(): void
     {
         $this->assertFalse((new ConsoleCommandLambdaEventHandler($this->getLoggerMock()))->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
-    public function testHandleWithSuccessfulCommand()
+    public function testHandleWithSuccessfulCommand(): void
     {
         $event = $this->getConsoleCommandEventMock();
         $logger = $this->getLoggerMock();
@@ -59,7 +59,7 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
         $this->assertSame(0, $responseData['exitCode']);
     }
 
-    public function testHandleWithUnsuccessfulCommand()
+    public function testHandleWithUnsuccessfulCommand(): void
     {
         $event = $this->getConsoleCommandEventMock();
         $logger = $this->getLoggerMock();
@@ -79,7 +79,7 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
         $this->assertNotSame(0, $responseData['exitCode']);
     }
 
-    public function testHandleWithWrongEventType()
+    public function testHandleWithWrongEventType(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('ConsoleCommandLambdaEventHandler can only handle ConsoleCommandEvent objects');
