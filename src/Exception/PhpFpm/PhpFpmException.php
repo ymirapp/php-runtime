@@ -11,7 +11,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Exception;
+namespace Ymir\Runtime\Exception\PhpFpm;
+
+use Ymir\Runtime\Exception\ExceptionInterface;
 
 /**
  * Exception thrown when there is an error with the PHP-FPM process.

@@ -16,8 +16,10 @@ namespace Ymir\Runtime\Tests\Unit;
 use hollodotme\FastCGI\Exceptions\ReadFailedException;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
+use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\Lambda\InvocationEvent\Context;
 use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
+use Ymir\Runtime\Lambda\Response\GatewayTimeoutHttpResponse;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaEventHandlerInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaRuntimeApiClientMockTrait;
@@ -92,6 +94,42 @@ class WebsiteRuntimeTest extends TestCase
         $runtime->expects($this->once())
                  ->method('terminate')
                  ->with(0);
+
+        $runtime->processNextEvent();
+    }
+
+    public function testProcessNextEventWithPhpFpmTimeoutException(): void
+    {
+        $client = $this->getLambdaRuntimeApiClientMock();
+        $event = $this->getInvocationEventInterfaceMock();
+        $handler = $this->getLambdaEventHandlerInterfaceMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $runtime = $this->getMockBuilder(WebsiteRuntime::class)
+                        ->setConstructorArgs([$client, $handler, $logger, $process])
+                        ->setMethods(['terminate'])
+                        ->getMock();
+
+        $client->expects($this->once())
+               ->method('getNextEvent')
+               ->willReturn($event);
+
+        $handler->expects($this->once())
+                ->method('canHandle')
+                ->with($this->identicalTo($event))
+                ->willReturn(true);
+        $handler->expects($this->once())
+                ->method('handle')
+                ->with($this->identicalTo($event))
+                ->willThrowException(new PhpFpmTimeoutException('test timeout'));
+
+        $client->expects($this->once())
+               ->method('sendResponse')
+               ->with($this->identicalTo($event), $this->isInstanceOf(GatewayTimeoutHttpResponse::class));
+
+        $runtime->expects($this->never())
+                 ->method('terminate');
 
         $runtime->processNextEvent();
     }

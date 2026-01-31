@@ -15,10 +15,12 @@ namespace Ymir\Runtime;
 
 use hollodotme\FastCGI\Exceptions\ReadFailedException;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
+use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
+use Ymir\Runtime\Lambda\Response\GatewayTimeoutHttpResponse;
 
 /**
  * Runtime for "website" functions.
@@ -90,6 +92,8 @@ class WebsiteRuntime extends AbstractRuntime
             if (is_int($this->maxInvocations)) {
                 ++$this->invocations;
             }
+        } catch (PhpFpmTimeoutException $exception) {
+            $this->client->sendResponse($event, new GatewayTimeoutHttpResponse($exception->getMessage()));
         } catch (ReadFailedException $exception) {
             $this->logger->exception($exception);
 

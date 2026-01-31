@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\FastCgi;
 
+use hollodotme\FastCGI\Exceptions\TimedoutException;
 use hollodotme\FastCGI\Interfaces\ProvidesRequestData;
 use hollodotme\FastCGI\Interfaces\ProvidesResponseData;
 use Symfony\Component\Process\Process;
-use Ymir\Runtime\Exception\PhpFpmException;
+use Ymir\Runtime\Exception\PhpFpm\PhpFpmException;
+use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\Logger;
 
 /**
@@ -92,9 +94,20 @@ class PhpFpmProcess
     /**
      * Handles the given request and returns the response from the PHP-FPM process.
      */
-    public function handle(ProvidesRequestData $request): ProvidesResponseData
+    public function handle(ProvidesRequestData $request, int $timeoutMs): ProvidesResponseData
     {
-        $response = $this->client->handle($request);
+        try {
+            $response = $this->client->handle($request, $timeoutMs);
+        } catch (TimedoutException $exception) {
+            $message = sprintf('PHP-FPM request timed out after %dms', $timeoutMs);
+
+            $this->logger->info(sprintf('%s, restarting process', $message));
+
+            $this->stop();
+            $this->start();
+
+            throw new PhpFpmTimeoutException($message);
+        }
 
         // This also triggers "updateStatus" inside the Symfony process which will make it output the logs from PHP-FPM.
         if (!$this->process->isRunning()) {
@@ -132,6 +145,20 @@ class PhpFpmProcess
     }
 
     /**
+     * Stop the PHP-FPM process.
+     */
+    public function stop(): void
+    {
+        if (!$this->process->isRunning()) {
+            return;
+        }
+
+        $this->logger->info('Stopping PHP-FPM process');
+
+        $this->process->stop();
+    }
+
+    /**
      * Checks if the PHP-FPM process is started.
      */
     private function isStarted(): bool
@@ -139,16 +166,6 @@ class PhpFpmProcess
         clearstatcache(false, self::SOCKET_PATH);
 
         return file_exists(self::SOCKET_PATH);
-    }
-
-    /**
-     * Stop the PHP-FPM process.
-     */
-    private function stop(): void
-    {
-        if ($this->process->isRunning()) {
-            $this->process->stop();
-        }
     }
 
     /**

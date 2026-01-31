@@ -56,13 +56,14 @@ abstract class AbstractPhpFpmRequestEventHandler extends AbstractHttpRequestEven
     protected function createLambdaEventResponse(HttpRequestEvent $event): HttpResponse
     {
         $request = FastCgiRequest::createFromInvocationEvent($event, $this->getScriptFilePath($event));
+        $timeoutMs = max(1000, $event->getContext()->getRemainingTimeInMs() - 1000);
 
         $this->logger->debug('FastCgi request sent:', [
             'content' => $request->getContent(),
             'parameters' => $request->getParams(),
         ]);
 
-        return new FastCgiHttpResponse($this->process->handle($request), $event->getPayloadVersion(), in_array('gzip', $request->getAcceptableEncodings()));
+        return new FastCgiHttpResponse($this->process->handle($request, $timeoutMs), $event->getPayloadVersion(), in_array('gzip', $request->getAcceptableEncodings()));
     }
 
     /**

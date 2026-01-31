@@ -55,6 +55,19 @@ class ContextTest extends TestCase
         $this->assertSame('', (new Context('request-id'))->getInvokedFunctionArn());
     }
 
+    public function testGetRemainingTimeInMs(): void
+    {
+        $context = new Context('request-id', (int) (microtime(true) * 1000) + 1000);
+
+        $this->assertGreaterThan(0, $context->getRemainingTimeInMs());
+        $this->assertLessThanOrEqual(1000, $context->getRemainingTimeInMs());
+    }
+
+    public function testGetRemainingTimeInMsWithNoDeadline(): void
+    {
+        $this->assertSame(0, (new Context('request-id'))->getRemainingTimeInMs());
+    }
+
     public function testGetRequestId(): void
     {
         $this->assertSame('request-id', (new Context('request-id'))->getRequestId());

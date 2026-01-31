@@ -14,15 +14,24 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\FastCgi;
 
 use PHPUnit\Framework\TestCase;
+use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
+use Ymir\Runtime\Tests\Mock\FastCgiServerClientMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
+use Ymir\Runtime\Tests\Mock\ProcessMockTrait;
+use Ymir\Runtime\Tests\Mock\ProvidesRequestDataMockTrait;
+use Ymir\Runtime\Tests\Mock\ProvidesResponseDataMockTrait;
 
 /**
  * @covers \Ymir\Runtime\FastCgi\PhpFpmProcess
  */
 class PhpFpmProcessTest extends TestCase
 {
+    use FastCgiServerClientMockTrait;
     use LoggerMockTrait;
+    use ProcessMockTrait;
+    use ProvidesRequestDataMockTrait;
+    use ProvidesResponseDataMockTrait;
 
     public function testCreateForConfigWithCustomValue(): void
     {
@@ -48,5 +57,58 @@ class PhpFpmProcessTest extends TestCase
         $process = $processProperty->getValue($phpFpmProcess);
 
         $this->assertSame("'php-fpm' '--nodaemonize' '--force-stderr' '--fpm-config' '/opt/ymir/etc/php-fpm.d/php-fpm.conf' '-d' 'opcache.file_cache_only=0'", $process->getCommandLine());
+    }
+
+    public function testHandle(): void
+    {
+        $client = $this->getFastCgiServerClientMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getProcessMock();
+        $request = $this->getProvidesRequestDataMock();
+        $response = $this->getProvidesResponseDataMock();
+
+        $client->expects($this->once())
+               ->method('handle')
+               ->with($this->identicalTo($request), 1000)
+               ->willReturn($response);
+
+        $process->method('isRunning')
+                ->willReturn(true);
+
+        $phpFpmProcess = new PhpFpmProcess($client, $logger, $process);
+
+        $this->assertSame($response, $phpFpmProcess->handle($request, 1000));
+    }
+
+    public function testHandleWithTimeout(): void
+    {
+        $this->expectException(PhpFpmTimeoutException::class);
+        $this->expectExceptionMessage('PHP-FPM request timed out after 1000ms');
+
+        $client = $this->getFastCgiServerClientMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getProcessMock();
+        $request = $this->getProvidesRequestDataMock();
+
+        $client->expects($this->once())
+               ->method('handle')
+               ->with($this->identicalTo($request), 1000)
+               ->willThrowException(new \hollodotme\FastCGI\Exceptions\TimedoutException());
+
+        $logger->expects($this->once())
+               ->method('info')
+               ->with('PHP-FPM request timed out after 1000ms, restarting process');
+
+        $phpFpmProcess = $this->getMockBuilder(PhpFpmProcess::class)
+                              ->setConstructorArgs([$client, $logger, $process])
+                              ->setMethods(['start', 'stop'])
+                              ->getMock();
+
+        $phpFpmProcess->expects($this->once())
+                      ->method('stop');
+        $phpFpmProcess->expects($this->once())
+                      ->method('start');
+
+        $phpFpmProcess->handle($request, 1000);
     }
 }

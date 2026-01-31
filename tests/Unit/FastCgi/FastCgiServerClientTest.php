@@ -54,10 +54,15 @@ class FastCgiServerClientTest extends TestCase
         $response = $this->getProvidesResponseDataMock();
 
         $client->expects($this->once())
-                      ->method('sendRequest')
+                      ->method('sendAsyncRequest')
                       ->with($this->identicalTo($connection), $this->identicalTo($request))
+                      ->willReturn(1);
+
+        $client->expects($this->once())
+                      ->method('readResponse')
+                      ->with(1, 1000)
                       ->willReturn($response);
 
-        $this->assertSame($response, (new FastCgiServerClient($client, $connection))->handle($request));
+        $this->assertSame($response, (new FastCgiServerClient($client, $connection))->handle($request, 1000));
     }
 }

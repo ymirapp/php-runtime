@@ -93,6 +93,14 @@ class Context implements \JsonSerializable
     }
 
     /**
+     * Get the remaining time in milliseconds before the execution times out.
+     */
+    public function getRemainingTimeInMs(): int
+    {
+        return max(0, $this->deadlineMs - (int) (microtime(true) * 1000));
+    }
+
+    /**
      * Get the ID of the Lambda invocation request.
      */
     public function getRequestId(): string

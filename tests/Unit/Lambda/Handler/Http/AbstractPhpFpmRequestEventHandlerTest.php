@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\Http\AbstractPhpFpmRequestEventHandler;
+use Ymir\Runtime\Lambda\InvocationEvent\Context;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
@@ -45,6 +46,10 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
               ->willReturn('tmp');
 
         $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn(new Context('request-id'));
+
+        $event->expects($this->once())
               ->method('getPayloadVersion')
               ->willReturn('1.0');
 
@@ -53,7 +58,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
 
         $process->expects($this->once())
                 ->method('handle')
-                ->with($this->isInstanceOf(FastCgiRequest::class));
+                ->with($this->isInstanceOf(FastCgiRequest::class), $this->isType('int'));
 
         $handler = $this->getMockForAbstractClass(AbstractPhpFpmRequestEventHandler::class, [$logger, $process, '/']);
 
@@ -79,6 +84,10 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
               ->willReturn('tmp');
 
         $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn(new Context('request-id'));
+
+        $event->expects($this->once())
               ->method('getPayloadVersion')
               ->willReturn('1.0');
 
@@ -87,7 +96,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
 
         $process->expects($this->once())
                 ->method('handle')
-                ->with($this->isInstanceOf(FastCgiRequest::class));
+                ->with($this->isInstanceOf(FastCgiRequest::class), $this->isType('int'));
 
         $handler = $this->getMockForAbstractClass(AbstractPhpFpmRequestEventHandler::class, [$logger, $process, '/']);
 
@@ -123,6 +132,10 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
               ->willReturn($phpFilePath);
 
         $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn(new Context('request-id'));
+
+        $event->expects($this->once())
               ->method('getPayloadVersion')
               ->willReturn('1.0');
 
@@ -151,6 +164,10 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
         $event->expects($this->exactly(2))
               ->method('getPath')
               ->willReturn($phpFilePath);
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn(new Context('request-id'));
 
         $event->expects($this->once())
               ->method('getPayloadVersion')

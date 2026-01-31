@@ -58,8 +58,8 @@ class FastCgiServerClient
     /**
      * Handles the given request and return the response from the FastCGI socket.
      */
-    public function handle(ProvidesRequestData $request): ProvidesResponseData
+    public function handle(ProvidesRequestData $request, int $timeoutMs): ProvidesResponseData
     {
-        return $this->client->sendRequest($this->socketConnection, $request);
+        return $this->client->readResponse($this->client->sendAsyncRequest($this->socketConnection, $request), $timeoutMs);
     }
 }
