@@ -34,7 +34,7 @@ class PhpFpmProcessTest extends TestCase
         $processProperty->setAccessible(true);
         $process = $processProperty->getValue($phpFpmProcess);
 
-        $this->assertSame("'php-fpm' '--nodaemonize' '--force-stderr' '--fpm-config' '/foo/bar'", $process->getCommandLine());
+        $this->assertSame("'php-fpm' '--nodaemonize' '--force-stderr' '--fpm-config' '/foo/bar' '-d' 'opcache.file_cache_only=0'", $process->getCommandLine());
     }
 
     public function testCreateForConfigWithDefault(): void
@@ -47,6 +47,6 @@ class PhpFpmProcessTest extends TestCase
         $processProperty->setAccessible(true);
         $process = $processProperty->getValue($phpFpmProcess);
 
-        $this->assertSame("'php-fpm' '--nodaemonize' '--force-stderr' '--fpm-config' '/opt/ymir/etc/php-fpm.d/php-fpm.conf'", $process->getCommandLine());
+        $this->assertSame("'php-fpm' '--nodaemonize' '--force-stderr' '--fpm-config' '/opt/ymir/etc/php-fpm.d/php-fpm.conf' '-d' 'opcache.file_cache_only=0'", $process->getCommandLine());
     }
 }

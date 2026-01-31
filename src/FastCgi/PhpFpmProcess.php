@@ -85,7 +85,7 @@ class PhpFpmProcess
         return new self(
             FastCgiServerClient::createFromSocketPath(self::SOCKET_PATH),
             $logger,
-            new Process(['php-fpm', '--nodaemonize', '--force-stderr', '--fpm-config', $configPath])
+            new Process(['php-fpm', '--nodaemonize', '--force-stderr', '--fpm-config', $configPath, '-d', 'opcache.file_cache_only=0'])
         );
     }
 
