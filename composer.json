@@ -41,6 +41,12 @@
         "phpunit/phpunit": "^8.0"
     },
     "config": {
+        "audit": {
+            "ignore": [
+                "PKSA-dxyf-6n16-t87m",
+                "PKSA-n3s6-289w-qtqb"
+            ]
+        },
         "optimize-autoloader": true,
         "platform": {
             "php": "7.4.33"
