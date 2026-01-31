@@ -19,25 +19,25 @@ namespace Ymir\Runtime\Lambda\InvocationEvent;
 abstract class AbstractEvent implements InvocationEventInterface
 {
     /**
-     * The ID of the Lambda invocation.
+     * The Lambda invocation context.
      *
-     * @var string
+     * @var Context
      */
-    private $id;
+    private $context;
 
     /**
      * Constructor.
      */
-    public function __construct(string $id)
+    public function __construct(Context $context)
     {
-        $this->id = $id;
+        $this->context = $context;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getId(): string
+    public function getContext(): Context
     {
-        return $this->id;
+        return $this->context;
     }
 }

@@ -28,9 +28,9 @@ class ConsoleCommandEvent extends AbstractEvent
     /**
      * Constructor.
      */
-    public function __construct(string $id, string $command)
+    public function __construct(Context $context, string $command)
     {
-        parent::__construct($id);
+        parent::__construct($context);
 
         $this->command = $command;
     }

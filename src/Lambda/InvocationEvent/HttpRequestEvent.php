@@ -28,9 +28,9 @@ class HttpRequestEvent extends AbstractEvent
     /**
      * Constructor.
      */
-    public function __construct(string $id, array $event = [])
+    public function __construct(Context $context, array $event = [])
     {
-        parent::__construct($id);
+        parent::__construct($context);
 
         $this->event = $event;
     }

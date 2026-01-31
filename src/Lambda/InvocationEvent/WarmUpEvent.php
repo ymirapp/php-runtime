@@ -28,9 +28,9 @@ class WarmUpEvent extends AbstractEvent
     /**
      * Constructor.
      */
-    public function __construct(string $id, int $concurrency)
+    public function __construct(Context $context, int $concurrency)
     {
-        parent::__construct($id);
+        parent::__construct($context);
 
         $this->concurrency = $concurrency;
     }

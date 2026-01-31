@@ -19,7 +19,7 @@ namespace Ymir\Runtime\Lambda\InvocationEvent;
 interface InvocationEventInterface
 {
     /**
-     * Get the ID of the Lambda invocation.
+     * Get the context of the Lambda invocation.
      */
-    public function getId(): string;
+    public function getContext(): Context;
 }

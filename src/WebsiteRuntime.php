@@ -101,7 +101,7 @@ class WebsiteRuntime extends AbstractRuntime
         }
 
         if (is_int($this->maxInvocations) && $this->invocations >= $this->maxInvocations) {
-            $this->logger->info(sprintf('Killing Lambda container. Container has processed %s invocation events. (%s)', $this->maxInvocations, $event->getId()));
+            $this->logger->info(sprintf('Killing Lambda container. Container has processed %s invocation events. (%s)', $this->maxInvocations, $event->getContext()->getRequestId()));
 
             $this->terminate(0);
         }

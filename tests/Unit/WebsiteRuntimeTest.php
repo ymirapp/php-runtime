@@ -16,6 +16,7 @@ namespace Ymir\Runtime\Tests\Unit;
 use hollodotme\FastCGI\Exceptions\ReadFailedException;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
+use Ymir\Runtime\Lambda\InvocationEvent\Context;
 use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaEventHandlerInterfaceMockTrait;
@@ -72,8 +73,8 @@ class WebsiteRuntimeTest extends TestCase
                 ->with($this->identicalTo($event), $this->identicalTo($response));
 
         $event->expects($this->once())
-              ->method('getId')
-              ->willReturn('test-id');
+              ->method('getContext')
+              ->willReturn(new Context('test-id', 0, 'arn', 'trace-id'));
 
         $handler->expects($this->once())
                 ->method('canHandle')

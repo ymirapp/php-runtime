@@ -33,17 +33,15 @@ class InvocationEventFactory
             throw new RuntimeApiException('The given "handle" must be a resource or a CurlHandle object');
         }
 
-        $requestId = '';
-        curl_setopt($handle, CURLOPT_HEADERFUNCTION, function ($handle, $header) use (&$requestId) {
+        $headers = [];
+        curl_setopt($handle, CURLOPT_HEADERFUNCTION, function ($handle, $header) use (&$headers) {
             if (!preg_match('/:\s*/', $header)) {
                 return strlen($header);
             }
 
             [$name, $value] = (array) preg_split('/:\s*/', $header, 2);
 
-            if ('lambda-runtime-aws-request-id' == strtolower((string) $name)) {
-                $requestId = trim((string) $value);
-            }
+            $headers[strtolower((string) $name)] = trim((string) $value);
 
             return strlen($header);
         });
@@ -59,40 +57,42 @@ class InvocationEventFactory
 
         if (curl_error($handle)) {
             throw new RuntimeApiException('Failed to get the next Lambda invocation: '.curl_error($handle));
-        } elseif ('' === $requestId) {
-            throw new RuntimeApiException('Unable to parse the Lambda invocation ID');
         } elseif ('' === $body) {
             throw new RuntimeApiException('Unable to parse the Lambda runtime API response');
         }
 
+        $context = Context::fromHeaders($headers);
         $event = json_decode($body, true);
 
         if (!is_array($event)) {
             throw new RuntimeApiException('Unable to decode the Lambda runtime API response');
         }
 
-        $logger->debug('Lambda event received:', $event);
+        $logger->debug('Lambda event received:', [
+            'context' => $context,
+            'event' => $event,
+        ]);
 
-        return self::createFromInvocationEvent($requestId, $event);
+        return self::createFromInvocationEvent($context, $event);
     }
 
     /**
      * Creates a new invocation event object based on the given event information from the Lambda runtime API.
      */
-    public static function createFromInvocationEvent(string $requestId, array $event): InvocationEventInterface
+    public static function createFromInvocationEvent(Context $context, array $event): InvocationEventInterface
     {
         $invocationEvent = null;
 
         if (isset($event['command'])) {
-            $invocationEvent = new ConsoleCommandEvent($requestId, (string) $event['command']);
+            $invocationEvent = new ConsoleCommandEvent($context, (string) $event['command']);
         } elseif (isset($event['httpMethod']) || isset($event['requestContext']['http']['method'])) {
-            $invocationEvent = new HttpRequestEvent($requestId, $event);
+            $invocationEvent = new HttpRequestEvent($context, $event);
         } elseif (isset($event['ping']) && true === $event['ping']) {
-            $invocationEvent = new PingEvent($requestId);
+            $invocationEvent = new PingEvent($context);
         } elseif (isset($event['php'])) {
-            $invocationEvent = new PhpConsoleCommandEvent($requestId, (string) $event['php']);
+            $invocationEvent = new PhpConsoleCommandEvent($context, (string) $event['php']);
         } elseif (isset($event['warmup'])) {
-            $invocationEvent = new WarmUpEvent($requestId, (int) $event['warmup']);
+            $invocationEvent = new WarmUpEvent($context, (int) $event['warmup']);
         }
 
         if (!$invocationEvent instanceof InvocationEventInterface) {

@@ -21,47 +21,50 @@ use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
 use Ymir\Runtime\Lambda\InvocationEvent\PhpConsoleCommandEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\PingEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent;
+use Ymir\Runtime\Tests\Mock\ContextMockTrait;
 
 /**
  * @covers \Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory
  */
 class InvocationEventFactoryTest extends TestCase
 {
+    use ContextMockTrait;
+
     public function testCreateFromInvocationEventFails(): void
     {
         $this->expectException(UnsupportedEventException::class);
         $this->expectExceptionMessage('Unknown Lambda event type');
 
-        InvocationEventFactory::createFromInvocationEvent('id', []);
+        InvocationEventFactory::createFromInvocationEvent($this->getContextMock(), []);
     }
 
     public function testCreatesConsoleCommandEvent(): void
     {
-        $this->assertInstanceOf(ConsoleCommandEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['command' => 'foo']));
+        $this->assertInstanceOf(ConsoleCommandEvent::class, InvocationEventFactory::createFromInvocationEvent($this->getContextMock(), ['command' => 'foo']));
     }
 
     public function testCreatesHttpRequestEventWithPayloadVersion1(): void
     {
-        $this->assertInstanceOf(HttpRequestEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['httpMethod' => 'get']));
+        $this->assertInstanceOf(HttpRequestEvent::class, InvocationEventFactory::createFromInvocationEvent($this->getContextMock(), ['httpMethod' => 'get']));
     }
 
     public function testCreatesHttpRequestEventWithPayloadVersion2(): void
     {
-        $this->assertInstanceOf(HttpRequestEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['requestContext' => ['http' => ['method' => 'get']]]));
+        $this->assertInstanceOf(HttpRequestEvent::class, InvocationEventFactory::createFromInvocationEvent($this->getContextMock(), ['requestContext' => ['http' => ['method' => 'get']]]));
     }
 
     public function testCreatesPhpConsoleCommandEvent(): void
     {
-        $this->assertInstanceOf(PhpConsoleCommandEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['php' => 'foo']));
+        $this->assertInstanceOf(PhpConsoleCommandEvent::class, InvocationEventFactory::createFromInvocationEvent($this->getContextMock(), ['php' => 'foo']));
     }
 
     public function testCreatesPingEvent(): void
     {
-        $this->assertInstanceOf(PingEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['ping' => true]));
+        $this->assertInstanceOf(PingEvent::class, InvocationEventFactory::createFromInvocationEvent($this->getContextMock(), ['ping' => true]));
     }
 
     public function testCreatesWarmUpEvent(): void
     {
-        $this->assertInstanceOf(WarmUpEvent::class, InvocationEventFactory::createFromInvocationEvent('id', ['warmup' => '5']));
+        $this->assertInstanceOf(WarmUpEvent::class, InvocationEventFactory::createFromInvocationEvent($this->getContextMock(), ['warmup' => '5']));
     }
 }

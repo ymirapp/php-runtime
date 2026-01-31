@@ -64,7 +64,7 @@ abstract class AbstractRuntime implements RuntimeInterface
             $this->handleEvent($event);
         } catch (\Throwable $exception) {
             $this->logger->exception($exception);
-            $this->client->sendEventError($event, $exception);
+            $this->client->sendError($event->getContext(), $exception);
         }
     }
 

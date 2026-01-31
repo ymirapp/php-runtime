@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime;
 
 use Ymir\Runtime\Exception\RuntimeApiException;
+use Ymir\Runtime\Lambda\InvocationEvent\Context;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\ForbiddenHttpResponse;
@@ -85,9 +86,9 @@ class RuntimeApiClient
     /**
      * Send an error back to the Lambda runtime API for the given event.
      */
-    public function sendEventError(InvocationEventInterface $event, \Throwable $error): void
+    public function sendError(Context $context, \Throwable $error): void
     {
-        $this->sendData($this->getErrorData($error), "invocation/{$event->getId()}/error");
+        $this->sendData($this->getErrorData($error), sprintf('invocation/%s/error', $context->getRequestId()));
     }
 
     /**
@@ -111,7 +112,7 @@ class RuntimeApiClient
             $data = (new ForbiddenHttpResponse('Response Too Large'))->getResponseData();
         }
 
-        $this->sendData($data, "invocation/{$event->getId()}/response");
+        $this->sendData($data, sprintf('invocation/%s/response', $event->getContext()->getRequestId()));
     }
 
     /**

@@ -15,14 +15,17 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\InvocationEvent;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent;
+use Ymir\Runtime\Tests\Mock\ContextMockTrait;
 
 /**
  * @covers \Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent
  */
 class WarmUpEventTest extends TestCase
 {
+    use ContextMockTrait;
+
     public function testGetConcurrency(): void
     {
-        $this->assertSame(5, (new WarmUpEvent('id', 5))->getConcurrency());
+        $this->assertSame(5, (new WarmUpEvent($this->getContextMock(), 5))->getConcurrency());
     }
 }

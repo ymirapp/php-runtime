@@ -15,6 +15,7 @@ namespace Ymir\Runtime\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\AbstractRuntime;
+use Ymir\Runtime\Tests\Mock\ContextMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaEventHandlerInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaRuntimeApiClientMockTrait;
@@ -26,6 +27,7 @@ use Ymir\Runtime\Tests\Mock\ResponseInterfaceMockTrait;
  */
 class AbstractRuntimeTest extends TestCase
 {
+    use ContextMockTrait;
     use InvocationEventInterfaceMockTrait;
     use LambdaEventHandlerInterfaceMockTrait;
     use LambdaRuntimeApiClientMockTrait;
@@ -64,6 +66,7 @@ class AbstractRuntimeTest extends TestCase
     public function testProcessNextEventWithException(): void
     {
         $client = $this->getLambdaRuntimeApiClientMock();
+        $context = $this->getContextMock();
         $event = $this->getInvocationEventInterfaceMock();
         $exception = new \Exception('test exception');
         $handler = $this->getLambdaEventHandlerInterfaceMock();
@@ -71,12 +74,14 @@ class AbstractRuntimeTest extends TestCase
 
         $runtime = $this->getMockForAbstractClass(AbstractRuntime::class, [$client, $handler, $logger]);
 
+        $event->method('getContext')->willReturn($context);
+
         $client->expects($this->once())
                ->method('getNextEvent')
                ->willReturn($event);
         $client->expects($this->once())
-                ->method('sendEventError')
-                ->with($this->identicalTo($event), $this->identicalTo($exception));
+                ->method('sendError')
+                ->with($this->identicalTo($context), $this->identicalTo($exception));
 
         $handler->expects($this->once())
                  ->method('canHandle')
@@ -97,18 +102,21 @@ class AbstractRuntimeTest extends TestCase
     public function testProcessNextEventWithUnhandledEvent(): void
     {
         $client = $this->getLambdaRuntimeApiClientMock();
+        $context = $this->getContextMock();
         $event = $this->getInvocationEventInterfaceMock();
         $handler = $this->getLambdaEventHandlerInterfaceMock();
         $logger = $this->getLoggerMock();
 
         $runtime = $this->getMockForAbstractClass(AbstractRuntime::class, [$client, $handler, $logger]);
 
+        $event->method('getContext')->willReturn($context);
+
         $client->expects($this->once())
                ->method('getNextEvent')
                ->willReturn($event);
         $client->expects($this->once())
-                ->method('sendEventError')
-                ->with($this->identicalTo($event), $this->isInstanceOf(\Exception::class));
+                ->method('sendError')
+                ->with($this->identicalTo($context), $this->isInstanceOf(\Exception::class));
 
         $handler->expects($this->once())
                  ->method('canHandle')
