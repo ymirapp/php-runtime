@@ -44,4 +44,4 @@ jobs:
       - name: Install dependencies
         run: composer install --no-ansi --no-interaction --no-scripts --no-suggest --prefer-dist
       - name: Run PHPUnit tests
-        run: composer phpunit
+        run: composer tests:unit
