@@ -26,6 +26,8 @@ jobs:
         run: composer php-cs-fixer
       - name: Run PHPStan
         run: composer phpstan
+      - name: Run Rector
+        run: composer rector
   php-tests:
     name: Run tests on ${{ matrix.php-versions }}
     runs-on: ubuntu-latest
@@ -41,6 +43,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
+      - name: Remove code quality dependencies
+        run: composer remove --dev phpstan/phpstan rector/rector
       - name: Install dependencies
         run: composer install --no-ansi --no-interaction --no-scripts --no-suggest --prefer-dist
       - name: Run PHPUnit tests

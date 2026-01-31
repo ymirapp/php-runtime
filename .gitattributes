@@ -11,4 +11,5 @@ Makefile export-ignore
 phpmd.xml export-ignore
 phpstan.neon export-ignore
 phpunit.xml.dist export-ignore
+rector.php export-ignore
 release-please-config.json export-ignore
