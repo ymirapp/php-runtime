@@ -1,0 +1,73 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Class CurlHandle not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Lambda/InvocationEvent/InvocationEventFactory.php
+
+		-
+			message: '#^Method Ymir\\Runtime\\Lambda\\InvocationEvent\\InvocationEventFactory\:\:createFromApi\(\) has parameter \$handle with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Lambda/InvocationEvent/InvocationEventFactory.php
+
+		-
+			message: '#^Method Ymir\\Runtime\\Lambda\\InvocationEvent\\InvocationEventFactory\:\:isHandle\(\) has parameter \$handle with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Lambda/InvocationEvent/InvocationEventFactory.php
+
+		-
+			message: '#^Constructor of class Ymir\\Runtime\\Lambda\\Response\\AbstractErrorHttpResponse has an unused parameter \$message\.$#'
+			identifier: constructor.unusedParameter
+			count: 1
+			path: src/Lambda/Response/AbstractErrorHttpResponse.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Lambda/Response/StaticFileResponse.php
+
+		-
+			message: '#^Method Ymir\\Runtime\\Logger\:\:__construct\(\) has parameter \$level with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Logger.php
+
+		-
+			message: '#^Method Ymir\\Runtime\\Logger\:\:__construct\(\) has parameter \$stream with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Logger.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: array.invalidKey
+			count: 1
+			path: src/Runtime.php
+
+		-
+			message: '#^Method Ymir\\Runtime\\RuntimeApiClient\:\:sendData\(\) has parameter \$data with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/RuntimeApiClient.php
+
+		-
+			message: '#^Parameter \#1 \$ch of function curl_close expects resource, CurlHandle\|resource given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/RuntimeApiClient.php
+
+		-
+			message: '#^Property Ymir\\Runtime\\RuntimeApiClient\:\:\$nextInvocationHandle \(CurlHandle\|resource\) is never assigned CurlHandle so it can be removed from the property type\.$#'
+			identifier: property.unusedType
+			count: 1
+			path: src/RuntimeApiClient.php
+
+		-
+			message: '#^Property Ymir\\Runtime\\RuntimeApiClient\:\:\$nextInvocationHandle has unknown class CurlHandle as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/RuntimeApiClient.php

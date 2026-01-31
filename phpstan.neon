@@ -1,21 +1,12 @@
+includes:
+    - ./phpstan-baseline.neon
 parameters:
-    level: max
+    level: 9
     paths:
         - src
     reportUnmatchedIgnoredErrors: false
     excludePaths:
-        - src/Lambda/Response/AbstractErrorHttpResponse.php
         - templates/*
         - tests/*
     ignoreErrors:
         - identifier: missingType.iterableValue
-
-        - '#Method [^\s]* has parameter \$[^\s]* with no type specified#'
-        - '#CurlHandle\|resource given#'
-        - message: '#unknown class CurlHandle|Class CurlHandle not found#'
-          paths:
-            - src/RuntimeApiClient.php
-            - src/Lambda/InvocationEvent/InvocationEventFactory.php
-        - message: '#While loop condition is always true#'
-          paths:
-            - runtime/runtime.php
