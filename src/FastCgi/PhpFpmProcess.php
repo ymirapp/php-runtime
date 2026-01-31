@@ -13,11 +13,12 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\FastCgi;
 
+use hollodotme\FastCGI\Exceptions\ReadFailedException;
 use hollodotme\FastCGI\Exceptions\TimedoutException;
 use hollodotme\FastCGI\Interfaces\ProvidesRequestData;
 use hollodotme\FastCGI\Interfaces\ProvidesResponseData;
 use Symfony\Component\Process\Process;
-use Ymir\Runtime\Exception\PhpFpm\PhpFpmException;
+use Ymir\Runtime\Exception\PhpFpm\PhpFpmProcessException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\Logger;
 
@@ -98,6 +99,8 @@ class PhpFpmProcess
     {
         try {
             $response = $this->client->handle($request, $timeoutMs);
+        } catch (ReadFailedException $exception) {
+            throw new PhpFpmProcessException('PHP-FPM process crashed unexpectedly');
         } catch (TimedoutException $exception) {
             $message = sprintf('PHP-FPM request timed out after %dms', $timeoutMs);
 
@@ -111,7 +114,7 @@ class PhpFpmProcess
 
         // This also triggers "updateStatus" inside the Symfony process which will make it output the logs from PHP-FPM.
         if (!$this->process->isRunning()) {
-            throw new PhpFpmException('PHP-FPM has stopped unexpectedly');
+            throw new PhpFpmProcessException('PHP-FPM has stopped unexpectedly');
         }
 
         return $response;
@@ -137,11 +140,11 @@ class PhpFpmProcess
 
         $this->wait(function () {
             if (!$this->process->isRunning()) {
-                throw new PhpFpmException('PHP-FPM process failed to start');
+                throw new PhpFpmProcessException('PHP-FPM process failed to start');
             }
 
             return !$this->isStarted();
-        }, 'Timeout while waiting for PHP-FPM process to start', 5000000);
+        }, 5000000);
     }
 
     /**
@@ -171,7 +174,7 @@ class PhpFpmProcess
     /**
      * Wait for the given callback to finish.
      */
-    private function wait(callable $callback, string $message, int $timeout): void
+    private function wait(callable $callback, int $timeoutUs): void
     {
         $elapsed = 0;
         $wait = 5000; // 5ms
@@ -181,8 +184,8 @@ class PhpFpmProcess
 
             $elapsed += $wait;
 
-            if ($elapsed > $timeout) {
-                throw new PhpFpmException($message);
+            if ($elapsed > $timeoutUs) {
+                throw new PhpFpmProcessException(sprintf('PHP-FPM failed to start within %dms', $timeoutUs / 1000));
             }
         }
     }

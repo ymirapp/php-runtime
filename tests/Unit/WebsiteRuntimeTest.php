@@ -13,11 +13,10 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Tests\Unit;
 
-use hollodotme\FastCGI\Exceptions\ReadFailedException;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
+use Ymir\Runtime\Exception\PhpFpm\PhpFpmProcessException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
-use Ymir\Runtime\Lambda\InvocationEvent\Context;
 use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
 use Ymir\Runtime\Lambda\Response\GatewayTimeoutHttpResponse;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
@@ -71,14 +70,11 @@ class WebsiteRuntimeTest extends TestCase
                ->method('getNextEvent')
                ->willReturn($event);
         $client->expects($this->once())
-                ->method('sendResponse')
-                ->with($this->identicalTo($event), $this->identicalTo($response));
-
-        $event->expects($this->once())
-              ->method('getContext')
-              ->willReturn(new Context('test-id', 0, 'arn', 'trace-id'));
+                 ->method('sendResponse')
+                 ->with($this->identicalTo($event), $this->identicalTo($response));
 
         $handler->expects($this->once())
+
                 ->method('canHandle')
                 ->with($this->identicalTo($event))
                 ->willReturn(true);
@@ -89,11 +85,55 @@ class WebsiteRuntimeTest extends TestCase
 
         $logger->expects($this->once())
                ->method('info')
-               ->with('Killing Lambda container. Container has processed 1 invocation events. (test-id)');
+               ->with('Function has processed 1 invocation events, killing lambda function');
 
         $runtime->expects($this->once())
                  ->method('terminate')
                  ->with(0);
+
+        $runtime->processNextEvent();
+    }
+
+    public function testProcessNextEventWithPhpFpmProcessException(): void
+    {
+        $client = $this->getLambdaRuntimeApiClientMock();
+        $event = $this->getInvocationEventInterfaceMock();
+        $handler = $this->getLambdaEventHandlerInterfaceMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getPhpFpmProcessMock();
+
+        $runtime = $this->getMockBuilder(WebsiteRuntime::class)
+                        ->setConstructorArgs([$client, $handler, $logger, $process])
+                        ->setMethods(['terminate'])
+                        ->getMock();
+
+        $client->expects($this->once())
+               ->method('getNextEvent')
+               ->willReturn($event);
+
+        $handler->expects($this->once())
+                ->method('canHandle')
+                ->with($this->identicalTo($event))
+                ->willReturn(true);
+        $handler->expects($this->once())
+                ->method('handle')
+                ->with($this->identicalTo($event))
+                ->willThrowException(new PhpFpmProcessException('test crash'));
+
+        $logger->expects($this->once())
+               ->method('exception')
+               ->with($this->isInstanceOf(PhpFpmProcessException::class));
+        $logger->expects($this->once())
+               ->method('info')
+               ->with('PHP-FPM process has crashed, killing lambda function');
+
+        $client->expects($this->once())
+               ->method('sendResponse')
+               ->with($this->identicalTo($event), $this->isInstanceOf(BadGatewayHttpResponse::class));
+
+        $runtime->expects($this->once())
+                 ->method('terminate')
+                 ->with(1);
 
         $runtime->processNextEvent();
     }
@@ -130,50 +170,6 @@ class WebsiteRuntimeTest extends TestCase
 
         $runtime->expects($this->never())
                  ->method('terminate');
-
-        $runtime->processNextEvent();
-    }
-
-    public function testProcessNextEventWithReadFailedException(): void
-    {
-        $client = $this->getLambdaRuntimeApiClientMock();
-        $event = $this->getInvocationEventInterfaceMock();
-        $handler = $this->getLambdaEventHandlerInterfaceMock();
-        $logger = $this->getLoggerMock();
-        $process = $this->getPhpFpmProcessMock();
-
-        $runtime = $this->getMockBuilder(WebsiteRuntime::class)
-                        ->setConstructorArgs([$client, $handler, $logger, $process])
-                        ->setMethods(['terminate'])
-                        ->getMock();
-
-        $client->expects($this->once())
-               ->method('getNextEvent')
-               ->willReturn($event);
-
-        $handler->expects($this->once())
-                ->method('canHandle')
-                ->with($this->identicalTo($event))
-                ->willReturn(true);
-        $handler->expects($this->once())
-                ->method('handle')
-                ->with($this->identicalTo($event))
-                ->willThrowException(new ReadFailedException());
-
-        $logger->expects($this->once())
-               ->method('exception')
-               ->with($this->isInstanceOf(ReadFailedException::class));
-        $logger->expects($this->once())
-               ->method('info')
-               ->with('Killing Lambda container. PHP-FPM process has crashed.');
-
-        $client->expects($this->once())
-               ->method('sendResponse')
-               ->with($this->identicalTo($event), $this->isInstanceOf(BadGatewayHttpResponse::class));
-
-        $runtime->expects($this->once())
-                 ->method('terminate')
-                 ->with(1);
 
         $runtime->processNextEvent();
     }

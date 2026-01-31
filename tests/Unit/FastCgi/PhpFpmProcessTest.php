@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\FastCgi;
 
 use PHPUnit\Framework\TestCase;
+use Ymir\Runtime\Exception\PhpFpm\PhpFpmProcessException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Tests\Mock\FastCgiServerClientMockTrait;
@@ -78,6 +79,50 @@ class PhpFpmProcessTest extends TestCase
         $phpFpmProcess = new PhpFpmProcess($client, $logger, $process);
 
         $this->assertSame($response, $phpFpmProcess->handle($request, 1000));
+    }
+
+    public function testHandleWithProcessStopped(): void
+    {
+        $this->expectException(PhpFpmProcessException::class);
+        $this->expectExceptionMessage('PHP-FPM has stopped unexpectedly');
+
+        $client = $this->getFastCgiServerClientMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getProcessMock();
+        $request = $this->getProvidesRequestDataMock();
+        $response = $this->getProvidesResponseDataMock();
+
+        $client->expects($this->once())
+               ->method('handle')
+               ->with($this->identicalTo($request), 1000)
+               ->willReturn($response);
+
+        $process->method('isRunning')
+                ->willReturn(false);
+
+        $phpFpmProcess = new PhpFpmProcess($client, $logger, $process);
+
+        $phpFpmProcess->handle($request, 1000);
+    }
+
+    public function testHandleWithReadFailedException(): void
+    {
+        $this->expectException(PhpFpmProcessException::class);
+        $this->expectExceptionMessage('PHP-FPM process crashed unexpectedly');
+
+        $client = $this->getFastCgiServerClientMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getProcessMock();
+        $request = $this->getProvidesRequestDataMock();
+
+        $client->expects($this->once())
+               ->method('handle')
+               ->with($this->identicalTo($request), 1000)
+               ->willThrowException(new \hollodotme\FastCGI\Exceptions\ReadFailedException());
+
+        $phpFpmProcess = new PhpFpmProcess($client, $logger, $process);
+
+        $phpFpmProcess->handle($request, 1000);
     }
 
     public function testHandleWithTimeout(): void

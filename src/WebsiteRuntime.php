@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime;
 
-use hollodotme\FastCGI\Exceptions\ReadFailedException;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
+use Ymir\Runtime\Exception\PhpFpm\PhpFpmProcessException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
@@ -94,18 +94,18 @@ class WebsiteRuntime extends AbstractRuntime
             }
         } catch (PhpFpmTimeoutException $exception) {
             $this->client->sendResponse($event, new GatewayTimeoutHttpResponse($exception->getMessage()));
-        } catch (ReadFailedException $exception) {
+        } catch (PhpFpmProcessException $exception) {
             $this->logger->exception($exception);
 
-            $this->client->sendResponse($event, new BadGatewayHttpResponse('The process handling the request crashed unexpectedly'));
+            $this->client->sendResponse($event, new BadGatewayHttpResponse($exception->getMessage()));
 
-            $this->logger->info('Killing Lambda container. PHP-FPM process has crashed.');
+            $this->logger->info('PHP-FPM process has crashed, killing lambda function');
 
             $this->terminate(1);
         }
 
         if (is_int($this->maxInvocations) && $this->invocations >= $this->maxInvocations) {
-            $this->logger->info(sprintf('Killing Lambda container. Container has processed %s invocation events. (%s)', $this->maxInvocations, $event->getContext()->getRequestId()));
+            $this->logger->info(sprintf('Function has processed %s invocation events, killing lambda function', $this->maxInvocations));
 
             $this->terminate(0);
         }

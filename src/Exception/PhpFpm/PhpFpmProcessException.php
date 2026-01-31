@@ -13,11 +13,9 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Exception\PhpFpm;
 
-use Ymir\Runtime\Exception\ExceptionInterface;
-
 /**
- * Base PHP-FPM exception.
+ * Exception thrown when there is an error with the PHP-FPM process.
  */
-class PhpFpmException extends \RuntimeException implements ExceptionInterface
+class PhpFpmProcessException extends PhpFpmException
 {
 }
