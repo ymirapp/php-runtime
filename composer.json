@@ -31,7 +31,8 @@
         "symfony/http-client": "^5.4",
         "symfony/polyfill-php80": "^1.29",
         "symfony/process": "^5.4",
-        "tightenco/collect": "^7.19"
+        "tightenco/collect": "^7.19",
+        "ymirapp/monolog-bridge": "^1.0"
     },
     "require-dev": {
         "aws/aws-sdk-php": "^3.171",

@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Ymir\Runtime;
 
 use Monolog\DateTimeImmutable;
-use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger as MonologLogger;
+use Ymir\Bridge\Monolog\Formatter\CloudWatchFormatter;
 
 /**
  * Logger that outputs logs to CloudWatch.
@@ -92,7 +92,7 @@ class Logger extends MonologLogger
     {
         $handler = new StreamHandler($this->stream, $this->level);
 
-        $handler->setFormatter(new LineFormatter("%message% %context% %extra%\n", null, true, true));
+        $handler->setFormatter(new CloudWatchFormatter());
 
         return $handler;
     }

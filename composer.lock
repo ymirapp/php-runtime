@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "49e500255901d2850fb1e04275fa3d9e",
+    "content-hash": "16a4bb02870df36cf89b0537e657daa7",
     "packages": [
         {
             "name": "async-aws/core",
@@ -1311,6 +1311,53 @@
             },
             "abandoned": "illuminate/collections",
             "time": "2020-09-05T00:05:48+00:00"
+        },
+        {
+            "name": "ymirapp/monolog-bridge",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ymirapp/monolog-bridge.git",
+                "reference": "0f6715de32709e688db9b6ecc605159da28aaed7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ymirapp/monolog-bridge/zipball/0f6715de32709e688db9b6ecc605159da28aaed7",
+                "reference": "0f6715de32709e688db9b6ecc605159da28aaed7",
+                "shasum": ""
+            },
+            "require": {
+                "monolog/monolog": "^2.0|^3.0",
+                "php": ">=7.2.5"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "phpunit/phpunit": "^8.0",
+                "rector/rector": "^2.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ymir\\Bridge\\Monolog\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Carl Alexander",
+                    "email": "support@ymirapp.com",
+                    "homepage": "https://ymirapp.com"
+                }
+            ],
+            "description": "Monolog integration for Ymir",
+            "support": {
+                "issues": "https://github.com/ymirapp/monolog-bridge/issues",
+                "source": "https://github.com/ymirapp/monolog-bridge/tree/v1.0.0"
+            },
+            "time": "2026-02-01T19:25:34+00:00"
         }
     ],
     "packages-dev": [
