@@ -23,9 +23,6 @@ use Ymir\Runtime\Tests\Mock\ProcessMockTrait;
 use Ymir\Runtime\Tests\Mock\ProvidesRequestDataMockTrait;
 use Ymir\Runtime\Tests\Mock\ProvidesResponseDataMockTrait;
 
-/**
- * @covers \Ymir\Runtime\FastCgi\PhpFpmProcess
- */
 class PhpFpmProcessTest extends TestCase
 {
     use FastCgiServerClientMockTrait;

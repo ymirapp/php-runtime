@@ -17,9 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Response\ProcessResponse;
 use Ymir\Runtime\Tests\Mock\ProcessMockTrait;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Response\ProcessResponse
- */
 class ProcessResponseTest extends TestCase
 {
     use ProcessMockTrait;

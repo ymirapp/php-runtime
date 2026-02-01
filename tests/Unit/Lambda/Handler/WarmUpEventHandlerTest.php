@@ -22,9 +22,6 @@ use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaClientMockTrait;
 use Ymir\Runtime\Tests\Mock\WarmUpEventMockTrait;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Handler\WarmUpEventHandler
- */
 class WarmUpEventHandlerTest extends TestCase
 {
     use FunctionMockTrait;

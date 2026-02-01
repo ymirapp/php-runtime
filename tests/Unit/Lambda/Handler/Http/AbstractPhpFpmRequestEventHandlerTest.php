@@ -22,9 +22,6 @@ use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Handler\Http\AbstractPhpFpmRequestEventHandler
- */
 class AbstractPhpFpmRequestEventHandlerTest extends TestCase
 {
     use HttpRequestEventMockTrait;

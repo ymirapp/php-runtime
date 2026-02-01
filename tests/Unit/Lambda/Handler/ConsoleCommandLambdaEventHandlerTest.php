@@ -20,9 +20,6 @@ use Ymir\Runtime\Tests\Mock\ConsoleCommandEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler
- */
 class ConsoleCommandLambdaEventHandlerTest extends TestCase
 {
     use ConsoleCommandEventMockTrait;

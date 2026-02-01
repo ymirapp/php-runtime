@@ -20,9 +20,6 @@ use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpResponseMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Handler\Http\AbstractHttpRequestEventHandler
- */
 class AbstractHttpRequestEventHandlerTest extends TestCase
 {
     use HttpRequestEventMockTrait;

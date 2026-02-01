@@ -16,9 +16,6 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Response;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Response\HttpResponse;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Response\HttpResponse
- */
 class HttpResponseTest extends TestCase
 {
     public function testGetResponseDataWithFormatVersion1And304Status(): void

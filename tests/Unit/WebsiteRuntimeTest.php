@@ -27,9 +27,6 @@ use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 use Ymir\Runtime\Tests\Mock\ResponseInterfaceMockTrait;
 use Ymir\Runtime\WebsiteRuntime;
 
-/**
- * @covers \Ymir\Runtime\WebsiteRuntime
- */
 class WebsiteRuntimeTest extends TestCase
 {
     use InvocationEventInterfaceMockTrait;

@@ -19,9 +19,6 @@ use Ymir\Runtime\Lambda\Response\HttpResponse;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\PingEventMockTrait;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler
- */
 class PingLambdaEventHandlerTest extends TestCase
 {
     use InvocationEventInterfaceMockTrait;

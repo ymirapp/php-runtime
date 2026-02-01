@@ -21,9 +21,6 @@ use Ymir\Runtime\Tests\Mock\LambdaEventHandlerInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\ResponseInterfaceMockTrait;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection
- */
 class LambdaEventHandlerCollectionTest extends TestCase
 {
     use InvocationEventInterfaceMockTrait;

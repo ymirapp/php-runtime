@@ -16,9 +16,6 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Response;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Response\StaticFileResponse;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Response\StaticFileResponse
- */
 class StaticFileResponseTest extends TestCase
 {
     public function testGetResponseDataWithCorrectFileExtensionMimeType(): void

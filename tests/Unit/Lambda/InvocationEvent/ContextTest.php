@@ -17,9 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Exception\RuntimeApiException;
 use Ymir\Runtime\Lambda\InvocationEvent\Context;
 
-/**
- * @covers \Ymir\Runtime\Lambda\InvocationEvent\Context
- */
 class ContextTest extends TestCase
 {
     public function testFromHeadersFailsIfRequestIdIsMissing(): void

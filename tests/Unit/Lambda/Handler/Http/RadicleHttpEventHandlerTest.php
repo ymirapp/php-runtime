@@ -26,9 +26,6 @@ use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Handler\Http\RadicleHttpEventHandler
- */
 class RadicleHttpEventHandlerTest extends TestCase
 {
     use HttpRequestEventMockTrait;

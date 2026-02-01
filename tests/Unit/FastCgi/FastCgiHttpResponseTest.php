@@ -17,9 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
 use Ymir\Runtime\Tests\Mock\ProvidesResponseDataMockTrait;
 
-/**
- * @covers \Ymir\Runtime\FastCgi\FastCgiHttpResponse
- */
 class FastCgiHttpResponseTest extends TestCase
 {
     use ProvidesResponseDataMockTrait;

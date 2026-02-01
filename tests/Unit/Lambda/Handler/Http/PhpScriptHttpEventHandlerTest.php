@@ -22,9 +22,6 @@ use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Handler\Http\PhpScriptHttpEventHandler
- */
 class PhpScriptHttpEventHandlerTest extends TestCase
 {
     use HttpRequestEventMockTrait;

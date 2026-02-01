@@ -16,9 +16,6 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Response;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse
- */
 class BadGatewayHttpResponseTest extends TestCase
 {
     public function testGetDataWhenTemplateFound(): void

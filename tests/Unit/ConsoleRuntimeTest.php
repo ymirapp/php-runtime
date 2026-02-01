@@ -16,9 +16,6 @@ namespace Ymir\Runtime\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\ConsoleRuntime;
 
-/**
- * @covers \Ymir\Runtime\ConsoleRuntime
- */
 class ConsoleRuntimeTest extends TestCase
 {
     public function testType(): void

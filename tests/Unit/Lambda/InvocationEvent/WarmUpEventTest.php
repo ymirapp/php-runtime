@@ -17,9 +17,6 @@ use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent;
 use Ymir\Runtime\Tests\Mock\ContextMockTrait;
 
-/**
- * @covers \Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent
- */
 class WarmUpEventTest extends TestCase
 {
     use ContextMockTrait;

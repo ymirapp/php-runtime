@@ -18,9 +18,6 @@ use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 
-/**
- * @covers \Ymir\Runtime\FastCgi\FastCgiRequest
- */
 class FastCgiRequestTest extends TestCase
 {
     use FunctionMockTrait;

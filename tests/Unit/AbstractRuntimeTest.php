@@ -22,9 +22,6 @@ use Ymir\Runtime\Tests\Mock\LambdaRuntimeApiClientMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\ResponseInterfaceMockTrait;
 
-/**
- * @covers \Ymir\Runtime\AbstractRuntime
- */
 class AbstractRuntimeTest extends TestCase
 {
     use ContextMockTrait;

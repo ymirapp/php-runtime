@@ -21,9 +21,6 @@ use Ymir\Runtime\Tests\Mock\FastCgiClientMockTrait;
 use Ymir\Runtime\Tests\Mock\ProvidesRequestDataMockTrait;
 use Ymir\Runtime\Tests\Mock\ProvidesResponseDataMockTrait;
 
-/**
- * @covers \Ymir\Runtime\FastCgi\FastCgiServerClient
- */
 class FastCgiServerClientTest extends TestCase
 {
     use ConfiguresSocketConnectionMockTrait;

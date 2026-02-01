@@ -16,9 +16,6 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Response;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Response\NotFoundHttpResponse;
 
-/**
- * @covers \Ymir\Runtime\Lambda\Response\NotFoundHttpResponse
- */
 class NotFoundHttpResponseTest extends TestCase
 {
     public function testGetDataWhenTemplateFound(): void

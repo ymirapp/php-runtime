@@ -23,9 +23,6 @@ use Ymir\Runtime\Lambda\InvocationEvent\PingEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent;
 use Ymir\Runtime\Tests\Mock\ContextMockTrait;
 
-/**
- * @covers \Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory
- */
 class InvocationEventFactoryTest extends TestCase
 {
     use ContextMockTrait;
