@@ -15,7 +15,7 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Http;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Handler\Http\AbstractHttpRequestEventHandler;
-use Ymir\Runtime\Lambda\Response\StaticFileResponse;
+use Ymir\Runtime\Lambda\Response\Http\StaticFileResponse;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpResponseMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;

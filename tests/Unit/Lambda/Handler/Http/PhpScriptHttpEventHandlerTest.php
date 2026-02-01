@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Http;
 
 use PHPUnit\Framework\TestCase;
-use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\Http\PhpScriptHttpEventHandler;
+use Ymir\Runtime\Lambda\Response\Http\FastCgiHttpResponse;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;

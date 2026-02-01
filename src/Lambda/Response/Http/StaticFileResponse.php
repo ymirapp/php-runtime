@@ -11,11 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Lambda\Response;
+namespace Ymir\Runtime\Lambda\Response\Http;
 
 use Mimey\MimeTypes;
 use Mimey\MimeTypesInterface;
 use Ymir\Runtime\Exception\FileNotReadableException;
+use Ymir\Runtime\Lambda\Response\ResponseInterface;
 
 /**
  * A Lambda response for a static file.

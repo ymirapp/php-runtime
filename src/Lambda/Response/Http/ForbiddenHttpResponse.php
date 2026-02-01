@@ -11,18 +11,18 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Lambda\Response;
+namespace Ymir\Runtime\Lambda\Response\Http;
 
 /**
- * A Lambda response for a 404 HTTP response.
+ * A Lambda response for a 403 HTTP response.
  */
-class NotFoundHttpResponse extends AbstractErrorHttpResponse
+class ForbiddenHttpResponse extends AbstractErrorHttpResponse
 {
     /**
      * Constructor.
      */
-    public function __construct(string $message = 'Not Found', string $templatesDirectory = '')
+    public function __construct(string $message = 'Forbidden', string $templatesDirectory = '')
     {
-        parent::__construct($message, 404, $templatesDirectory);
+        parent::__construct($message, 403, $templatesDirectory);
     }
 }

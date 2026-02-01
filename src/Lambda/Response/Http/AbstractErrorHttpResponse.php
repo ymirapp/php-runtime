@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Lambda\Response;
+namespace Ymir\Runtime\Lambda\Response\Http;
 
 /**
  * A Lambda response for a 4XX/5XX HTTP responses.

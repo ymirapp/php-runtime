@@ -16,7 +16,7 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
 use Ymir\Runtime\Lambda\Handler\WarmUpEventHandler;
-use Ymir\Runtime\Lambda\Response\HttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaClientMockTrait;

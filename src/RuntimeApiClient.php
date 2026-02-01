@@ -17,7 +17,7 @@ use Ymir\Runtime\Exception\RuntimeApiException;
 use Ymir\Runtime\Lambda\InvocationEvent\Context;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
-use Ymir\Runtime\Lambda\Response\ForbiddenHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\ForbiddenHttpResponse;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
 
 /**

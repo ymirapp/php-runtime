@@ -11,10 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Tests\Unit\Lambda\Response;
+namespace Ymir\Runtime\Tests\Unit\Lambda\Response\Http;
 
 use PHPUnit\Framework\TestCase;
-use Ymir\Runtime\Lambda\Response\StaticFileResponse;
+use Ymir\Runtime\Lambda\Response\Http\StaticFileResponse;
 
 class StaticFileResponseTest extends TestCase
 {

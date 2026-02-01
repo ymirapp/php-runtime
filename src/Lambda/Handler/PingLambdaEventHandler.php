@@ -15,7 +15,7 @@ namespace Ymir\Runtime\Lambda\Handler;
 
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\PingEvent;
-use Ymir\Runtime\Lambda\Response\HttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
 
 /**

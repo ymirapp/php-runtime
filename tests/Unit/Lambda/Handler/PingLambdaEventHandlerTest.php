@@ -15,7 +15,7 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
-use Ymir\Runtime\Lambda\Response\HttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\PingEventMockTrait;
 

@@ -16,10 +16,10 @@ namespace Ymir\Runtime\Lambda\Handler\Http;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
-use Ymir\Runtime\Lambda\Response\HttpResponse;
-use Ymir\Runtime\Lambda\Response\NotFoundHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\NotFoundHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\StaticFileResponse;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
-use Ymir\Runtime\Lambda\Response\StaticFileResponse;
 
 /**
  * Base handler for HTTP request events.

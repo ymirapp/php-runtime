@@ -11,18 +11,18 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Tests\Unit\Lambda\Response;
+namespace Ymir\Runtime\Tests\Unit\Lambda\Response\Http;
 
 use PHPUnit\Framework\TestCase;
-use Ymir\Runtime\Lambda\Response\NotFoundHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\ForbiddenHttpResponse;
 
-class NotFoundHttpResponseTest extends TestCase
+class ForbiddenHttpResponseTest extends TestCase
 {
     public function testGetDataWhenTemplateFound(): void
     {
         $message = 'foo';
-        $statusCode = 404;
-        $templatesDirectory = __DIR__.'/../../../../templates';
+        $statusCode = 403;
+        $templatesDirectory = __DIR__.'/../../../../../templates';
 
         ob_start();
 
@@ -37,18 +37,18 @@ class NotFoundHttpResponseTest extends TestCase
             'headers' => [
                 'Content-Type' => 'text/html',
             ],
-        ], (new NotFoundHttpResponse($message, $templatesDirectory))->getResponseData());
+        ], (new ForbiddenHttpResponse($message, $templatesDirectory))->getResponseData());
     }
 
     public function testGetResponseDataWhenTemplateNotFound(): void
     {
         $this->assertSame([
             'isBase64Encoded' => true,
-            'statusCode' => 404,
+            'statusCode' => 403,
             'body' => base64_encode(''),
             'headers' => [
                 'Content-Type' => 'text/html',
             ],
-        ], (new NotFoundHttpResponse('foo'))->getResponseData());
+        ], (new ForbiddenHttpResponse('foo'))->getResponseData());
     }
 }

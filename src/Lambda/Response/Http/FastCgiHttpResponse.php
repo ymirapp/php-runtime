@@ -11,10 +11,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\FastCgi;
+namespace Ymir\Runtime\Lambda\Response\Http;
 
 use hollodotme\FastCGI\Interfaces\ProvidesResponseData;
-use Ymir\Runtime\Lambda\Response\HttpResponse;
 
 /**
  * A Lambda response from a FastCGI server.
@@ -26,7 +25,7 @@ class FastCgiHttpResponse extends HttpResponse
      */
     public function __construct(ProvidesResponseData $response, string $formatVersion = '1.0', bool $compressible = true)
     {
-        $headers = array_change_key_case($response->getHeaders(), CASE_LOWER);
+        $headers = array_change_key_case($response->getHeaders());
         $statusCode = 200;
 
         if (isset($headers['status'][0])) {

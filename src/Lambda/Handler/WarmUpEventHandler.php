@@ -17,7 +17,7 @@ use AsyncAws\Lambda\LambdaClient;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent;
-use Ymir\Runtime\Lambda\Response\HttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
 
 /**

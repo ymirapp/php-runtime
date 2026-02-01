@@ -13,11 +13,11 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Lambda\Handler\Http;
 
-use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
-use Ymir\Runtime\Lambda\Response\HttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\FastCgiHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\Logger;
 
 /**

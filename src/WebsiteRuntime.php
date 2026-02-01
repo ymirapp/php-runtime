@@ -19,8 +19,8 @@ use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
-use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
-use Ymir\Runtime\Lambda\Response\GatewayTimeoutHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\BadGatewayHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\GatewayTimeoutHttpResponse;
 
 /**
  * Runtime for "website" functions.

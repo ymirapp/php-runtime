@@ -19,16 +19,16 @@ parameters:
 			path: src/Lambda/InvocationEvent/InvocationEventFactory.php
 
 		-
-			message: '#^Constructor of class Ymir\\Runtime\\Lambda\\Response\\AbstractErrorHttpResponse has an unused parameter \$message\.$#'
+			message: '#^Constructor of class Ymir\\Runtime\\Lambda\\Response\\Http\\AbstractErrorHttpResponse has an unused parameter \$message\.$#'
 			identifier: constructor.unusedParameter
 			count: 1
-			path: src/Lambda/Response/AbstractErrorHttpResponse.php
+			path: src/Lambda/Response/Http/AbstractErrorHttpResponse.php
 
 		-
 			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
-			path: src/Lambda/Response/StaticFileResponse.php
+			path: src/Lambda/Response/Http/StaticFileResponse.php
 
 		-
 			message: '#^Method Ymir\\Runtime\\Logger\:\:__construct\(\) has parameter \$level with no type specified\.$#'

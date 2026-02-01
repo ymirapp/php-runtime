@@ -15,11 +15,11 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Http;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
-use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\Http\LaravelHttpEventHandler;
-use Ymir\Runtime\Lambda\Response\NotFoundHttpResponse;
-use Ymir\Runtime\Lambda\Response\StaticFileResponse;
+use Ymir\Runtime\Lambda\Response\Http\FastCgiHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\NotFoundHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\StaticFileResponse;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;

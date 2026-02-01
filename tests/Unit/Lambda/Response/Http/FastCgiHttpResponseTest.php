@@ -11,10 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Tests\Unit\FastCgi;
+namespace Ymir\Runtime\Tests\Unit\Lambda\Response\Http;
 
 use PHPUnit\Framework\TestCase;
-use Ymir\Runtime\FastCgi\FastCgiHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\FastCgiHttpResponse;
 use Ymir\Runtime\Tests\Mock\ProvidesResponseDataMockTrait;
 
 class FastCgiHttpResponseTest extends TestCase

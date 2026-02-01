@@ -11,10 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Tests\Unit\Lambda\Response;
+namespace Ymir\Runtime\Tests\Unit\Lambda\Response\Http;
 
 use PHPUnit\Framework\TestCase;
-use Ymir\Runtime\Lambda\Response\BadGatewayHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\BadGatewayHttpResponse;
 
 class BadGatewayHttpResponseTest extends TestCase
 {
@@ -22,7 +22,7 @@ class BadGatewayHttpResponseTest extends TestCase
     {
         $message = 'foo';
         $statusCode = 502;
-        $templatesDirectory = __DIR__.'/../../../../templates';
+        $templatesDirectory = __DIR__.'/../../../../../templates';
 
         ob_start();
 

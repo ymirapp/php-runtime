@@ -11,10 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Lambda\Response;
+namespace Ymir\Runtime\Lambda\Response\Http;
 
 use Tightenco\Collect\Support\Arr;
 use Tightenco\Collect\Support\Collection;
+use Ymir\Runtime\Lambda\Response\ResponseInterface;
 
 /**
  * An HTTP lambda response.

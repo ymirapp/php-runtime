@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Mock;
 
 use PHPUnit\Framework\MockObject\MockObject;
-use Ymir\Runtime\Lambda\Response\HttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 
 trait HttpResponseMockTrait
 {

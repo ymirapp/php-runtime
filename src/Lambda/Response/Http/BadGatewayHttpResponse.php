@@ -11,18 +11,18 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Ymir\Runtime\Lambda\Response;
+namespace Ymir\Runtime\Lambda\Response\Http;
 
 /**
- * A Lambda response for a 504 HTTP response.
+ * A Lambda response for a 502 HTTP response.
  */
-class GatewayTimeoutHttpResponse extends AbstractErrorHttpResponse
+class BadGatewayHttpResponse extends AbstractErrorHttpResponse
 {
     /**
      * Constructor.
      */
-    public function __construct(string $message = 'Gateway Timeout', string $templatesDirectory = '')
+    public function __construct(string $message = 'Bad Gateway', string $templatesDirectory = '')
     {
-        parent::__construct($message, 504, $templatesDirectory);
+        parent::__construct($message, 502, $templatesDirectory);
     }
 }
