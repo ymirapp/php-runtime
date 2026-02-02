@@ -91,6 +91,8 @@ class InvocationEventFactory
             $invocationEvent = new PingEvent($context);
         } elseif (isset($event['php'])) {
             $invocationEvent = new PhpConsoleCommandEvent($context, (string) $event['php']);
+        } elseif (isset($event['Records'][0]['eventSource']) && 'aws:sqs' === $event['Records'][0]['eventSource']) {
+            $invocationEvent = new SqsEvent($context, $event);
         } elseif (isset($event['warmup'])) {
             $invocationEvent = new WarmUpEvent($context, (int) $event['warmup']);
         }

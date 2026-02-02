@@ -67,6 +67,11 @@ class Runtime
                     ])), $logger);
 
                     break;
+                case QueueRuntime::TYPE:
+                    $runtime = new QueueRuntime($runtimeApiClient, new LambdaEventHandlerCollection($logger, array_merge($handlers, [
+                    ])), $logger);
+
+                    break;
                 case WebsiteRuntime::TYPE:
                     $maxInvocations = ((int) getenv('YMIR_RUNTIME_MAX_INVOCATIONS')) ?: null;
                     $phpFpmProcess = PhpFpmProcess::createForConfig($logger);

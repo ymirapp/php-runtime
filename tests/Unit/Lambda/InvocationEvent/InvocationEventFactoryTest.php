@@ -20,6 +20,7 @@ use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
 use Ymir\Runtime\Lambda\InvocationEvent\PhpConsoleCommandEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\PingEvent;
+use Ymir\Runtime\Lambda\InvocationEvent\SqsEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent;
 use Ymir\Runtime\Tests\Mock\ContextMockTrait;
 
@@ -58,6 +59,11 @@ class InvocationEventFactoryTest extends TestCase
     public function testCreatesPingEvent(): void
     {
         $this->assertInstanceOf(PingEvent::class, InvocationEventFactory::createFromInvocationEvent($this->getContextMock(), ['ping' => true]));
+    }
+
+    public function testCreatesSqsEvent(): void
+    {
+        $this->assertInstanceOf(SqsEvent::class, InvocationEventFactory::createFromInvocationEvent($this->getContextMock(), ['Records' => [['eventSource' => 'aws:sqs']]]));
     }
 
     public function testCreatesWarmUpEvent(): void
