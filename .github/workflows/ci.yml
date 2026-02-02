@@ -21,7 +21,7 @@ jobs:
         with:
           php-version: '7.4'
       - name: Install dependencies
-        run: composer install --no-ansi --no-interaction --no-scripts --no-suggest --prefer-dist
+        run: composer install --no-ansi --no-interaction --no-scripts --no-security-blocking --no-suggest --prefer-dist
       - name: Run PHP CS Fixer
         run: composer php-cs-fixer
       - name: Run PHPStan
@@ -44,8 +44,8 @@ jobs:
         with:
           php-version: ${{ matrix.php-versions }}
       - name: Remove code quality dependencies
-        run: composer remove --dev phpstan/phpstan rector/rector
+        run: composer remove --dev --no-security-blocking phpstan/phpstan rector/rector
       - name: Install dependencies
-        run: composer install --no-ansi --no-interaction --no-scripts --no-suggest --prefer-dist
+        run: composer install --no-ansi --no-interaction --no-scripts --no-security-blocking --no-suggest --prefer-dist
       - name: Run PHPUnit tests
         run: composer tests:unit
