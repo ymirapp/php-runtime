@@ -24,6 +24,7 @@ use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\Http as HttpHandler;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
 use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
+use Ymir\Runtime\Lambda\Handler\Sqs;
 use Ymir\Runtime\Lambda\Handler\WarmUpEventHandler;
 
 /**
@@ -69,6 +70,8 @@ class Runtime
                     break;
                 case QueueRuntime::TYPE:
                     $runtime = new QueueRuntime($runtimeApiClient, new LambdaEventHandlerCollection($logger, array_merge($handlers, [
+                        // Application/Framework specific handlers
+                        new Sqs\LaravelSqsHandler($logger, $rootDirectory),
                     ])), $logger);
 
                     break;

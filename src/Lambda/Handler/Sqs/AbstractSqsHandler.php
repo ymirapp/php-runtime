@@ -14,17 +14,34 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Lambda\Handler\Sqs;
 
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
+use Ymir\Runtime\Lambda\InvocationEvent\Context;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsRecord;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
 use Ymir\Runtime\Lambda\Response\SqsResponse;
+use Ymir\Runtime\Logger;
 
 /**
  * Base handler for SQS events.
  */
 abstract class AbstractSqsHandler implements LambdaEventHandlerInterface
 {
+    /**
+     * The logger that sends logs to CloudWatch.
+     *
+     * @var Logger
+     */
+    private $logger;
+
+    /**
+     * Constructor.
+     */
+    public function __construct(Logger $logger)
+    {
+        $this->logger = $logger;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -44,10 +61,14 @@ abstract class AbstractSqsHandler implements LambdaEventHandlerInterface
 
         $failedRecords = [];
 
-        $event->getRecords()->each(function (SqsRecord $record) use (&$failedRecords): void {
+        $event->getRecords()->each(function (SqsRecord $record) use ($event, &$failedRecords): void {
             try {
-                $this->processRecord($record);
+                $this->processRecord($event->getContext(), $record);
             } catch (\Throwable $exception) {
+                $this->logger->error(sprintf('Processing SQS message [%s] failed: %s', $record->getMessageId(), $exception->getMessage()), [
+                    'record' => $record->toArray(),
+                ]);
+
                 $failedRecords[] = $record;
             }
         });
@@ -58,5 +79,5 @@ abstract class AbstractSqsHandler implements LambdaEventHandlerInterface
     /**
      * Process a SQS message record.
      */
-    abstract protected function processRecord(SqsRecord $record): void;
+    abstract protected function processRecord(Context $context, SqsRecord $record): void;
 }

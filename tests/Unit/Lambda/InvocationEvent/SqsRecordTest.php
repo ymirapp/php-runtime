@@ -42,4 +42,18 @@ class SqsRecordTest extends TestCase
     {
         $this->assertSame('handle', (new SqsRecord(['receiptHandle' => 'handle']))->getReceiptHandle());
     }
+
+    public function testJsonSerialize(): void
+    {
+        $record = ['foo' => 'bar', 'baz' => 'qux'];
+
+        $this->assertSame($record, (new SqsRecord($record))->jsonSerialize());
+    }
+
+    public function testToArray(): void
+    {
+        $record = ['foo' => 'bar', 'baz' => 'qux'];
+
+        $this->assertSame($record, (new SqsRecord($record))->toArray());
+    }
 }

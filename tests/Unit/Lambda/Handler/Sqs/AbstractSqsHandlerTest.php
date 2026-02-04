@@ -15,27 +15,34 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Sqs;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Handler\Sqs\AbstractSqsHandler;
+use Ymir\Runtime\Lambda\InvocationEvent\Context;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsRecord;
 use Ymir\Runtime\Lambda\Response\SqsResponse;
 use Ymir\Runtime\Tests\Mock\ContextMockTrait;
+use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
+use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 
 class AbstractSqsHandlerTest extends TestCase
 {
     use ContextMockTrait;
+    use InvocationEventInterfaceMockTrait;
+    use LoggerMockTrait;
 
     public function testCanHandleReturnsFalse(): void
     {
-        $handler = $this->getMockForAbstractClass(AbstractSqsHandler::class);
+        $handler = $this->getMockForAbstractClass(AbstractSqsHandler::class, [$this->getLoggerMock()]);
 
-        $this->assertFalse($handler->canHandle($this->getMockBuilder(\Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface::class)->getMock()));
+        $this->assertFalse($handler->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
     public function testCanHandleReturnsTrue(): void
     {
-        $handler = $this->getMockForAbstractClass(AbstractSqsHandler::class);
+        $handler = $this->getMockForAbstractClass(AbstractSqsHandler::class, [$this->getLoggerMock()]);
 
-        $this->assertTrue($handler->canHandle(new SqsEvent($this->getContextMock())));
+        $context = $this->getContextMock();
+
+        $this->assertTrue($handler->canHandle(new SqsEvent($context)));
     }
 
     public function testHandleCollectsFailures(): void
@@ -44,7 +51,9 @@ class AbstractSqsHandlerTest extends TestCase
         $record2 = new SqsRecord(['messageId' => 'id2']);
         $record3 = new SqsRecord(['messageId' => 'id3']);
 
-        $event = new SqsEvent($this->getContextMock(), [
+        $context = $this->getContextMock();
+
+        $event = new SqsEvent($context, [
             'Records' => [
                 ['messageId' => 'id1'],
                 ['messageId' => 'id2'],
@@ -52,10 +61,14 @@ class AbstractSqsHandlerTest extends TestCase
             ],
         ]);
 
-        $handler = $this->getMockForAbstractClass(AbstractSqsHandler::class);
+        $logger = $this->getLoggerMock();
+        $logger->expects($this->once())
+               ->method('error');
+
+        $handler = $this->getMockForAbstractClass(AbstractSqsHandler::class, [$logger]);
         $handler->expects($this->exactly(3))
                 ->method('processRecord')
-                ->willReturnCallback(function (SqsRecord $record): void {
+                ->willReturnCallback(function (Context $context, SqsRecord $record): void {
                     if ('id2' === $record->getMessageId()) {
                         throw new \Exception('Failed');
                     }

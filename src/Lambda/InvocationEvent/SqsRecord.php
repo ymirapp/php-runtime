@@ -16,7 +16,7 @@ namespace Ymir\Runtime\Lambda\InvocationEvent;
 /**
  * An SQS record.
  */
-class SqsRecord
+class SqsRecord implements \JsonSerializable
 {
     /**
      * The record details.
@@ -71,5 +71,21 @@ class SqsRecord
     public function getReceiptHandle(): string
     {
         return $this->record['receiptHandle'];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Convert the SQS record to an array.
+     */
+    public function toArray(): array
+    {
+        return $this->record;
     }
 }
