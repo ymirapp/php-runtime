@@ -58,7 +58,7 @@ class ConsoleCommandLambdaEventHandler implements LambdaEventHandlerInterface
         }
 
         $process = Process::fromShellCommandline("{$event->getCommand()} 2>&1");
-        $process->setTimeout(null);
+        $process->setTimeout(max(1, $event->getContext()->getRemainingTimeInMs() / 1000 - 1));
         $process->run(function ($type, $output): void {
             $this->logger->info($output);
         });
