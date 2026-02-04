@@ -108,7 +108,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
         $this->assertFalse($response->isCompressible());
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion1(): void
+    public function testHandleDoesntReturnStaticFileHttpResponseForPhpFileWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $file = tmpfile();
@@ -142,7 +142,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
         $this->assertFalse($response->isCompressible());
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion2(): void
+    public function testHandleDoesntReturnStaticFileHttpResponseForPhpFileWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $file = tmpfile();

@@ -18,7 +18,7 @@ use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\Lambda\Response\Http\NotFoundHttpResponse;
-use Ymir\Runtime\Lambda\Response\Http\StaticFileResponse;
+use Ymir\Runtime\Lambda\Response\Http\StaticFileHttpResponse;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
 
 /**
@@ -64,7 +64,7 @@ abstract class AbstractHttpRequestEventHandler implements LambdaEventHandlerInte
             return new NotFoundHttpResponse();
         }
 
-        return $this->isStaticFile($filePath) ? new StaticFileResponse($filePath) : $this->createLambdaEventResponse($event);
+        return $this->isStaticFile($filePath) ? new StaticFileHttpResponse($filePath) : $this->createLambdaEventResponse($event);
     }
 
     /**

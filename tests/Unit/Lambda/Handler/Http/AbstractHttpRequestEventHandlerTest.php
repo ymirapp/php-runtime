@@ -15,7 +15,7 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Http;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Handler\Http\AbstractHttpRequestEventHandler;
-use Ymir\Runtime\Lambda\Response\Http\StaticFileResponse;
+use Ymir\Runtime\Lambda\Response\Http\StaticFileHttpResponse;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpResponseMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
@@ -58,7 +58,7 @@ class AbstractHttpRequestEventHandlerTest extends TestCase
         $this->assertSame($response, $handler->handle($event));
     }
 
-    public function testHandleReturnsStaticFileResponse(): void
+    public function testHandleReturnsStaticFileHttpResponse(): void
     {
         $event = $this->getHttpRequestEventMock();
         $tempDir = sys_get_temp_dir();
@@ -71,7 +71,7 @@ class AbstractHttpRequestEventHandlerTest extends TestCase
               ->method('getPath')
               ->willReturn('/foo');
 
-        $this->assertInstanceOf(StaticFileResponse::class, $handler->handle($event));
+        $this->assertInstanceOf(StaticFileHttpResponse::class, $handler->handle($event));
 
         @unlink($tempDir.'/foo');
     }

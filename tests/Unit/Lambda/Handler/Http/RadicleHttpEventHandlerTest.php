@@ -20,7 +20,7 @@ use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\Http\RadicleHttpEventHandler;
 use Ymir\Runtime\Lambda\Response\Http\FastCgiHttpResponse;
 use Ymir\Runtime\Lambda\Response\Http\NotFoundHttpResponse;
-use Ymir\Runtime\Lambda\Response\Http\StaticFileResponse;
+use Ymir\Runtime\Lambda\Response\Http\StaticFileHttpResponse;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
@@ -406,7 +406,7 @@ class RadicleHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.'/public/wp/tmp/index.php');
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForFileOutsideWebDirectoryWithPayloadVersion1(): void
+    public function testHandleDoesntReturnStaticFileHttpResponseForFileOutsideWebDirectoryWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -439,7 +439,7 @@ class RadicleHttpEventHandlerTest extends TestCase
         $this->assertFalse($response->isCompressible());
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForFileOutsideWebDirectoryWithPayloadVersion2(): void
+    public function testHandleDoesntReturnStaticFileHttpResponseForFileOutsideWebDirectoryWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -472,7 +472,7 @@ class RadicleHttpEventHandlerTest extends TestCase
         $this->assertFalse($response->isCompressible());
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion1(): void
+    public function testHandleDoesntReturnStaticFileHttpResponseForPhpFileWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -505,7 +505,7 @@ class RadicleHttpEventHandlerTest extends TestCase
         $this->assertFalse($response->isCompressible());
     }
 
-    public function testHandleDoesntReturnStaticFileResponseForPhpFileWithPayloadVersion2(): void
+    public function testHandleDoesntReturnStaticFileHttpResponseForPhpFileWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -628,7 +628,7 @@ class RadicleHttpEventHandlerTest extends TestCase
         @unlink($this->tempDir.$filePath);
     }
 
-    public function testHandleReturnsStaticFileResponseForFileInsideWebDirectory(): void
+    public function testHandleReturnsStaticFileHttpResponseForFileInsideWebDirectory(): void
     {
         $event = $this->getHttpRequestEventMock();
         $logger = $this->getLoggerMock();
@@ -643,7 +643,7 @@ class RadicleHttpEventHandlerTest extends TestCase
         touch($this->tempDir.'/public/wp/wp-login.php');
         touch($this->tempDir.'/public/foo');
 
-        $this->assertInstanceOf(StaticFileResponse::class, (new RadicleHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $this->assertInstanceOf(StaticFileHttpResponse::class, (new RadicleHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
 
         @unlink($this->tempDir.'/bedrock/application.php');
         @unlink($this->tempDir.'/public/content/mu-plugins/bedrock-autoloader.php');

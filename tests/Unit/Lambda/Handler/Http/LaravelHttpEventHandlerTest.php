@@ -19,7 +19,7 @@ use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\Http\LaravelHttpEventHandler;
 use Ymir\Runtime\Lambda\Response\Http\FastCgiHttpResponse;
 use Ymir\Runtime\Lambda\Response\Http\NotFoundHttpResponse;
-use Ymir\Runtime\Lambda\Response\Http\StaticFileResponse;
+use Ymir\Runtime\Lambda\Response\Http\StaticFileHttpResponse;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
@@ -177,7 +177,7 @@ class LaravelHttpEventHandlerTest extends TestCase
         $handler = new LaravelHttpEventHandler($logger, $process, $this->tempDir);
         $response = $handler->handle($event);
 
-        $this->assertInstanceOf(StaticFileResponse::class, $response);
+        $this->assertInstanceOf(StaticFileHttpResponse::class, $response);
 
         @unlink($this->tempDir.'/public/index.php');
         @unlink($this->tempDir.'/artisan');
@@ -203,7 +203,7 @@ class LaravelHttpEventHandlerTest extends TestCase
         $handler = new LaravelHttpEventHandler($logger, $process, $this->tempDir);
         $response = $handler->handle($event);
 
-        $this->assertInstanceOf(StaticFileResponse::class, $response);
+        $this->assertInstanceOf(StaticFileHttpResponse::class, $response);
 
         @unlink($this->tempDir.'/public/index.php');
         @unlink($this->tempDir.'/artisan');
