@@ -42,7 +42,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
               ->method('getPath')
               ->willReturn('tmp');
 
-        $event->expects($this->once())
+        $event->expects($this->exactly(2))
               ->method('getContext')
               ->willReturn(new Context('request-id'));
 
@@ -80,7 +80,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
               ->method('getPath')
               ->willReturn('tmp');
 
-        $event->expects($this->once())
+        $event->expects($this->exactly(2))
               ->method('getContext')
               ->willReturn(new Context('request-id'));
 
@@ -128,7 +128,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
               ->method('getPath')
               ->willReturn($phpFilePath);
 
-        $event->expects($this->once())
+        $event->expects($this->exactly(2))
               ->method('getContext')
               ->willReturn(new Context('request-id'));
 
@@ -162,7 +162,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
               ->method('getPath')
               ->willReturn($phpFilePath);
 
-        $event->expects($this->once())
+        $event->expects($this->exactly(2))
               ->method('getContext')
               ->willReturn(new Context('request-id'));
 

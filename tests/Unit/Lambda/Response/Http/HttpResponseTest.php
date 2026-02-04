@@ -338,4 +338,19 @@ class HttpResponseTest extends TestCase
     {
         $this->assertFalse((new HttpResponse('foo', [], 200, '1.0', false))->isCompressible());
     }
+
+    public function testWithHeader(): void
+    {
+        $response = (new HttpResponse('foo'))->withHeader('X-Foo', 'bar');
+
+        $this->assertSame([
+            'isBase64Encoded' => true,
+            'statusCode' => 200,
+            'body' => base64_encode('foo'),
+            'multiValueHeaders' => [
+                'X-Foo' => ['bar'],
+                'Content-Type' => ['text/html'],
+            ],
+        ], $response->getResponseData());
+    }
 }

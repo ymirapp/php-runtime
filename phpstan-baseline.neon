@@ -37,10 +37,10 @@ parameters:
 			path: src/Lambda/Response/Http/AbstractErrorHttpResponse.php
 
 		-
-			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
+			message: '#^Method Ymir\\Runtime\\Lambda\\Response\\Http\\HttpResponse\:\:withHeader\(\) has parameter \$value with no type specified\.$#'
+			identifier: missingType.parameter
 			count: 1
-			path: src/Lambda/Response/Http/StaticFileResponse.php
+			path: src/Lambda/Response/Http/HttpResponse.php
 
 		-
 			message: '#^Method Ymir\\Runtime\\Logger\:\:__construct\(\) has parameter \$level with no type specified\.$#'

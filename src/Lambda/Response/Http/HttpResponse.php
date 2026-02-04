@@ -130,6 +130,16 @@ class HttpResponse implements ResponseInterface
     }
 
     /**
+     * Return an instance with the given value replacing the given header.
+     */
+    public function withHeader(string $name, $value): self
+    {
+        $this->headers[$name] = (array) $value;
+
+        return $this;
+    }
+
+    /**
      * Get the HTTP response headers properly formatted for a Lambda response.
      */
     private function getFormattedHeaders(): Collection

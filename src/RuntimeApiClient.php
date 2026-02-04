@@ -18,6 +18,7 @@ use Ymir\Runtime\Lambda\InvocationEvent\Context;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\Http\ForbiddenHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
 
 /**
@@ -104,12 +105,23 @@ class RuntimeApiClient
      */
     public function sendResponse(InvocationEventInterface $event, ResponseInterface $response): void
     {
+        $requestId = $event->getContext()->getRequestId();
+
+        if ($response instanceof HttpResponse) {
+            $response
+                ->withHeader('X-Request-ID', $requestId)
+                ->withHeader('X-Amzn-RequestId', $requestId);
+        }
+
         $data = $response->getResponseData();
 
         // Lambda has a 6MB response payload limit. Send an error if we hit this limit instead of getting an
         // error from the API gateway.
         if (!empty($data['body']) && mb_strlen((string) $data['body']) >= 6000000) {
-            $data = (new ForbiddenHttpResponse('Response Too Large'))->getResponseData();
+            $data = (new ForbiddenHttpResponse('Response Too Large'))
+                ->withHeader('X-Request-ID', $requestId)
+                ->withHeader('X-Amzn-RequestId', $requestId)
+                ->getResponseData();
         }
 
         $this->sendData($data, sprintf('invocation/%s/response', $event->getContext()->getRequestId()));

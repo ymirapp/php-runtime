@@ -15,16 +15,19 @@ namespace Ymir\Runtime\Tests\Unit\FastCgi;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
+use Ymir\Runtime\Tests\Mock\ContextMockTrait;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 
 class FastCgiRequestTest extends TestCase
 {
+    use ContextMockTrait;
     use FunctionMockTrait;
     use HttpRequestEventMockTrait;
 
     public function testCreateFromInvocationEventSetsContentLengthWithTraceMethod(): void
     {
+        $context = $this->getContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -33,9 +36,21 @@ class FastCgiRequestTest extends TestCase
         $getcwd->expects($this->once())
                ->willReturn('/tmp');
 
+        $context->expects($this->once())
+                ->method('getRequestId')
+                ->willReturn('test-request-id');
+
+        $context->expects($this->once())
+                ->method('getTraceId')
+                ->willReturn('test-trace-id');
+
         $event->expects($this->once())
               ->method('getBody')
               ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn($context);
 
         $event->expects($this->once())
               ->method('getHeaders')
@@ -62,7 +77,7 @@ class FastCgiRequestTest extends TestCase
               ->willReturn('127.0.0.1');
 
         $microtime->expects($this->once())
-                  ->willReturn(1617733986.080936);
+                   ->willReturn(1617733986.080936);
 
         $time->expects($this->once())
              ->willReturn(1617733986);
@@ -71,9 +86,14 @@ class FastCgiRequestTest extends TestCase
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'AWS_REQUEST_ID' => 'test-request-id',
             'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'HTTP_HOST' => 'localhost',
+            'HTTP_X_AMZN_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_AMZN_TRACE_ID' => 'test-trace-id',
+            'HTTP_X_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_TRACE_ID' => 'test-trace-id',
             'PATH_INFO' => '',
             'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
@@ -90,11 +110,13 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventSetsContentTypeWithPostMethod(): void
     {
+        $context = $this->getContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -103,9 +125,21 @@ class FastCgiRequestTest extends TestCase
         $getcwd->expects($this->once())
                ->willReturn('/tmp');
 
+        $context->expects($this->once())
+                ->method('getRequestId')
+                ->willReturn('test-request-id');
+
+        $context->expects($this->once())
+                ->method('getTraceId')
+                ->willReturn('test-trace-id');
+
         $event->expects($this->once())
               ->method('getBody')
               ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn($context);
 
         $event->expects($this->once())
               ->method('getHeaders')
@@ -132,7 +166,7 @@ class FastCgiRequestTest extends TestCase
               ->willReturn('127.0.0.1');
 
         $microtime->expects($this->once())
-                  ->willReturn(1617733986.080936);
+                   ->willReturn(1617733986.080936);
 
         $time->expects($this->once())
              ->willReturn(1617733986);
@@ -141,11 +175,16 @@ class FastCgiRequestTest extends TestCase
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'AWS_REQUEST_ID' => 'test-request-id',
             'CONTENT_LENGTH' => 3,
             'CONTENT_TYPE' => 'application/x-www-form-urlencoded',
             'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'HTTP_HOST' => 'localhost',
+            'HTTP_X_AMZN_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_AMZN_TRACE_ID' => 'test-trace-id',
+            'HTTP_X_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_TRACE_ID' => 'test-trace-id',
             'PATH_INFO' => '',
             'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
@@ -162,11 +201,13 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithContentLengthHeader(): void
     {
+        $context = $this->getContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -175,9 +216,21 @@ class FastCgiRequestTest extends TestCase
         $getcwd->expects($this->once())
                ->willReturn('/tmp');
 
+        $context->expects($this->once())
+                ->method('getRequestId')
+                ->willReturn('test-request-id');
+
+        $context->expects($this->once())
+                ->method('getTraceId')
+                ->willReturn('test-trace-id');
+
         $event->expects($this->once())
               ->method('getBody')
               ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn($context);
 
         $event->expects($this->once())
               ->method('getHeaders')
@@ -213,11 +266,16 @@ class FastCgiRequestTest extends TestCase
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'AWS_REQUEST_ID' => 'test-request-id',
             'CONTENT_LENGTH' => 42,
             'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'HTTP_CONTENT_LENGTH' => 42,
             'HTTP_HOST' => 'localhost',
+            'HTTP_X_AMZN_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_AMZN_TRACE_ID' => 'test-trace-id',
+            'HTTP_X_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_TRACE_ID' => 'test-trace-id',
             'PATH_INFO' => '',
             'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
@@ -234,11 +292,13 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithContentTypeHeader(): void
     {
+        $context = $this->getContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -247,9 +307,21 @@ class FastCgiRequestTest extends TestCase
         $getcwd->expects($this->once())
                ->willReturn('/tmp');
 
+        $context->expects($this->once())
+                ->method('getRequestId')
+                ->willReturn('test-request-id');
+
+        $context->expects($this->once())
+                ->method('getTraceId')
+                ->willReturn('test-trace-id');
+
         $event->expects($this->once())
               ->method('getBody')
               ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn($context);
 
         $event->expects($this->once())
             ->method('getHeaders')
@@ -285,12 +357,17 @@ class FastCgiRequestTest extends TestCase
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'AWS_REQUEST_ID' => 'test-request-id',
             'CONTENT_LENGTH' => 3,
             'CONTENT_TYPE' => 'text/html',
             'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'HTTP_CONTENT_TYPE' => 'text/html',
             'HTTP_HOST' => 'localhost',
+            'HTTP_X_AMZN_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_AMZN_TRACE_ID' => 'test-trace-id',
+            'HTTP_X_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_TRACE_ID' => 'test-trace-id',
             'PATH_INFO' => '',
             'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
@@ -307,11 +384,13 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithDefaults(): void
     {
+        $context = $this->getContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -320,9 +399,21 @@ class FastCgiRequestTest extends TestCase
         $getcwd->expects($this->once())
                ->willReturn('/tmp');
 
+        $context->expects($this->once())
+                ->method('getRequestId')
+                ->willReturn('test-request-id');
+
+        $context->expects($this->once())
+                ->method('getTraceId')
+                ->willReturn('test-trace-id');
+
         $event->expects($this->once())
               ->method('getBody')
               ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn($context);
 
         $event->expects($this->once())
               ->method('getHeaders')
@@ -358,10 +449,15 @@ class FastCgiRequestTest extends TestCase
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'AWS_REQUEST_ID' => 'test-request-id',
             'CONTENT_LENGTH' => 3,
             'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'HTTP_HOST' => 'localhost',
+            'HTTP_X_AMZN_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_AMZN_TRACE_ID' => 'test-trace-id',
+            'HTTP_X_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_TRACE_ID' => 'test-trace-id',
             'PATH_INFO' => '',
             'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
@@ -378,11 +474,13 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithHostHeader(): void
     {
+        $context = $this->getContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -391,9 +489,21 @@ class FastCgiRequestTest extends TestCase
         $getcwd->expects($this->once())
                ->willReturn('/tmp');
 
+        $context->expects($this->once())
+                ->method('getRequestId')
+                ->willReturn('test-request-id');
+
+        $context->expects($this->once())
+                ->method('getTraceId')
+                ->willReturn('test-trace-id');
+
         $event->expects($this->once())
               ->method('getBody')
               ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn($context);
 
         $event->expects($this->once())
               ->method('getHeaders')
@@ -429,10 +539,15 @@ class FastCgiRequestTest extends TestCase
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'AWS_REQUEST_ID' => 'test-request-id',
             'CONTENT_LENGTH' => 3,
             'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'HTTP_HOST' => 'test.local',
+            'HTTP_X_AMZN_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_AMZN_TRACE_ID' => 'test-trace-id',
+            'HTTP_X_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_TRACE_ID' => 'test-trace-id',
             'PATH_INFO' => '',
             'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
@@ -449,11 +564,13 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithPathAndQueryString(): void
     {
+        $context = $this->getContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -462,9 +579,21 @@ class FastCgiRequestTest extends TestCase
         $getcwd->expects($this->once())
                ->willReturn('/tmp');
 
+        $context->expects($this->once())
+                ->method('getRequestId')
+                ->willReturn('test-request-id');
+
+        $context->expects($this->once())
+                ->method('getTraceId')
+                ->willReturn('test-trace-id');
+
         $event->expects($this->once())
               ->method('getBody')
               ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn($context);
 
         $event->expects($this->once())
               ->method('getHeaders')
@@ -500,10 +629,15 @@ class FastCgiRequestTest extends TestCase
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'AWS_REQUEST_ID' => 'test-request-id',
             'CONTENT_LENGTH' => 3,
             'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'HTTP_HOST' => 'localhost',
+            'HTTP_X_AMZN_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_AMZN_TRACE_ID' => 'test-trace-id',
+            'HTTP_X_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_TRACE_ID' => 'test-trace-id',
             'PATH_INFO' => '',
             'PHP_SELF' => '/foo.php/bar',
             'QUERY_STRING' => 'test',
@@ -520,11 +654,13 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithPathInfoAndQueryString(): void
     {
+        $context = $this->getContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -533,9 +669,21 @@ class FastCgiRequestTest extends TestCase
         $getcwd->expects($this->once())
                ->willReturn('/tmp');
 
+        $context->expects($this->once())
+                ->method('getRequestId')
+                ->willReturn('test-request-id');
+
+        $context->expects($this->once())
+                ->method('getTraceId')
+                ->willReturn('test-trace-id');
+
         $event->expects($this->once())
               ->method('getBody')
               ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn($context);
 
         $event->expects($this->once())
               ->method('getHeaders')
@@ -571,10 +719,15 @@ class FastCgiRequestTest extends TestCase
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'AWS_REQUEST_ID' => 'test-request-id',
             'CONTENT_LENGTH' => 3,
             'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'HTTP_HOST' => 'localhost',
+            'HTTP_X_AMZN_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_AMZN_TRACE_ID' => 'test-trace-id',
+            'HTTP_X_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_TRACE_ID' => 'test-trace-id',
             'PATH_INFO' => '/bar',
             'PHP_SELF' => '/foo.php/bar',
             'QUERY_STRING' => 'test',
@@ -591,11 +744,13 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithQueryString(): void
     {
+        $context = $this->getContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -604,9 +759,21 @@ class FastCgiRequestTest extends TestCase
         $getcwd->expects($this->once())
                ->willReturn('/tmp');
 
+        $context->expects($this->once())
+                ->method('getRequestId')
+                ->willReturn('test-request-id');
+
+        $context->expects($this->once())
+                ->method('getTraceId')
+                ->willReturn('test-trace-id');
+
         $event->expects($this->once())
               ->method('getBody')
               ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn($context);
 
         $event->expects($this->once())
               ->method('getHeaders')
@@ -642,10 +809,15 @@ class FastCgiRequestTest extends TestCase
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'AWS_REQUEST_ID' => 'test-request-id',
             'CONTENT_LENGTH' => 3,
             'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'HTTP_HOST' => 'localhost',
+            'HTTP_X_AMZN_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_AMZN_TRACE_ID' => 'test-trace-id',
+            'HTTP_X_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_TRACE_ID' => 'test-trace-id',
             'PATH_INFO' => '',
             'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => 'test',
@@ -662,11 +834,13 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithXForwardedHostHeader(): void
     {
+        $context = $this->getContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -675,9 +849,21 @@ class FastCgiRequestTest extends TestCase
         $getcwd->expects($this->once())
                ->willReturn('/tmp');
 
+        $context->expects($this->once())
+                ->method('getRequestId')
+                ->willReturn('test-request-id');
+
+        $context->expects($this->once())
+                ->method('getTraceId')
+                ->willReturn('test-trace-id');
+
         $event->expects($this->once())
             ->method('getBody')
             ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn($context);
 
         $event->expects($this->once())
               ->method('getHeaders')
@@ -704,7 +890,7 @@ class FastCgiRequestTest extends TestCase
               ->willReturn('127.0.0.1');
 
         $microtime->expects($this->once())
-                  ->willReturn(1617733986.080936);
+                   ->willReturn(1617733986.080936);
 
         $time->expects($this->once())
              ->willReturn(1617733986);
@@ -713,11 +899,16 @@ class FastCgiRequestTest extends TestCase
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'AWS_REQUEST_ID' => 'test-request-id',
             'CONTENT_LENGTH' => 3,
             'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'HTTP_HOST' => 'test.local',
+            'HTTP_X_AMZN_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_AMZN_TRACE_ID' => 'test-trace-id',
             'HTTP_X_FORWARDED_HOST' => 'test.local',
+            'HTTP_X_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_TRACE_ID' => 'test-trace-id',
             'PATH_INFO' => '',
             'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
@@ -734,11 +925,13 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
 
     public function testCreateFromInvocationEventWithXForwardedProto(): void
     {
+        $context = $this->getContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -747,9 +940,21 @@ class FastCgiRequestTest extends TestCase
         $getcwd->expects($this->once())
                ->willReturn('/tmp');
 
+        $context->expects($this->once())
+                ->method('getRequestId')
+                ->willReturn('test-request-id');
+
+        $context->expects($this->once())
+                ->method('getTraceId')
+                ->willReturn('test-trace-id');
+
         $event->expects($this->once())
               ->method('getBody')
               ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn($context);
 
         $event->expects($this->once())
               ->method('getHeaders')
@@ -785,12 +990,17 @@ class FastCgiRequestTest extends TestCase
 
         $this->assertSame('foo', $request->getContent());
         $this->assertSame([
+            'AWS_REQUEST_ID' => 'test-request-id',
             'CONTENT_LENGTH' => 3,
             'DOCUMENT_ROOT' => '/tmp',
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'HTTPS' => 'on',
             'HTTP_HOST' => 'localhost',
+            'HTTP_X_AMZN_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_AMZN_TRACE_ID' => 'test-trace-id',
             'HTTP_X_FORWARDED_PROTO' => 'https',
+            'HTTP_X_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_TRACE_ID' => 'test-trace-id',
             'PATH_INFO' => '',
             'PHP_SELF' => '/foo.php',
             'QUERY_STRING' => '',
@@ -807,6 +1017,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
 

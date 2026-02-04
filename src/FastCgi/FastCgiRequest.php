@@ -50,6 +50,7 @@ class FastCgiRequest implements ProvidesRequestData
     public static function createFromInvocationEvent(HttpRequestEvent $event, string $scriptFilename): self
     {
         $content = $event->getBody();
+        $context = $event->getContext();
         $documentRoot = getcwd() ?: '';
         $headers = $event->getHeaders();
         $method = strtoupper($event->getMethod());
@@ -57,8 +58,10 @@ class FastCgiRequest implements ProvidesRequestData
         $pathInfo = '';
         $port = $headers['x-forwarded-port'][0] ?? 80;
         $queryString = $event->getQueryString();
+        $requestId = $context->getRequestId();
         $scriptName = str_replace($documentRoot, '', $scriptFilename);
         $self = $scriptName.$path;
+        $traceId = $context->getTraceId();
 
         // Parse path information using same regex for nginx with "fastcgi_split_path_info"
         if (1 === preg_match('%^(.+\.php)(/.+)$%i', $path, $matches)) {
@@ -66,7 +69,13 @@ class FastCgiRequest implements ProvidesRequestData
             $self = $matches[0];
         }
 
+        $headers['x-request-id'] = $headers['x-request-id'] ?? [$requestId];
+        $headers['x-trace-id'] = $headers['x-trace-id'] ?? [$traceId];
+        $headers['x-amzn-request-id'] = $headers['x-amzn-request-id'] ?? [$requestId];
+        $headers['x-amzn-trace-id'] = $headers['x-amzn-trace-id'] ?? [$traceId];
+
         $parameters = [
+            'AWS_REQUEST_ID' => $requestId,
             'DOCUMENT_ROOT' => $documentRoot,
             'GATEWAY_INTERFACE' => 'FastCGI/1.0',
             'PATH_INFO' => $pathInfo,
@@ -84,6 +93,7 @@ class FastCgiRequest implements ProvidesRequestData
             'SERVER_PORT' => $port,
             'SERVER_PROTOCOL' => $event->getProtocol(),
             'SERVER_SOFTWARE' => 'ymir',
+            '_X_AMZN_TRACE_ID' => $traceId,
         ];
 
         $parameters['REQUEST_URI'] = empty($queryString) ? $path : $path.'?'.$queryString;
