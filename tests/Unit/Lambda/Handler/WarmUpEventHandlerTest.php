@@ -20,6 +20,7 @@ use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaClientMockTrait;
+use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\WarmUpEventMockTrait;
 
 class WarmUpEventHandlerTest extends TestCase
@@ -27,16 +28,17 @@ class WarmUpEventHandlerTest extends TestCase
     use FunctionMockTrait;
     use InvocationEventInterfaceMockTrait;
     use LambdaClientMockTrait;
+    use LoggerMockTrait;
     use WarmUpEventMockTrait;
 
     public function testCanHandleWarmUpEventType(): void
     {
-        $this->assertTrue((new WarmUpEventHandler($this->getLambdaClientMock()))->canHandle($this->getWarmUpEventMock()));
+        $this->assertTrue((new WarmUpEventHandler($this->getLambdaClientMock(), $this->getLoggerMock()))->canHandle($this->getWarmUpEventMock()));
     }
 
     public function testCanHandleWrongEventType(): void
     {
-        $this->assertFalse((new WarmUpEventHandler($this->getLambdaClientMock()))->canHandle($this->getInvocationEventInterfaceMock()));
+        $this->assertFalse((new WarmUpEventHandler($this->getLambdaClientMock(), $this->getLoggerMock()))->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
     public function testHandleDoesntInvokeAdditionalFunctionsWhenConcurrencyIsOne(): void
@@ -51,7 +53,7 @@ class WarmUpEventHandlerTest extends TestCase
         $lambdaClient->expects($this->never())
                      ->method('invoke');
 
-        $reponse = (new WarmUpEventHandler($lambdaClient))->handle($event);
+        $reponse = (new WarmUpEventHandler($lambdaClient, $this->getLoggerMock()))->handle($event);
 
         $this->assertInstanceOf(HttpResponse::class, $reponse);
         $this->assertSame([
@@ -69,10 +71,15 @@ class WarmUpEventHandlerTest extends TestCase
         $event = $this->getWarmUpEventMock();
         $getenv = $this->getFunctionMock($this->getNamespace(WarmUpEventHandler::class), 'getenv');
         $lambdaClient = $this->getLambdaClientMock();
+        $logger = $this->getLoggerMock();
 
         $event->expects($this->any())
               ->method('getConcurrency')
               ->willReturn(3);
+
+        $logger->expects($this->once())
+               ->method('debug')
+               ->with($this->identicalTo('Warming up 3 additional functions'));
 
         $getenv->expects($this->once())
                ->with($this->identicalTo('AWS_LAMBDA_FUNCTION_NAME'))
@@ -85,10 +92,10 @@ class WarmUpEventHandlerTest extends TestCase
                          'Qualifier' => 'deployed',
                          'InvocationType' => 'Event',
                          'LogType' => 'None',
-                         'Payload' => '{"ping": true}',
-                     ]);
+                          'Payload' => '{"ping": true}',
+                      ]);
 
-        $reponse = (new WarmUpEventHandler($lambdaClient))->handle($event);
+        $reponse = (new WarmUpEventHandler($lambdaClient, $logger))->handle($event);
 
         $this->assertInstanceOf(HttpResponse::class, $reponse);
         $this->assertSame([
@@ -112,7 +119,7 @@ class WarmUpEventHandlerTest extends TestCase
               ->method('getConcurrency')
               ->willReturn(3);
 
-        (new WarmUpEventHandler($this->getLambdaClientMock()))->handle($event);
+        (new WarmUpEventHandler($this->getLambdaClientMock(), $this->getLoggerMock()))->handle($event);
     }
 
     public function testHandleWithWrongEventType(): void
@@ -120,6 +127,6 @@ class WarmUpEventHandlerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('WarmUpEventHandler can only handle WarmUpEvent objects');
 
-        (new WarmUpEventHandler($this->getLambdaClientMock()))->handle($this->getInvocationEventInterfaceMock());
+        (new WarmUpEventHandler($this->getLambdaClientMock(), $this->getLoggerMock()))->handle($this->getInvocationEventInterfaceMock());
     }
 }

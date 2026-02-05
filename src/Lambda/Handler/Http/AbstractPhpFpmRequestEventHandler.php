@@ -58,7 +58,7 @@ abstract class AbstractPhpFpmRequestEventHandler extends AbstractHttpRequestEven
         $request = FastCgiRequest::createFromInvocationEvent($event, $this->getScriptFilePath($event));
         $timeoutMs = max(1000, $event->getContext()->getRemainingTimeInMs() - 1000);
 
-        $this->logger->debug('FastCgi request sent:', [
+        $this->logger->debug('FastCGI request sent', [
             'content' => $request->getContent(),
             'parameters' => $request->getParams(),
         ]);

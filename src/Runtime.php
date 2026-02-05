@@ -58,7 +58,7 @@ class Runtime
 
             $handlers = [
                 new PingLambdaEventHandler(),
-                new WarmUpEventHandler(new LambdaClient(['region' => $region], null, null, $logger)),
+                new WarmUpEventHandler(new LambdaClient(['region' => $region], null, null, $logger), $logger),
             ];
 
             switch ($functionType) {

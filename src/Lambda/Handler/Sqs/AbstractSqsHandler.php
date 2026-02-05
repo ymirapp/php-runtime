@@ -63,6 +63,10 @@ abstract class AbstractSqsHandler implements LambdaEventHandlerInterface
 
         $event->getRecords()->each(function (SqsRecord $record) use ($event, &$failedRecords): void {
             try {
+                $this->logger->debug(sprintf('Processing SQS message [%s]', $record->getMessageId()), [
+                    'record' => $record->toArray(),
+                ]);
+
                 $this->processRecord($event->getContext(), $record);
             } catch (\Throwable $exception) {
                 $this->logger->error(sprintf('Processing SQS message [%s] failed: %s', $record->getMessageId(), $exception->getMessage()), [

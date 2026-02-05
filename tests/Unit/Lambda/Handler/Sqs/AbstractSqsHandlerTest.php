@@ -62,6 +62,9 @@ class AbstractSqsHandlerTest extends TestCase
         ]);
 
         $logger = $this->getLoggerMock();
+        $logger->expects($this->exactly(3))
+               ->method('debug')
+               ->with($this->stringContains('Processing SQS message [id'));
         $logger->expects($this->once())
                ->method('error');
 

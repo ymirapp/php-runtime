@@ -19,6 +19,7 @@ use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent;
 use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
+use Ymir\Runtime\Logger;
 
 /**
  * Lambda invocation event handler for warming up Lambda functions.
@@ -33,11 +34,19 @@ class WarmUpEventHandler implements LambdaEventHandlerInterface
     private $lambdaClient;
 
     /**
+     * The logger that sends logs to CloudWatch.
+     *
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * Constructor.
      */
-    public function __construct(LambdaClient $lambdaClient)
+    public function __construct(LambdaClient $lambdaClient, Logger $logger)
     {
         $this->lambdaClient = $lambdaClient;
+        $this->logger = $logger;
     }
 
     /**
@@ -68,6 +77,8 @@ class WarmUpEventHandler implements LambdaEventHandlerInterface
         if (!is_string($functionName)) {
             throw new InvalidConfigurationException('"AWS_LAMBDA_FUNCTION_NAME" environment variable is\'t set');
         }
+
+        $this->logger->debug(sprintf('Warming up %s additional functions', $concurrency));
 
         // The first Lambda function invoked will be the one running this code. So, if we want the number of concurrent
         // Lambda functions to match, we need to keep the concurrency number the same and not subtract one from it.
