@@ -49,7 +49,7 @@ class PhpFpmProcess
     private $client;
 
     /**
-     * The CloudWatch logger.
+     * The logger that sends logs to CloudWatch.
      *
      * @var Logger
      */
