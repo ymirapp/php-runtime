@@ -47,7 +47,7 @@ class WebsiteRuntime extends AbstractRuntime
     private $maxInvocations;
 
     /**
-     * The PHP-FPM process used by the runtime.
+     * The PHP-FPM process used by the Lambda runtime.
      *
      * @var PhpFpmProcess
      */
