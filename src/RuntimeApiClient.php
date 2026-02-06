@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime;
 
 use Ymir\Runtime\Exception\RuntimeApiException;
-use Ymir\Runtime\Lambda\InvocationEvent\Context;
+use Ymir\Runtime\Lambda\InvocationEvent\InvocationContext;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventFactory;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\Http\ForbiddenHttpResponse;
@@ -87,7 +87,7 @@ class RuntimeApiClient
     /**
      * Send an error back to the Lambda runtime API for the given event.
      */
-    public function sendError(Context $context, \Throwable $error): void
+    public function sendError(InvocationContext $context, \Throwable $error): void
     {
         $this->sendData($this->getErrorData($error), sprintf('invocation/%s/error', $context->getRequestId()));
     }

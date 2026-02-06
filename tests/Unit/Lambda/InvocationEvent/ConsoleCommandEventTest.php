@@ -15,14 +15,14 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\InvocationEvent;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\InvocationEvent\ConsoleCommandEvent;
-use Ymir\Runtime\Tests\Mock\ContextMockTrait;
+use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
 
 class ConsoleCommandEventTest extends TestCase
 {
-    use ContextMockTrait;
+    use InvocationContextMockTrait;
 
     public function testGetCommand(): void
     {
-        $this->assertSame('foo', (new ConsoleCommandEvent($this->getContextMock(), 'foo'))->getCommand());
+        $this->assertSame('foo', (new ConsoleCommandEvent($this->getInvocationContextMock(), 'foo'))->getCommand());
     }
 }

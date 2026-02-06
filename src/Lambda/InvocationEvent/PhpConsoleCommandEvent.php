@@ -21,7 +21,7 @@ class PhpConsoleCommandEvent extends ConsoleCommandEvent
     /**
      * Constructor.
      */
-    public function __construct(Context $context, string $command)
+    public function __construct(InvocationContext $context, string $command)
     {
         parent::__construct($context, sprintf('/opt/bin/php %s', $command));
     }

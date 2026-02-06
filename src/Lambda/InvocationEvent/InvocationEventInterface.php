@@ -21,5 +21,5 @@ interface InvocationEventInterface
     /**
      * Get the context of the Lambda invocation.
      */
-    public function getContext(): Context;
+    public function getContext(): InvocationContext;
 }

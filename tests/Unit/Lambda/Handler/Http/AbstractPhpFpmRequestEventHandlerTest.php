@@ -16,15 +16,16 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Http;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\Http\AbstractPhpFpmRequestEventHandler;
-use Ymir\Runtime\Lambda\InvocationEvent\Context;
 use Ymir\Runtime\Lambda\Response\Http\FastCgiHttpResponse;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
+use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
 class AbstractPhpFpmRequestEventHandlerTest extends TestCase
 {
     use HttpRequestEventMockTrait;
+    use InvocationContextMockTrait;
     use LoggerMockTrait;
     use PhpFpmProcessMockTrait;
 
@@ -44,7 +45,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
 
         $event->expects($this->exactly(2))
               ->method('getContext')
-              ->willReturn(new Context('request-id'));
+              ->willReturn($this->getInvocationContextMock());
 
         $event->expects($this->once())
               ->method('getPayloadVersion')
@@ -82,7 +83,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
 
         $event->expects($this->exactly(2))
               ->method('getContext')
-              ->willReturn(new Context('request-id'));
+              ->willReturn($this->getInvocationContextMock());
 
         $event->expects($this->once())
               ->method('getPayloadVersion')
@@ -130,7 +131,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
 
         $event->expects($this->exactly(2))
               ->method('getContext')
-              ->willReturn(new Context('request-id'));
+              ->willReturn($this->getInvocationContextMock());
 
         $event->expects($this->once())
               ->method('getPayloadVersion')
@@ -164,7 +165,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
 
         $event->expects($this->exactly(2))
               ->method('getContext')
-              ->willReturn(new Context('request-id'));
+              ->willReturn($this->getInvocationContextMock());
 
         $event->expects($this->once())
               ->method('getPayloadVersion')

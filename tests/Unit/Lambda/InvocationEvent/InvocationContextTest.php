@@ -15,21 +15,21 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\InvocationEvent;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Exception\RuntimeApiException;
-use Ymir\Runtime\Lambda\InvocationEvent\Context;
+use Ymir\Runtime\Lambda\InvocationEvent\InvocationContext;
 
-class ContextTest extends TestCase
+class InvocationContextTest extends TestCase
 {
     public function testFromHeadersFailsIfRequestIdIsMissing(): void
     {
         $this->expectException(RuntimeApiException::class);
         $this->expectExceptionMessage('Unable to determine the Lambda invocation ID');
 
-        Context::fromHeaders([]);
+        InvocationContext::fromHeaders([]);
     }
 
     public function testFromHeadersWithAllHeaders(): void
     {
-        $context = Context::fromHeaders([
+        $context = InvocationContext::fromHeaders([
             'lambda-runtime-aws-request-id' => 'request-id',
             'lambda-runtime-deadline-ms' => '123456789',
             'lambda-runtime-invoked-function-arn' => 'arn',
@@ -44,17 +44,17 @@ class ContextTest extends TestCase
 
     public function testGetDeadlineMsDefaultValue(): void
     {
-        $this->assertSame(0, (new Context('request-id'))->getDeadlineMs());
+        $this->assertSame(0, (new InvocationContext('request-id'))->getDeadlineMs());
     }
 
     public function testGetInvokedFunctionArnDefaultValue(): void
     {
-        $this->assertSame('', (new Context('request-id'))->getInvokedFunctionArn());
+        $this->assertSame('', (new InvocationContext('request-id'))->getInvokedFunctionArn());
     }
 
     public function testGetRemainingTimeInMs(): void
     {
-        $context = new Context('request-id', (int) (microtime(true) * 1000) + 1000);
+        $context = new InvocationContext('request-id', (int) (microtime(true) * 1000) + 1000);
 
         $this->assertGreaterThan(0, $context->getRemainingTimeInMs());
         $this->assertLessThanOrEqual(1000, $context->getRemainingTimeInMs());
@@ -62,22 +62,22 @@ class ContextTest extends TestCase
 
     public function testGetRemainingTimeInMsWithNoDeadline(): void
     {
-        $this->assertSame(0, (new Context('request-id'))->getRemainingTimeInMs());
+        $this->assertSame(0, (new InvocationContext('request-id'))->getRemainingTimeInMs());
     }
 
     public function testGetRequestId(): void
     {
-        $this->assertSame('request-id', (new Context('request-id'))->getRequestId());
+        $this->assertSame('request-id', (new InvocationContext('request-id'))->getRequestId());
     }
 
     public function testGetTraceIdDefaultValue(): void
     {
-        $this->assertSame('', (new Context('request-id'))->getTraceId());
+        $this->assertSame('', (new InvocationContext('request-id'))->getTraceId());
     }
 
     public function testJsonSerialize(): void
     {
-        $context = new Context('request-id', 123456789, 'arn', 'trace-id');
+        $context = new InvocationContext('request-id', 123456789, 'arn', 'trace-id');
 
         $this->assertSame([
             'awsRequestId' => 'request-id',

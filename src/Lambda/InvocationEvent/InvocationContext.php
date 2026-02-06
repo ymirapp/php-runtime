@@ -18,7 +18,7 @@ use Ymir\Runtime\Exception\RuntimeApiException;
 /**
  * The Lambda invocation context.
  */
-class Context implements \JsonSerializable
+class InvocationContext implements \JsonSerializable
 {
     /**
      * The deadline for the Lambda invocation in milliseconds.

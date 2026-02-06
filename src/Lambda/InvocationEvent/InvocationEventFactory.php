@@ -61,7 +61,7 @@ class InvocationEventFactory
             throw new RuntimeApiException('Unable to parse the Lambda runtime API response');
         }
 
-        $context = Context::fromHeaders($headers);
+        $context = InvocationContext::fromHeaders($headers);
         $event = json_decode($body, true);
 
         if (!is_array($event)) {
@@ -79,7 +79,7 @@ class InvocationEventFactory
     /**
      * Creates a new invocation event object based on the given event information from the Lambda runtime API.
      */
-    public static function createFromInvocationEvent(Context $context, array $event): InvocationEventInterface
+    public static function createFromInvocationEvent(InvocationContext $context, array $event): InvocationEventInterface
     {
         $invocationEvent = null;
 

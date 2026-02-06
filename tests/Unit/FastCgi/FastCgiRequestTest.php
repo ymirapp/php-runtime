@@ -15,19 +15,19 @@ namespace Ymir\Runtime\Tests\Unit\FastCgi;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
-use Ymir\Runtime\Tests\Mock\ContextMockTrait;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
+use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
 
 class FastCgiRequestTest extends TestCase
 {
-    use ContextMockTrait;
     use FunctionMockTrait;
     use HttpRequestEventMockTrait;
+    use InvocationContextMockTrait;
 
     public function testCreateFromInvocationEventSetsContentLengthWithTraceMethod(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -116,7 +116,7 @@ class FastCgiRequestTest extends TestCase
 
     public function testCreateFromInvocationEventSetsContentTypeWithPostMethod(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -207,7 +207,7 @@ class FastCgiRequestTest extends TestCase
 
     public function testCreateFromInvocationEventWithContentLengthHeader(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -298,7 +298,7 @@ class FastCgiRequestTest extends TestCase
 
     public function testCreateFromInvocationEventWithContentTypeHeader(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -390,7 +390,7 @@ class FastCgiRequestTest extends TestCase
 
     public function testCreateFromInvocationEventWithDefaults(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -480,7 +480,7 @@ class FastCgiRequestTest extends TestCase
 
     public function testCreateFromInvocationEventWithHostHeader(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -570,7 +570,7 @@ class FastCgiRequestTest extends TestCase
 
     public function testCreateFromInvocationEventWithPathAndQueryString(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -660,7 +660,7 @@ class FastCgiRequestTest extends TestCase
 
     public function testCreateFromInvocationEventWithPathInfoAndQueryString(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -750,7 +750,7 @@ class FastCgiRequestTest extends TestCase
 
     public function testCreateFromInvocationEventWithQueryString(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -840,7 +840,7 @@ class FastCgiRequestTest extends TestCase
 
     public function testCreateFromInvocationEventWithXForwardedHostHeader(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
@@ -931,7 +931,7 @@ class FastCgiRequestTest extends TestCase
 
     public function testCreateFromInvocationEventWithXForwardedProto(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getHttpRequestEventMock();
         $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
         $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');

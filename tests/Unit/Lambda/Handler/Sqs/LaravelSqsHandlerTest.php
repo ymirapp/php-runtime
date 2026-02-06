@@ -17,13 +17,13 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use Ymir\Runtime\Lambda\Handler\Sqs\LaravelSqsHandler;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsEvent;
-use Ymir\Runtime\Tests\Mock\ContextMockTrait;
+use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 
 class LaravelSqsHandlerTest extends TestCase
 {
-    use ContextMockTrait;
+    use InvocationContextMockTrait;
     use InvocationEventInterfaceMockTrait;
     use LoggerMockTrait;
 
@@ -58,7 +58,7 @@ class LaravelSqsHandlerTest extends TestCase
 
         $handler = new LaravelSqsHandler($this->getLoggerMock(), $this->tempDir);
 
-        $this->assertFalse($handler->canHandle(new SqsEvent($this->getContextMock())));
+        $this->assertFalse($handler->canHandle(new SqsEvent($this->getInvocationContextMock())));
     }
 
     public function testCanHandleReturnsFalseIfPublicIndexMissing(): void
@@ -67,7 +67,7 @@ class LaravelSqsHandlerTest extends TestCase
 
         $handler = new LaravelSqsHandler($this->getLoggerMock(), $this->tempDir);
 
-        $this->assertFalse($handler->canHandle(new SqsEvent($this->getContextMock())));
+        $this->assertFalse($handler->canHandle(new SqsEvent($this->getInvocationContextMock())));
     }
 
     public function testCanHandleReturnsTrueIfArtisanAndPublicIndexExist(): void
@@ -77,7 +77,7 @@ class LaravelSqsHandlerTest extends TestCase
 
         $handler = new LaravelSqsHandler($this->getLoggerMock(), $this->tempDir);
 
-        $this->assertTrue($handler->canHandle(new SqsEvent($this->getContextMock())));
+        $this->assertTrue($handler->canHandle(new SqsEvent($this->getInvocationContextMock())));
     }
 
     public function testHandleCollectsFailuresIfProcessFails(): void
@@ -85,7 +85,7 @@ class LaravelSqsHandlerTest extends TestCase
         touch($this->tempDir.'/artisan');
         touch($this->tempDir.'/public/index.php');
 
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $context->method('getRemainingTimeInMs')->willReturn(10000);
 
         $event = new SqsEvent($context, [
@@ -113,7 +113,7 @@ class LaravelSqsHandlerTest extends TestCase
         touch($this->tempDir.'/artisan');
         touch($this->tempDir.'/public/index.php');
 
-        $event = new SqsEvent($this->getContextMock(), [
+        $event = new SqsEvent($this->getInvocationContextMock(), [
             'Records' => [
                 ['messageId' => 'id1', 'body' => "\xB1\x31"],
             ],
@@ -144,7 +144,7 @@ class LaravelSqsHandlerTest extends TestCase
         $_ENV['YMIR_QUEUE_TRIES'] = '5';
         $_ENV['YMIR_QUEUE_FORCE'] = '1';
 
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $context->method('getRemainingTimeInMs')->willReturn(60000);
 
         $event = new SqsEvent($context, [

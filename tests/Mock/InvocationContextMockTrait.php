@@ -14,16 +14,16 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Mock;
 
 use PHPUnit\Framework\MockObject\MockObject;
-use Ymir\Runtime\Lambda\InvocationEvent\Context;
+use Ymir\Runtime\Lambda\InvocationEvent\InvocationContext;
 
-trait ContextMockTrait
+trait InvocationContextMockTrait
 {
     /**
-     * Get a mock of a Context object.
+     * Get a mock of an InvocationContext object.
      */
-    private function getContextMock(): MockObject
+    private function getInvocationContextMock(): MockObject
     {
-        return $this->getMockBuilder(Context::class)
+        return $this->getMockBuilder(InvocationContext::class)
                     ->disableOriginalConstructor()
                     ->getMock();
     }

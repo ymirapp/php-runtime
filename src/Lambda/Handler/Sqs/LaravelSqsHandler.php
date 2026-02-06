@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Lambda\Handler\Sqs;
 
 use Symfony\Component\Process\Process;
-use Ymir\Runtime\Lambda\InvocationEvent\Context;
+use Ymir\Runtime\Lambda\InvocationEvent\InvocationContext;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsRecord;
 use Ymir\Runtime\Logger;
@@ -51,7 +51,7 @@ class LaravelSqsHandler extends AbstractSqsHandler
     /**
      * {@inheritdoc}
      */
-    protected function processRecord(Context $context, SqsRecord $record): void
+    protected function processRecord(InvocationContext $context, SqsRecord $record): void
     {
         $message = json_encode($record);
 
@@ -86,7 +86,7 @@ class LaravelSqsHandler extends AbstractSqsHandler
     /**
      * Calculate the timeout for processing the SQS record.
      */
-    private function calculateTimeout(Context $context): int
+    private function calculateTimeout(InvocationContext $context): int
     {
         $timeout = (int) ($_ENV['YMIR_QUEUE_TIMEOUT'] ?? $_ENV['QUEUE_TIMEOUT'] ?? 0);
         $remainingTime = (int) max(0, $context->getRemainingTimeInMs() / 1000 - 1);

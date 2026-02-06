@@ -18,16 +18,16 @@ use Ymir\Runtime\Exception\RuntimeApiException;
 use Ymir\Runtime\Lambda\InvocationEvent\ConsoleCommandEvent;
 use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\RuntimeApiClient;
-use Ymir\Runtime\Tests\Mock\ContextMockTrait;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
+use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\ResponseInterfaceMockTrait;
 
 class RuntimeApiClientTest extends TestCase
 {
-    use ContextMockTrait;
     use FunctionMockTrait;
+    use InvocationContextMockTrait;
     use InvocationEventInterfaceMockTrait;
     use LoggerMockTrait;
     use ResponseInterfaceMockTrait;
@@ -141,7 +141,7 @@ class RuntimeApiClientTest extends TestCase
              });
 
         $client = new RuntimeApiClient('api-url', $this->getLoggerMock());
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $context->method('getRequestId')->willReturn('request-id');
 
         $client->sendError($context, new \Exception('foo'));
@@ -210,7 +210,7 @@ class RuntimeApiClientTest extends TestCase
 
         $client = new RuntimeApiClient('api-url', $this->getLoggerMock());
         $event = $this->getInvocationEventInterfaceMock();
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $response = new HttpResponse(str_repeat('a', 6000000), [], 200, '1.0', false);
 
         $event->method('getContext')->willReturn($context);
@@ -244,7 +244,7 @@ class RuntimeApiClientTest extends TestCase
 
         $client = new RuntimeApiClient('api-url', $this->getLoggerMock());
         $event = $this->getInvocationEventInterfaceMock();
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $response = new HttpResponse('foo');
 
         $event->method('getContext')->willReturn($context);
@@ -285,7 +285,7 @@ class RuntimeApiClientTest extends TestCase
 
         $client = new RuntimeApiClient('api-url', $this->getLoggerMock());
         $event = $this->getInvocationEventInterfaceMock();
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $response = $this->getResponseInterfaceMock();
 
         $event->method('getContext')->willReturn($context);
@@ -324,7 +324,7 @@ class RuntimeApiClientTest extends TestCase
 
         $client = new RuntimeApiClient('api-url', $this->getLoggerMock());
         $event = $this->getInvocationEventInterfaceMock();
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $response = $this->getResponseInterfaceMock();
 
         $event->method('getContext')->willReturn($context);

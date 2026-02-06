@@ -17,15 +17,15 @@ use PHPUnit\Framework\TestCase;
 use Tightenco\Collect\Support\Collection;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsRecord;
-use Ymir\Runtime\Tests\Mock\ContextMockTrait;
+use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
 
 class SqsEventTest extends TestCase
 {
-    use ContextMockTrait;
+    use InvocationContextMockTrait;
 
     public function testGetRecordsDefaultValue(): void
     {
-        $records = (new SqsEvent($this->getContextMock()))->getRecords();
+        $records = (new SqsEvent($this->getInvocationContextMock()))->getRecords();
 
         $this->assertInstanceOf(Collection::class, $records);
         $this->assertEmpty($records);
@@ -33,7 +33,7 @@ class SqsEventTest extends TestCase
 
     public function testGetRecordsWithValue(): void
     {
-        $records = (new SqsEvent($this->getContextMock(), ['Records' => [['foo' => 'bar']]]))->getRecords();
+        $records = (new SqsEvent($this->getInvocationContextMock(), ['Records' => [['foo' => 'bar']]]))->getRecords();
 
         $this->assertInstanceOf(Collection::class, $records);
         $this->assertCount(1, $records);

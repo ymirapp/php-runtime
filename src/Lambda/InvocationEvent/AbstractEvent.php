@@ -21,14 +21,14 @@ abstract class AbstractEvent implements InvocationEventInterface
     /**
      * The Lambda invocation context.
      *
-     * @var Context
+     * @var InvocationContext
      */
     private $context;
 
     /**
      * Constructor.
      */
-    public function __construct(Context $context)
+    public function __construct(InvocationContext $context)
     {
         $this->context = $context;
     }
@@ -36,7 +36,7 @@ abstract class AbstractEvent implements InvocationEventInterface
     /**
      * {@inheritdoc}
      */
-    public function getContext(): Context
+    public function getContext(): InvocationContext
     {
         return $this->context;
     }

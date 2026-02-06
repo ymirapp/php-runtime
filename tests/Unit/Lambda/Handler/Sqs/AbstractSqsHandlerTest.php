@@ -15,17 +15,17 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Sqs;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Handler\Sqs\AbstractSqsHandler;
-use Ymir\Runtime\Lambda\InvocationEvent\Context;
+use Ymir\Runtime\Lambda\InvocationEvent\InvocationContext;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsRecord;
 use Ymir\Runtime\Lambda\Response\SqsResponse;
-use Ymir\Runtime\Tests\Mock\ContextMockTrait;
+use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 
 class AbstractSqsHandlerTest extends TestCase
 {
-    use ContextMockTrait;
+    use InvocationContextMockTrait;
     use InvocationEventInterfaceMockTrait;
     use LoggerMockTrait;
 
@@ -40,7 +40,7 @@ class AbstractSqsHandlerTest extends TestCase
     {
         $handler = $this->getMockForAbstractClass(AbstractSqsHandler::class, [$this->getLoggerMock()]);
 
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
 
         $this->assertTrue($handler->canHandle(new SqsEvent($context)));
     }
@@ -51,7 +51,7 @@ class AbstractSqsHandlerTest extends TestCase
         $record2 = new SqsRecord(['messageId' => 'id2']);
         $record3 = new SqsRecord(['messageId' => 'id3']);
 
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
 
         $event = new SqsEvent($context, [
             'Records' => [
@@ -71,7 +71,7 @@ class AbstractSqsHandlerTest extends TestCase
         $handler = $this->getMockForAbstractClass(AbstractSqsHandler::class, [$logger]);
         $handler->expects($this->exactly(3))
                 ->method('processRecord')
-                ->willReturnCallback(function (Context $context, SqsRecord $record): void {
+                ->willReturnCallback(function (InvocationContext $context, SqsRecord $record): void {
                     if ('id2' === $record->getMessageId()) {
                         throw new \Exception('Failed');
                     }

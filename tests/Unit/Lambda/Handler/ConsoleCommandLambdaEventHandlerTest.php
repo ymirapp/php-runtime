@@ -17,14 +17,14 @@ use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
 use Ymir\Runtime\Lambda\Response\ProcessResponse;
 use Ymir\Runtime\Tests\Mock\ConsoleCommandEventMockTrait;
-use Ymir\Runtime\Tests\Mock\ContextMockTrait;
+use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 
 class ConsoleCommandLambdaEventHandlerTest extends TestCase
 {
     use ConsoleCommandEventMockTrait;
-    use ContextMockTrait;
+    use InvocationContextMockTrait;
     use InvocationEventInterfaceMockTrait;
     use LoggerMockTrait;
 
@@ -52,7 +52,7 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
      */
     public function testHandleSetsCorrectTimeout(int $remainingTimeInMs, float $expectedTimeout): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getConsoleCommandEventMock();
         $logger = $this->getLoggerMock();
 
@@ -81,7 +81,7 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
 
     public function testHandleWithSuccessfulCommand(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getConsoleCommandEventMock();
         $logger = $this->getLoggerMock();
 
@@ -110,7 +110,7 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
 
     public function testHandleWithUnsuccessfulCommand(): void
     {
-        $context = $this->getContextMock();
+        $context = $this->getInvocationContextMock();
         $event = $this->getConsoleCommandEventMock();
         $logger = $this->getLoggerMock();
 

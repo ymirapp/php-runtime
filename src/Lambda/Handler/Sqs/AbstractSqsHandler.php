@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Lambda\Handler\Sqs;
 
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
-use Ymir\Runtime\Lambda\InvocationEvent\Context;
+use Ymir\Runtime\Lambda\InvocationEvent\InvocationContext;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsRecord;
@@ -83,5 +83,5 @@ abstract class AbstractSqsHandler implements LambdaEventHandlerInterface
     /**
      * Process a SQS message record.
      */
-    abstract protected function processRecord(Context $context, SqsRecord $record): void;
+    abstract protected function processRecord(InvocationContext $context, SqsRecord $record): void;
 }
