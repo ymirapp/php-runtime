@@ -33,7 +33,7 @@ abstract class AbstractPhpFpmRequestEventHandler extends AbstractHttpRequestEven
     private $logger;
 
     /**
-     * The PHP-FPM process.
+     * The PHP-FPM process used by the Lambda runtime.
      *
      * @var PhpFpmProcess
      */
