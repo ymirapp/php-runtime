@@ -71,7 +71,9 @@ class RuntimeApiClient
      */
     public function __destruct()
     {
-        curl_close($this->nextInvocationHandle);
+        if ((\PHP_VERSION_ID < 80000 && is_resource($this->nextInvocationHandle)) || (\PHP_VERSION_ID >= 80000 && $this->nextInvocationHandle instanceof \CurlHandle)) {
+            curl_close($this->nextInvocationHandle);
+        }
     }
 
     /**
