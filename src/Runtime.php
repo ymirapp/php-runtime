@@ -13,13 +13,12 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime;
 
-use AsyncAws\Lambda\LambdaClient;
 use AsyncAws\Ssm\Input\GetParametersByPathRequest;
-use AsyncAws\Ssm\SsmClient;
 use AsyncAws\Ssm\ValueObject\Parameter;
 use Tightenco\Collect\Support\Arr;
+use Ymir\Runtime\Aws\LambdaClient;
+use Ymir\Runtime\Aws\SsmClient;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
-use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\Http as HttpHandler;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
@@ -38,27 +37,24 @@ class Runtime
     public static function create(): RuntimeInterface
     {
         $coldStart = microtime(true);
-        $logger = new Logger(getenv('YMIR_RUNTIME_LOG_LEVEL') ?: Logger::INFO);
-        $runtimeApiClient = new RuntimeApiClient((string) getenv('AWS_LAMBDA_RUNTIME_API'), $logger);
+        $context = RuntimeContext::createFromEnvironment();
+
+        $logger = $context->getLogger();
+        $rootDirectory = $context->getRootDirectory();
+        $runtimeApiClient = $context->getRuntimeApiClient();
 
         try {
             $functionType = getenv('YMIR_FUNCTION_TYPE');
-            $region = getenv('AWS_REGION');
-            $rootDirectory = getenv('LAMBDA_TASK_ROOT');
 
             if (!is_string($functionType)) {
                 throw new InvalidConfigurationException('The "YMIR_FUNCTION_TYPE" environment variable is missing');
-            } elseif (!is_string($rootDirectory)) {
-                throw new InvalidConfigurationException('The "LAMBDA_TASK_ROOT" environment variable is missing');
-            } elseif (!is_string($region)) {
-                throw new InvalidConfigurationException('The "AWS_REGION" environment variable is missing');
             }
 
-            self::injectSecretEnvironmentVariables($logger, $region);
+            self::injectSecretEnvironmentVariables($context);
 
             $handlers = [
                 new PingLambdaEventHandler(),
-                new WarmUpEventHandler(new LambdaClient(['region' => $region], null, null, $logger), $logger),
+                new WarmUpEventHandler(LambdaClient::createFromContext($context), $logger),
             ];
 
             switch ($functionType) {
@@ -76,8 +72,7 @@ class Runtime
 
                     break;
                 case WebsiteRuntime::TYPE:
-                    $maxInvocations = ((int) getenv('YMIR_RUNTIME_MAX_INVOCATIONS')) ?: null;
-                    $phpFpmProcess = PhpFpmProcess::createForConfig($logger);
+                    $phpFpmProcess = $context->getPhpFpmProcess();
 
                     $runtime = new WebsiteRuntime($runtimeApiClient, new LambdaEventHandlerCollection($logger, array_merge($handlers, [
                         // Application/Framework specific handlers
@@ -88,7 +83,7 @@ class Runtime
 
                         // Fallback handlers
                         new HttpHandler\PhpScriptHttpEventHandler($logger, $phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
-                    ])), $logger, $phpFpmProcess, $maxInvocations);
+                    ])), $logger, $phpFpmProcess, $context->getMaxInvocations());
 
                     $runtime->start();
 
@@ -111,7 +106,7 @@ class Runtime
     /**
      * Inject the secret environment variables into the runtime.
      */
-    private static function injectSecretEnvironmentVariables(Logger $logger, string $region): void
+    private static function injectSecretEnvironmentVariables(RuntimeContext $context): void
     {
         $secretsPath = getenv('YMIR_SECRETS_PATH');
 
@@ -124,13 +119,13 @@ class Runtime
         // results because they use a numbered index.
         //
         // @see https://stackoverflow.com/questions/70536304/why-does-iterator-to-array-give-different-results-than-foreach
-        collect(iterator_to_array((new SsmClient(['region' => $region], null, null, $logger))->getParametersByPath(new GetParametersByPathRequest([
+        collect(iterator_to_array(SsmClient::createFromContext($context)->getParametersByPath(new GetParametersByPathRequest([
             'Path' => $secretsPath,
             'WithDecryption' => true,
         ])), false))->mapWithKeys(function (Parameter $parameter) {
             return [Arr::last(explode('/', (string) $parameter->getName())) => (string) $parameter->getValue()];
-        })->filter()->each(function ($value, $name) use ($logger): void {
-            $logger->debug(sprintf('Injecting [%s] secret environment variable into runtime', $name));
+        })->filter()->each(function ($value, $name) use ($context): void {
+            $context->getLogger()->debug(sprintf('Injecting [%s] secret environment variable into runtime', $name));
             $_ENV[$name] = $value;
         });
     }
