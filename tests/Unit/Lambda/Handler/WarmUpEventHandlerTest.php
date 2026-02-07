@@ -15,6 +15,7 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
+use Ymir\Runtime\Exception\InvalidHandlerEventException;
 use Ymir\Runtime\Lambda\Handler\WarmUpEventHandler;
 use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
@@ -124,8 +125,8 @@ class WarmUpEventHandlerTest extends TestCase
 
     public function testHandleWithWrongEventType(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('WarmUpEventHandler can only handle WarmUpEvent objects');
+        $this->expectException(InvalidHandlerEventException::class);
+        $this->expectExceptionMessageMatches('/WarmUpEventHandler cannot handle Mock_InvocationEventInterface[^\s]* event/');
 
         (new WarmUpEventHandler($this->getLambdaClientMock(), $this->getLoggerMock()))->handle($this->getInvocationEventInterfaceMock());
     }

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Lambda\Handler\Sqs;
 
+use Ymir\Runtime\Exception\InvalidHandlerEventException;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationContext;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
@@ -56,7 +57,7 @@ abstract class AbstractSqsHandler implements LambdaEventHandlerInterface
     public function handle(InvocationEventInterface $event): ResponseInterface
     {
         if (!$event instanceof SqsEvent || !$this->canHandle($event)) {
-            throw new \InvalidArgumentException(sprintf('%s cannot handle the given invocation event object', (new \ReflectionClass(static::class))->getShortName()));
+            throw new InvalidHandlerEventException($this, $event);
         }
 
         $failedRecords = [];

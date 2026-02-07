@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Lambda\Handler;
 
+use Ymir\Runtime\Exception\InvalidHandlerEventException;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\PingEvent;
 use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
@@ -37,7 +38,7 @@ class PingLambdaEventHandler implements LambdaEventHandlerInterface
     public function handle(InvocationEventInterface $event): ResponseInterface
     {
         if (!$event instanceof PingEvent) {
-            throw new \InvalidArgumentException('PingLambdaEventHandler can only handle PingEvent objects');
+            throw new InvalidHandlerEventException($this, $event);
         }
 
         usleep(50 * 1000);

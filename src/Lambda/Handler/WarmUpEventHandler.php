@@ -15,6 +15,7 @@ namespace Ymir\Runtime\Lambda\Handler;
 
 use AsyncAws\Lambda\LambdaClient;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
+use Ymir\Runtime\Exception\InvalidHandlerEventException;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\WarmUpEvent;
 use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
@@ -63,7 +64,7 @@ class WarmUpEventHandler implements LambdaEventHandlerInterface
     public function handle(InvocationEventInterface $event): ResponseInterface
     {
         if (!$event instanceof WarmUpEvent) {
-            throw new \InvalidArgumentException('WarmUpEventHandler can only handle WarmUpEvent objects');
+            throw new InvalidHandlerEventException($this, $event);
         }
 
         $concurrency = $event->getConcurrency();

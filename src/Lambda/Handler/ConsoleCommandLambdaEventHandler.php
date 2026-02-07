@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Lambda\Handler;
 
 use Symfony\Component\Process\Process;
+use Ymir\Runtime\Exception\InvalidHandlerEventException;
 use Ymir\Runtime\Lambda\InvocationEvent\ConsoleCommandEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\ProcessResponse;
@@ -54,7 +55,7 @@ class ConsoleCommandLambdaEventHandler implements LambdaEventHandlerInterface
     public function handle(InvocationEventInterface $event): ResponseInterface
     {
         if (!$event instanceof ConsoleCommandEvent) {
-            throw new \InvalidArgumentException('ConsoleCommandLambdaEventHandler can only handle ConsoleCommandEvent objects');
+            throw new InvalidHandlerEventException($this, $event);
         }
 
         $process = Process::fromShellCommandline("{$event->getCommand()} 2>&1");
