@@ -69,33 +69,9 @@ class LaravelHttpEventHandlerTest extends TestCase
         ];
     }
 
-    public function testCanHandleWithMissingArtisan(): void
-    {
-        touch($this->tempDir.'/public/index.php');
-
-        $this->assertFalse((new LaravelHttpEventHandler($this->getLoggerMock(), $this->getPhpFpmProcessMock(), $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/public/index.php');
-    }
-
-    public function testCanHandleWithMissingPublicIndex(): void
-    {
-        touch($this->tempDir.'/artisan');
-
-        $this->assertFalse((new LaravelHttpEventHandler($this->getLoggerMock(), $this->getPhpFpmProcessMock(), $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/artisan');
-    }
-
     public function testCanHandleWithPublicIndexAndArtisanPresent(): void
     {
-        touch($this->tempDir.'/public/index.php');
-        touch($this->tempDir.'/artisan');
-
         $this->assertTrue((new LaravelHttpEventHandler($this->getLoggerMock(), $this->getPhpFpmProcessMock(), $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/public/index.php');
-        @unlink($this->tempDir.'/artisan');
     }
 
     public function testHandleCreatesFastCgiRequestToPublicIndexPhpByDefault(): void

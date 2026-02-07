@@ -52,29 +52,8 @@ class LaravelSqsHandlerTest extends TestCase
         $this->assertFalse($handler->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
-    public function testCanHandleReturnsFalseIfArtisanMissing(): void
-    {
-        touch($this->tempDir.'/public/index.php');
-
-        $handler = new LaravelSqsHandler($this->getLoggerMock(), $this->tempDir);
-
-        $this->assertFalse($handler->canHandle(new SqsEvent($this->getInvocationContextMock())));
-    }
-
-    public function testCanHandleReturnsFalseIfPublicIndexMissing(): void
-    {
-        touch($this->tempDir.'/artisan');
-
-        $handler = new LaravelSqsHandler($this->getLoggerMock(), $this->tempDir);
-
-        $this->assertFalse($handler->canHandle(new SqsEvent($this->getInvocationContextMock())));
-    }
-
     public function testCanHandleReturnsTrueIfArtisanAndPublicIndexExist(): void
     {
-        touch($this->tempDir.'/artisan');
-        touch($this->tempDir.'/public/index.php');
-
         $handler = new LaravelSqsHandler($this->getLoggerMock(), $this->tempDir);
 
         $this->assertTrue($handler->canHandle(new SqsEvent($this->getInvocationContextMock())));

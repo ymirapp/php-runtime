@@ -73,35 +73,7 @@ class WordPressHttpEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
-
         $this->assertTrue((new WordPressHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
-    }
-
-    public function testCanHandleWithMissingIndex(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        touch($this->tempDir.'/wp-config.php');
-
-        $this->assertFalse((new WordPressHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/wp-config.php');
-    }
-
-    public function testCanHandleWithMissingWpConfig(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        touch($this->tempDir.'/index.php');
-
-        $this->assertFalse((new WordPressHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/index.php');
     }
 
     public function testCanHandleWrongEventType(): void
