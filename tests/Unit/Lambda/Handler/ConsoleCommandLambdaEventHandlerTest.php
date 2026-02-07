@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
 
 use PHPUnit\Framework\TestCase;
+use Ymir\Runtime\Exception\InvalidHandlerEventException;
 use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
 use Ymir\Runtime\Lambda\Response\ProcessResponse;
 use Ymir\Runtime\Tests\Mock\ConsoleCommandEventMockTrait;
@@ -139,8 +140,8 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
 
     public function testHandleWithWrongEventType(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('ConsoleCommandLambdaEventHandler can only handle ConsoleCommandEvent objects');
+        $this->expectException(InvalidHandlerEventException::class);
+        $this->expectExceptionMessageMatches('/ConsoleCommandLambdaEventHandler cannot handle Mock_InvocationEventInterface[^\s]* event/');
 
         (new ConsoleCommandLambdaEventHandler($this->getLoggerMock()))->handle($this->getInvocationEventInterfaceMock());
     }

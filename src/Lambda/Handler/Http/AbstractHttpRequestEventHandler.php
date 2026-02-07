@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Lambda\Handler\Http;
 
+use Ymir\Runtime\Exception\InvalidHandlerEventException;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
@@ -55,7 +56,7 @@ abstract class AbstractHttpRequestEventHandler implements LambdaEventHandlerInte
     public function handle(InvocationEventInterface $event): ResponseInterface
     {
         if (!$event instanceof HttpRequestEvent || !$this->canHandle($event)) {
-            throw new \InvalidArgumentException(sprintf('%s cannot handle the given invocation event object', (new \ReflectionClass(static::class))->getShortName()));
+            throw new InvalidHandlerEventException($this, $event);
         }
 
         $filePath = $this->getEventFilePath($event);

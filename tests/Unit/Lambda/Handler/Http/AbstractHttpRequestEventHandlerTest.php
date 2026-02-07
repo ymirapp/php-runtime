@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Http;
 
 use PHPUnit\Framework\TestCase;
+use Ymir\Runtime\Exception\InvalidHandlerEventException;
 use Ymir\Runtime\Lambda\Handler\Http\AbstractHttpRequestEventHandler;
 use Ymir\Runtime\Lambda\Response\Http\StaticFileHttpResponse;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
@@ -98,8 +99,8 @@ class AbstractHttpRequestEventHandlerTest extends TestCase
 
     public function testHandleWithWrongEventType(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageMatches('/[^\s]* cannot handle the given invocation event object/');
+        $this->expectException(InvalidHandlerEventException::class);
+        $this->expectExceptionMessageMatches('/[^\s]* cannot handle Mock_InvocationEventInterface[^\s]* event/');
 
         $handler = $this->getMockForAbstractClass(AbstractHttpRequestEventHandler::class, ['/']);
 

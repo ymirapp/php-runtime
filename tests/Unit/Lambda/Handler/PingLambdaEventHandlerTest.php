@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
 
 use PHPUnit\Framework\TestCase;
+use Ymir\Runtime\Exception\InvalidHandlerEventException;
 use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
 use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
@@ -47,8 +48,8 @@ class PingLambdaEventHandlerTest extends TestCase
 
     public function testHandleWithWrongEventType(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('PingLambdaEventHandler can only handle PingEvent objects');
+        $this->expectException(InvalidHandlerEventException::class);
+        $this->expectExceptionMessageMatches('/PingLambdaEventHandler cannot handle Mock_InvocationEventInterface[^\s]* event/');
 
         $handler = new PingLambdaEventHandler();
 
