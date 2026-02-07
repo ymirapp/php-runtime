@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\Http\AbstractPhpFpmRequestEventHandler;
 use Ymir\Runtime\Lambda\Response\Http\FastCgiHttpResponse;
+use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
@@ -24,6 +25,7 @@ use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
 class AbstractPhpFpmRequestEventHandlerTest extends TestCase
 {
+    use FunctionMockTrait;
     use HttpRequestEventMockTrait;
     use InvocationContextMockTrait;
     use LoggerMockTrait;
@@ -112,10 +114,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
     public function testHandleDoesntReturnStaticFileHttpResponseForPhpFileWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
-        $file = tmpfile();
-        $filePath = stream_get_meta_data($file)['uri'];
         $logger = $this->getLoggerMock();
-        $phpFilePath = $filePath.'.php';
         $process = $this->getPhpFpmProcessMock();
 
         $logger->expects($this->once())
@@ -123,11 +122,9 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
 
         $handler = $this->getMockForAbstractClass(AbstractPhpFpmRequestEventHandler::class, [$logger, $process, '/']);
 
-        rename($filePath, $phpFilePath);
-
         $event->expects($this->exactly(2))
               ->method('getPath')
-              ->willReturn($phpFilePath);
+              ->willReturn('/tmp.php');
 
         $event->expects($this->exactly(2))
               ->method('getContext')
@@ -146,10 +143,7 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
     public function testHandleDoesntReturnStaticFileHttpResponseForPhpFileWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
-        $file = tmpfile();
-        $filePath = stream_get_meta_data($file)['uri'];
         $logger = $this->getLoggerMock();
-        $phpFilePath = $filePath.'.php';
         $process = $this->getPhpFpmProcessMock();
 
         $logger->expects($this->once())
@@ -157,11 +151,9 @@ class AbstractPhpFpmRequestEventHandlerTest extends TestCase
 
         $handler = $this->getMockForAbstractClass(AbstractPhpFpmRequestEventHandler::class, [$logger, $process, '/']);
 
-        rename($filePath, $phpFilePath);
-
         $event->expects($this->exactly(2))
               ->method('getPath')
-              ->willReturn($phpFilePath);
+              ->willReturn('/tmp.php');
 
         $event->expects($this->exactly(2))
               ->method('getContext')

@@ -14,13 +14,14 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Http;
 
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Filesystem\Filesystem;
 use Tightenco\Collect\Support\Arr;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
+use Ymir\Runtime\Lambda\Handler\Http\AbstractHttpRequestEventHandler;
 use Ymir\Runtime\Lambda\Handler\Http\BedrockHttpEventHandler;
 use Ymir\Runtime\Lambda\Response\Http\FastCgiHttpResponse;
 use Ymir\Runtime\Lambda\Response\Http\NotFoundHttpResponse;
 use Ymir\Runtime\Lambda\Response\Http\StaticFileHttpResponse;
+use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
@@ -28,42 +29,11 @@ use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
 class BedrockHttpEventHandlerTest extends TestCase
 {
+    use FunctionMockTrait;
     use HttpRequestEventMockTrait;
     use InvocationEventInterfaceMockTrait;
     use LoggerMockTrait;
     use PhpFpmProcessMockTrait;
-
-    /**
-     * @var string
-     */
-    private $tempDir;
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function setUp(): void
-    {
-        $this->tempDir = sys_get_temp_dir();
-
-        collect([
-            $this->tempDir.'/composer',
-            $this->tempDir.'/config',
-            $this->tempDir.'/tmp',
-            $this->tempDir.'/web/app/mu-plugins',
-            $this->tempDir.'/web/app/plugins',
-            $this->tempDir.'/web/tmp',
-            $this->tempDir.'/web/wp/tmp',
-            $this->tempDir.'/web/wp/wp-admin',
-        ])->each(function (string $directory): void {
-            $filesystem = new Filesystem();
-
-            if ($filesystem->exists($directory)) {
-                $filesystem->remove($directory);
-            }
-
-            $filesystem->mkdir($directory);
-        });
-    }
 
     public function inaccessibleFilesProvider(): array
     {
@@ -80,55 +50,7 @@ class BedrockHttpEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/wp-config.php');
-
-        $this->assertTrue((new BedrockHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/wp-config.php');
-    }
-
-    public function testCanHandleWithBedrockAutoloaderPresent(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        $handler = new BedrockHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir);
-
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-
-        $this->assertTrue($handler->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-    }
-
-    public function testCanHandleWithMissingApplicationConfig(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        touch($this->tempDir.'/web/wp-config.php');
-
-        $this->assertFalse((new BedrockHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/web/wp-config.php');
-    }
-
-    public function testCanHandleWithMissingWpConfig(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        touch($this->tempDir.'/config/application.php');
-
-        $this->assertFalse((new BedrockHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/config/application.php');
-    }
-
-    public function testCanHandleWithNoBedrockAutoloaderOrApplicationOrWordPressConfig(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        $this->assertFalse((new BedrockHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
+        $this->assertTrue((new BedrockHttpEventHandler($this->getLoggerMock(), $process, '/tmp'))->canHandle($this->getHttpRequestEventMock()));
     }
 
     public function testCanHandleWrongEventType(): void
@@ -141,6 +63,9 @@ class BedrockHttpEventHandlerTest extends TestCase
     public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -158,23 +83,34 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/tmp/index.php';
+                    $this->assertSame('/tmp/web/tmp/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/tmp/index.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/tmp/index.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/tmp/index.php');
+        $is_dir->expects($this->any())
+               ->willReturnCallback(function (string $path) {
+                   return '/tmp/web/tmp/' === $path;
+               });
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -192,23 +128,34 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/tmp/index.php';
+                    $this->assertSame('/tmp/web/tmp/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/tmp/index.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/tmp/index.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/tmp/index.php');
+        $is_dir->expects($this->any())
+               ->willReturnCallback(function (string $path) {
+                   return '/tmp/web/tmp/' === $path;
+               });
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -226,21 +173,32 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/index.php';
+                    $this->assertSame('/tmp/web/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/index.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -258,21 +216,32 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/index.php';
+                    $this->assertSame('/tmp/web/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/index.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleCreatesFastCgiRequestToWebDirectoryWithAppPathsWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -290,23 +259,32 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/app/plugins/file.php';
+                    $this->assertSame('/tmp/web/app/plugins/file.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/app/plugins/file.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/app/plugins/file.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/app/plugins/file.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleCreatesFastCgiRequestToWebDirectoryWithAppPathsWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -324,23 +302,32 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/app/plugins/file.php';
+                    $this->assertSame('/tmp/web/app/plugins/file.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/app/plugins/file.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/app/plugins/file.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/app/plugins/file.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleCreatesFastCgiRequestToWebDirectoryWithWpPathsWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -358,23 +345,34 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/tmp/index.php';
+                    $this->assertSame('/tmp/web/wp/tmp/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/tmp/index.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/tmp/index.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/tmp/index.php');
+        $is_dir->expects($this->any())
+               ->willReturnCallback(function (string $path) {
+                   return in_array($path, ['/tmp/web/wp/tmp', '/tmp/web/wp/tmp/']);
+               });
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleCreatesFastCgiRequestToWebDirectoryWithWpPathsWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -392,23 +390,34 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/tmp/index.php';
+                    $this->assertSame('/tmp/web/wp/tmp/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/tmp/index.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/tmp/index.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/tmp/index.php');
+        $is_dir->expects($this->any())
+               ->willReturnCallback(function (string $path) {
+                   return in_array($path, ['/tmp/web/wp/tmp', '/tmp/web/wp/tmp/']);
+               });
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleDoesntReturnStaticFileHttpResponseForFileOutsideWebDirectoryWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -423,17 +432,19 @@ class BedrockHttpEventHandlerTest extends TestCase
               ->method('getPayloadVersion')
               ->willReturn('1.0');
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
-        touch($this->tempDir.'/foo');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php', '/tmp/foo', '/tmp/web/index.php']);
+                    });
 
-        $response = (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event);
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
-        @unlink($this->tempDir.'/foo');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $response = (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event);
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, $response);
         $this->assertFalse($response->isCompressible());
@@ -442,6 +453,9 @@ class BedrockHttpEventHandlerTest extends TestCase
     public function testHandleDoesntReturnStaticFileHttpResponseForFileOutsideWebDirectoryWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -456,17 +470,19 @@ class BedrockHttpEventHandlerTest extends TestCase
               ->method('getPayloadVersion')
               ->willReturn('2.0');
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
-        touch($this->tempDir.'/foo');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php', '/tmp/foo', '/tmp/web/index.php']);
+                    });
 
-        $response = (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event);
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
-        @unlink($this->tempDir.'/foo');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $response = (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event);
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, $response);
         $this->assertFalse($response->isCompressible());
@@ -475,6 +491,9 @@ class BedrockHttpEventHandlerTest extends TestCase
     public function testHandleDoesntReturnStaticFileHttpResponseForPhpFileWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -489,17 +508,19 @@ class BedrockHttpEventHandlerTest extends TestCase
               ->method('getPayloadVersion')
               ->willReturn('1.0');
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
-        touch($this->tempDir.'/web/foo.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php', '/tmp/web/foo.php', '/tmp/web/index.php']);
+                    });
 
-        $response = (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event);
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
-        @unlink($this->tempDir.'/web/foo.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $response = (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event);
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, $response);
         $this->assertFalse($response->isCompressible());
@@ -508,6 +529,9 @@ class BedrockHttpEventHandlerTest extends TestCase
     public function testHandleDoesntReturnStaticFileHttpResponseForPhpFileWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
         $logger->expects($this->once())
@@ -521,17 +545,19 @@ class BedrockHttpEventHandlerTest extends TestCase
               ->method('getPayloadVersion')
               ->willReturn('2.0');
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
-        touch($this->tempDir.'/web/foo.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php', '/tmp/web/foo.php', '/tmp/web/index.php']);
+                    });
 
-        $response = (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event);
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
-        @unlink($this->tempDir.'/web/foo.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $response = (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event);
 
         $this->assertInstanceOf(FastCgiHttpResponse::class, $response);
         $this->assertFalse($response->isCompressible());
@@ -540,6 +566,9 @@ class BedrockHttpEventHandlerTest extends TestCase
     public function testHandleDoesntRewriteWpLoginUrlWithoutWpPrefixAndWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -557,23 +586,32 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/index.php';
+                    $this->assertSame('/tmp/web/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php', '/tmp/web/index.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleDoesntRewriteWpLoginUrlWithoutWpPrefixAndWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -591,18 +629,24 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/index.php';
+                    $this->assertSame('/tmp/web/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php', '/tmp/web/index.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     /**
@@ -611,26 +655,37 @@ class BedrockHttpEventHandlerTest extends TestCase
     public function testHandleReturnsNotFoundHttpResponseForInaccessibleFiles(string $filePath): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(1))
               ->method('getPath')
               ->willReturn($filePath);
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.$filePath);
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) use ($filePath) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp'.$filePath]);
+                    });
 
-        $this->assertInstanceOf(NotFoundHttpResponse::class, (new BedrockHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.$filePath);
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(NotFoundHttpResponse::class, (new BedrockHttpEventHandler($this->getLoggerMock(), $process, '/tmp'))->handle($event));
     }
 
     public function testHandleReturnsStaticFileHttpResponseForFileInsideWebDirectory(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(StaticFileHttpResponse::class), 'file_get_contents');
+        $file_get_contents_bedrock = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -638,22 +693,30 @@ class BedrockHttpEventHandlerTest extends TestCase
               ->method('getPath')
               ->willReturn('/foo');
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
-        touch($this->tempDir.'/web/foo');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php', '/tmp/web/foo']);
+                    });
 
-        $this->assertInstanceOf(StaticFileHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents_bedrock->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
-        @unlink($this->tempDir.'/web/foo');
+        $file_get_contents->expects($this->any())
+                          ->willReturn('');
+
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(StaticFileHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleRewritesWpAdminUrlWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -671,23 +734,34 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-admin/index.php';
+                    $this->assertSame('/tmp/web/wp/wp-admin/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-admin/index.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-admin/index.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-admin/index.php');
+        $is_dir->expects($this->any())
+               ->willReturnCallback(function (string $path) {
+                   return '/tmp/web/wp/wp-admin/' === $path;
+               });
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleRewritesWpAdminUrlWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -705,23 +779,34 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-admin/index.php';
+                    $this->assertSame('/tmp/web/wp/wp-admin/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-admin/index.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-admin/index.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-admin/index.php');
+        $is_dir->expects($this->any())
+               ->willReturnCallback(function (string $path) {
+                   return '/tmp/web/wp/wp-admin/' === $path;
+               });
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -739,25 +824,34 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-admin/index.php';
+                    $this->assertSame('/tmp/web/wp/wp-admin/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-admin/index.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-admin/index.php']);
+                    });
 
-        file_put_contents($this->tempDir.'/config/application.php', 'Config::define(\'MULTISITE\', true);');
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('Config::define(\'MULTISITE\', true);');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $is_dir->expects($this->any())
+               ->willReturnCallback(function (string $path) {
+                   return '/tmp/web/wp/wp-admin/' === $path;
+               });
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-admin/index.php');
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -775,25 +869,34 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-admin/index.php';
+                    $this->assertSame('/tmp/web/wp/wp-admin/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-admin/index.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-admin/index.php']);
+                    });
 
-        file_put_contents($this->tempDir.'/config/application.php', 'Config::define(\'MULTISITE\', true);');
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('Config::define(\'MULTISITE\', true);');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $is_dir->expects($this->any())
+               ->willReturnCallback(function (string $path) {
+                   return '/tmp/web/wp/wp-admin/' === $path;
+               });
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-admin/index.php');
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleRewritesWpLoginUrlWithSubdirectoryMultisiteWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -811,25 +914,32 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-login.php';
+                    $this->assertSame('/tmp/web/wp/wp-login.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php']);
+                    });
 
-        file_put_contents($this->tempDir.'/config/application.php', 'Config::define(\'MULTISITE\', true);');
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('Config::define(\'MULTISITE\', true);');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $is_dir->expects($this->any())
+               ->willReturn(false);
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleRewritesWpLoginUrlWithSubdirectoryMultisiteWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -847,25 +957,32 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-login.php';
+                    $this->assertSame('/tmp/web/wp/wp-login.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php']);
+                    });
 
-        file_put_contents($this->tempDir.'/config/application.php', 'Config::define(\'MULTISITE\', true);');
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('Config::define(\'MULTISITE\', true);');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $is_dir->expects($this->any())
+               ->willReturn(false);
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -883,24 +1000,33 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-login.php'
-                        && '/foo' === Arr::get($request->getParams(), 'PATH_INFO');
+                    $this->assertSame('/tmp/web/wp/wp-login.php', $request->getScriptFilename());
+                    $this->assertSame('/foo', Arr::get($request->getParams(), 'PATH_INFO'));
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -918,24 +1044,33 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-login.php'
-                        && '/foo' === Arr::get($request->getParams(), 'PATH_INFO');
+                    $this->assertSame('/tmp/web/wp/wp-login.php', $request->getScriptFilename());
+                    $this->assertSame('/foo', Arr::get($request->getParams(), 'PATH_INFO'));
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleWpLoginUrlWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -953,23 +1088,32 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-login.php';
+                    $this->assertSame('/tmp/web/wp/wp-login.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleWpLoginUrlWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(BedrockHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -987,17 +1131,23 @@ class BedrockHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/web/wp/wp-login.php';
+                    $this->assertSame('/tmp/web/wp/wp-login.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        touch($this->tempDir.'/web/wp/wp-login.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/config/application.php', '/tmp/web/app/mu-plugins/bedrock-autoloader.php', '/tmp/web/wp/wp-login.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/config/application.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-        @unlink($this->tempDir.'/web/wp/wp-login.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new BedrockHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 }

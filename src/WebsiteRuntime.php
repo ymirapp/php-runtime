@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime;
 
+use Ymir\Runtime\Application\ApplicationInterface;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmProcessException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
@@ -64,6 +65,16 @@ class WebsiteRuntime extends AbstractRuntime
         $this->invocations = 0;
         $this->maxInvocations = $maxInvocations;
         $this->phpFpmProcess = $phpFpmProcess;
+    }
+
+    /**
+     * Create a "website" function runtime for the given runtime application.
+     */
+    public static function createFromApplication(ApplicationInterface $application): self
+    {
+        $context = $application->getContext();
+
+        return new self($context->getRuntimeApiClient(), $application->getWebsiteHandlers(), $context->getLogger(), $context->getPhpFpmProcess(), $context->getMaxInvocations());
     }
 
     /**

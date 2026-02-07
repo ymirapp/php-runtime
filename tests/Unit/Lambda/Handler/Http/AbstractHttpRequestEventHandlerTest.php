@@ -16,12 +16,14 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Http;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\Handler\Http\AbstractHttpRequestEventHandler;
 use Ymir\Runtime\Lambda\Response\Http\StaticFileHttpResponse;
+use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpResponseMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 
 class AbstractHttpRequestEventHandlerTest extends TestCase
 {
+    use FunctionMockTrait;
     use HttpRequestEventMockTrait;
     use HttpResponseMockTrait;
     use InvocationEventInterfaceMockTrait;
@@ -43,12 +45,20 @@ class AbstractHttpRequestEventHandlerTest extends TestCase
     public function testHandleCallsCreateLambdaEventResponse(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
         $handler = $this->getMockForAbstractClass(AbstractHttpRequestEventHandler::class, ['/']);
         $response = $this->getHttpResponseMock();
 
         $event->expects($this->once())
               ->method('getPath')
               ->willReturn('tmp');
+
+        $file_exists->expects($this->any())
+                    ->willReturn(false);
+
+        $is_dir->expects($this->any())
+               ->willReturn(false);
 
         $handler->expects($this->once())
                 ->method('createLambdaEventResponse')
@@ -61,19 +71,29 @@ class AbstractHttpRequestEventHandlerTest extends TestCase
     public function testHandleReturnsStaticFileHttpResponse(): void
     {
         $event = $this->getHttpRequestEventMock();
-        $tempDir = sys_get_temp_dir();
+        $file_exists = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock('Ymir\Runtime\Lambda\Response\Http', 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(AbstractHttpRequestEventHandler::class), 'is_dir');
 
-        $handler = $this->getMockForAbstractClass(AbstractHttpRequestEventHandler::class, [$tempDir]);
-
-        touch($tempDir.'/foo');
+        $handler = $this->getMockForAbstractClass(AbstractHttpRequestEventHandler::class, ['/tmp']);
 
         $event->expects($this->once())
               ->method('getPath')
               ->willReturn('/foo');
 
-        $this->assertInstanceOf(StaticFileHttpResponse::class, $handler->handle($event));
+        $file_exists->expects($this->once())
+                    ->with($this->identicalTo('/tmp/foo'))
+                    ->willReturn(true);
 
-        @unlink($tempDir.'/foo');
+        $is_dir->expects($this->once())
+               ->with($this->identicalTo('/tmp/foo'))
+               ->willReturn(false);
+
+        $file_get_contents->expects($this->once())
+                          ->with($this->identicalTo('/tmp/foo'))
+                          ->willReturn('');
+
+        $this->assertInstanceOf(StaticFileHttpResponse::class, $handler->handle($event));
     }
 
     public function testHandleWithWrongEventType(): void

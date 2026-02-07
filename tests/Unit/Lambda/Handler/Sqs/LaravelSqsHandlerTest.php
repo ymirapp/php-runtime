@@ -15,6 +15,7 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Sqs;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
+use Ymir\Runtime\Exception\InvalidHandlerEventException;
 use Ymir\Runtime\Lambda\Handler\Sqs\LaravelSqsHandler;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsEvent;
 use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
@@ -42,49 +43,32 @@ class LaravelSqsHandlerTest extends TestCase
         $this->filesystem->remove($this->tempDir);
     }
 
-    public function testCanHandleReturnsFalseForWrongEvent(): void
+    public function testHandleThrowsExceptionForWrongEvent(): void
     {
-        touch($this->tempDir.'/artisan');
-        touch($this->tempDir.'/public/index.php');
+        $this->expectException(InvalidHandlerEventException::class);
+        $this->expectExceptionMessageMatches('/LaravelSqsHandler cannot handle Mock_InvocationEventInterface[^\s]* event/');
 
         $handler = new LaravelSqsHandler($this->getLoggerMock(), $this->tempDir);
+
+        $handler->handle($this->getInvocationEventInterfaceMock());
+    }
+
+    public function testCanHandleReturnsFalseForWrongEvent(): void
+    {
+        $handler = new LaravelSqsHandler($this->getLoggerMock(), '/tmp');
 
         $this->assertFalse($handler->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
-    public function testCanHandleReturnsFalseIfArtisanMissing(): void
-    {
-        touch($this->tempDir.'/public/index.php');
-
-        $handler = new LaravelSqsHandler($this->getLoggerMock(), $this->tempDir);
-
-        $this->assertFalse($handler->canHandle(new SqsEvent($this->getInvocationContextMock())));
-    }
-
-    public function testCanHandleReturnsFalseIfPublicIndexMissing(): void
-    {
-        touch($this->tempDir.'/artisan');
-
-        $handler = new LaravelSqsHandler($this->getLoggerMock(), $this->tempDir);
-
-        $this->assertFalse($handler->canHandle(new SqsEvent($this->getInvocationContextMock())));
-    }
-
     public function testCanHandleReturnsTrueIfArtisanAndPublicIndexExist(): void
     {
-        touch($this->tempDir.'/artisan');
-        touch($this->tempDir.'/public/index.php');
-
-        $handler = new LaravelSqsHandler($this->getLoggerMock(), $this->tempDir);
+        $handler = new LaravelSqsHandler($this->getLoggerMock(), '/tmp');
 
         $this->assertTrue($handler->canHandle(new SqsEvent($this->getInvocationContextMock())));
     }
 
     public function testHandleCollectsFailuresIfProcessFails(): void
     {
-        touch($this->tempDir.'/artisan');
-        touch($this->tempDir.'/public/index.php');
-
         $context = $this->getInvocationContextMock();
         $context->method('getRemainingTimeInMs')->willReturn(10000);
 
@@ -98,7 +82,7 @@ class LaravelSqsHandlerTest extends TestCase
         $logger->expects($this->once())
                ->method('error');
 
-        $handler = new LaravelSqsHandler($logger, $this->tempDir);
+        $handler = new LaravelSqsHandler($logger, '/tmp');
         $response = $handler->handle($event);
 
         $this->assertSame([
@@ -110,9 +94,6 @@ class LaravelSqsHandlerTest extends TestCase
 
     public function testHandleCollectsFailuresOnJsonError(): void
     {
-        touch($this->tempDir.'/artisan');
-        touch($this->tempDir.'/public/index.php');
-
         $event = new SqsEvent($this->getInvocationContextMock(), [
             'Records' => [
                 ['messageId' => 'id1', 'body' => "\xB1\x31"],
@@ -123,7 +104,7 @@ class LaravelSqsHandlerTest extends TestCase
         $logger->expects($this->once())
                ->method('error');
 
-        $handler = new LaravelSqsHandler($logger, $this->tempDir);
+        $handler = new LaravelSqsHandler($logger, '/tmp');
         $response = $handler->handle($event);
 
         $this->assertSame([
@@ -135,9 +116,6 @@ class LaravelSqsHandlerTest extends TestCase
 
     public function testHandleUsesEnvironmentVariables(): void
     {
-        touch($this->tempDir.'/artisan');
-        touch($this->tempDir.'/public/index.php');
-
         $_ENV['YMIR_QUEUE_CONNECTION'] = 'custom_connection';
         $_ENV['YMIR_QUEUE_DELAY'] = '10';
         $_ENV['YMIR_QUEUE_TIMEOUT'] = '30';
@@ -157,7 +135,7 @@ class LaravelSqsHandlerTest extends TestCase
         $logger->expects($this->once())
                ->method('error');
 
-        $handler = new LaravelSqsHandler($logger, $this->tempDir);
+        $handler = new LaravelSqsHandler($logger, '/tmp');
         $response = $handler->handle($event);
 
         $this->assertSame([

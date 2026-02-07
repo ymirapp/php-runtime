@@ -14,23 +14,12 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Lambda\Handler\Http;
 
 use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
-use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 
 /**
  * Lambda invocation event handler for a Bedrock WordPress installation.
  */
 class BedrockHttpEventHandler extends AbstractPhpFpmRequestEventHandler
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function canHandle(InvocationEventInterface $event): bool
-    {
-        return parent::canHandle($event)
-            && (file_exists($this->rootDirectory.'/web/app/mu-plugins/bedrock-autoloader.php')
-                || (is_dir($this->rootDirectory.'/web/app/') && file_exists($this->rootDirectory.'/web/wp-config.php') && file_exists($this->rootDirectory.'/config/application.php')));
-    }
-
     /**
      * {@inheritdoc}
      */

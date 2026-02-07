@@ -14,23 +14,12 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Lambda\Handler\Http;
 
 use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
-use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 
 /**
  * Lambda invocation event handler for a Radicle WordPress installation.
  */
 class RadicleHttpEventHandler extends AbstractPhpFpmRequestEventHandler
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function canHandle(InvocationEventInterface $event): bool
-    {
-        return parent::canHandle($event)
-            && (file_exists($this->rootDirectory.'/public/content/mu-plugins/bedrock-autoloader.php')
-                || (is_dir($this->rootDirectory.'/public/') && file_exists($this->rootDirectory.'/public/wp-config.php') && file_exists($this->rootDirectory.'/bedrock/application.php')));
-    }
-
     /**
      * {@inheritdoc}
      */

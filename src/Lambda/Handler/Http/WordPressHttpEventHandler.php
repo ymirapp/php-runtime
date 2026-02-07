@@ -14,23 +14,12 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Lambda\Handler\Http;
 
 use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
-use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 
 /**
  * Lambda invocation event handler for a regular WordPress installation.
  */
 class WordPressHttpEventHandler extends AbstractPhpFpmRequestEventHandler
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function canHandle(InvocationEventInterface $event): bool
-    {
-        return parent::canHandle($event)
-            && file_exists($this->rootDirectory.'/index.php')
-            && file_exists($this->rootDirectory.'/wp-config.php');
-    }
-
     /**
      * {@inheritdoc}
      */

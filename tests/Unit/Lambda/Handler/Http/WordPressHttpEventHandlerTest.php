@@ -14,12 +14,12 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Handler\Http;
 
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Filesystem\Filesystem;
 use Tightenco\Collect\Support\Arr;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\Http\WordPressHttpEventHandler;
 use Ymir\Runtime\Lambda\Response\Http\FastCgiHttpResponse;
 use Ymir\Runtime\Lambda\Response\Http\NotFoundHttpResponse;
+use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
@@ -27,36 +27,11 @@ use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
 
 class WordPressHttpEventHandlerTest extends TestCase
 {
+    use FunctionMockTrait;
     use HttpRequestEventMockTrait;
     use InvocationEventInterfaceMockTrait;
     use LoggerMockTrait;
     use PhpFpmProcessMockTrait;
-
-    /**
-     * @var string
-     */
-    private $tempDir;
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function setUp(): void
-    {
-        $this->tempDir = sys_get_temp_dir();
-
-        collect([
-            $this->tempDir.'/tmp',
-            $this->tempDir.'/wp-admin',
-        ])->each(function (string $directory): void {
-            $filesystem = new Filesystem();
-
-            if ($filesystem->exists($directory)) {
-                $filesystem->remove($directory);
-            }
-
-            $filesystem->mkdir($directory);
-        });
-    }
 
     public function inaccessibleFilesProvider(): array
     {
@@ -73,35 +48,7 @@ class WordPressHttpEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
-
-        $this->assertTrue((new WordPressHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
-    }
-
-    public function testCanHandleWithMissingIndex(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        touch($this->tempDir.'/wp-config.php');
-
-        $this->assertFalse((new WordPressHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/wp-config.php');
-    }
-
-    public function testCanHandleWithMissingWpConfig(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        touch($this->tempDir.'/index.php');
-
-        $this->assertFalse((new WordPressHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/index.php');
+        $this->assertTrue((new WordPressHttpEventHandler($this->getLoggerMock(), $process, '/tmp'))->canHandle($this->getHttpRequestEventMock()));
     }
 
     public function testCanHandleWrongEventType(): void
@@ -114,6 +61,9 @@ class WordPressHttpEventHandlerTest extends TestCase
     public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -131,23 +81,33 @@ class WordPressHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/tmp/index.php';
+                    $this->assertSame('/tmp/tmp/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
-        touch($this->tempDir.'/tmp/index.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/index.php', '/tmp/wp-config.php', '/tmp/tmp/index.php', '/tmp/wp-admin/index.php', '/tmp/wp-login.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/wp-config.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
-        @unlink($this->tempDir.'/tmp/index.php');
+        $is_dir->expects($this->any())
+               ->with($this->identicalTo('/tmp/tmp/'))
+               ->willReturn(true);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleCreatesFastCgiRequestToFolderIndexPhpIfFileExistsWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -165,23 +125,31 @@ class WordPressHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
             ->method('handle')
             ->with($this->callback(function (FastCgiRequest $request) {
-                return $request->getScriptFilename() === $this->tempDir.'/tmp/index.php';
+                return '/tmp/tmp/index.php' === $request->getScriptFilename();
             }));
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
-        touch($this->tempDir.'/tmp/index.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/index.php', '/tmp/wp-config.php', '/tmp/tmp/index.php', '/tmp/wp-admin/index.php', '/tmp/wp-login.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/wp-config.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
-        @unlink($this->tempDir.'/tmp/index.php');
+        $is_dir->expects($this->any())
+               ->with($this->identicalTo('/tmp/tmp/'))
+               ->willReturn(true);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -199,21 +167,32 @@ class WordPressHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/index.php';
+                    $this->assertSame('/tmp/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/index.php', '/tmp/wp-config.php', '/tmp/tmp/index.php', '/tmp/wp-admin/index.php', '/tmp/wp-login.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/wp-config.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleCreatesFastCgiRequestToRootIndexPhpByDefaultWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -231,16 +210,24 @@ class WordPressHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/index.php';
+                    $this->assertSame('/tmp/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/index.php', '/tmp/wp-config.php', '/tmp/tmp/index.php', '/tmp/wp-admin/index.php', '/tmp/wp-login.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/wp-config.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     /**
@@ -249,26 +236,26 @@ class WordPressHttpEventHandlerTest extends TestCase
     public function testHandleReturnsNotFoundHttpResponseForInaccessibleFiles(string $filePath): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_get_contents');
         $process = $this->getPhpFpmProcessMock();
 
         $event->expects($this->exactly(1))
               ->method('getPath')
               ->willReturn($filePath);
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
-        touch($this->tempDir.$filePath);
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/wp-config.php'))
+                          ->willReturn('');
 
-        $this->assertInstanceOf(NotFoundHttpResponse::class, (new WordPressHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->handle($event));
-
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
-        @unlink($this->tempDir.$filePath);
+        $this->assertInstanceOf(NotFoundHttpResponse::class, (new WordPressHttpEventHandler($this->getLoggerMock(), $process, '/tmp'))->handle($event));
     }
 
     public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -286,25 +273,33 @@ class WordPressHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/wp-admin/index.php';
+                    $this->assertSame('/tmp/wp-admin/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
-        touch($this->tempDir.'/wp-admin/index.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/index.php', '/tmp/wp-config.php', '/tmp/tmp/index.php', '/tmp/wp-admin/index.php', '/tmp/wp-login.php']);
+                    });
 
-        file_put_contents($this->tempDir.'/wp-config.php', 'define(\'MULTISITE\', true);');
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/wp-config.php'))
+                          ->willReturn('define(\'MULTISITE\', true);');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $is_dir->expects($this->any())
+               ->with($this->identicalTo('/tmp/wp-admin/'))
+               ->willReturn(true);
 
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
-        @unlink($this->tempDir.'/wp-admin/index.php');
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleRewritesWpAdminUrlWithSubdirectoryMultisiteWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -322,25 +317,33 @@ class WordPressHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/wp-admin/index.php';
+                    $this->assertSame('/tmp/wp-admin/index.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
-        touch($this->tempDir.'/wp-admin/index.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/index.php', '/tmp/wp-config.php', '/tmp/tmp/index.php', '/tmp/wp-admin/index.php', '/tmp/wp-login.php']);
+                    });
 
-        file_put_contents($this->tempDir.'/wp-config.php', 'define(\'MULTISITE\', true);');
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/wp-config.php'))
+                          ->willReturn('define(\'MULTISITE\', true);');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $is_dir->expects($this->any())
+               ->with($this->identicalTo('/tmp/wp-admin/'))
+               ->willReturn(true);
 
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
-        @unlink($this->tempDir.'/wp-admin/index.php');
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleRewritesWpLoginUrlWithMultisiteWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -358,25 +361,32 @@ class WordPressHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/wp-login.php';
+                    $this->assertSame('/tmp/wp-login.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
-        touch($this->tempDir.'/wp-login.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/index.php', '/tmp/wp-config.php', '/tmp/tmp/index.php', '/tmp/wp-admin/index.php', '/tmp/wp-login.php']);
+                    });
 
-        file_put_contents($this->tempDir.'/wp-config.php', 'define(\'MULTISITE\', true);');
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/wp-config.php'))
+                          ->willReturn('define(\'MULTISITE\', true);');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $is_dir->expects($this->any())
+               ->willReturn(false);
 
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
-        @unlink($this->tempDir.'/wp-login.php');
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleRewritesWpLoginUrlWithMultisiteWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -394,25 +404,32 @@ class WordPressHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/wp-login.php';
+                    $this->assertSame('/tmp/wp-login.php', $request->getScriptFilename());
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
-        touch($this->tempDir.'/wp-login.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/index.php', '/tmp/wp-config.php', '/tmp/tmp/index.php', '/tmp/wp-admin/index.php', '/tmp/wp-login.php']);
+                    });
 
-        file_put_contents($this->tempDir.'/wp-config.php', 'define(\'MULTISITE\', true);');
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/wp-config.php'))
+                          ->willReturn('define(\'MULTISITE\', true);');
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $is_dir->expects($this->any())
+               ->willReturn(false);
 
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
-        @unlink($this->tempDir.'/wp-login.php');
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion1(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -430,24 +447,33 @@ class WordPressHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/wp-login.php'
-                        && '/foo' === Arr::get($request->getParams(), 'PATH_INFO');
+                    $this->assertSame('/tmp/wp-login.php', $request->getScriptFilename());
+                    $this->assertSame('/foo', Arr::get($request->getParams(), 'PATH_INFO'));
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
-        touch($this->tempDir.'/wp-login.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/index.php', '/tmp/wp-config.php', '/tmp/tmp/index.php', '/tmp/wp-admin/index.php', '/tmp/wp-login.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/wp-config.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
-        @unlink($this->tempDir.'/wp-login.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 
     public function testHandleWpLoginUrlWithPathInfoWithPayloadVersion2(): void
     {
         $event = $this->getHttpRequestEventMock();
+        $file_exists = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_exists');
+        $file_get_contents = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'file_get_contents');
+        $is_dir = $this->getFunctionMock($this->getNamespace(WordPressHttpEventHandler::class), 'is_dir');
         $logger = $this->getLoggerMock();
         $process = $this->getPhpFpmProcessMock();
 
@@ -465,18 +491,24 @@ class WordPressHttpEventHandlerTest extends TestCase
         $process->expects($this->once())
                 ->method('handle')
                 ->with($this->callback(function (FastCgiRequest $request) {
-                    return $request->getScriptFilename() === $this->tempDir.'/wp-login.php'
-                        && '/foo' === Arr::get($request->getParams(), 'PATH_INFO');
+                    $this->assertSame('/tmp/wp-login.php', $request->getScriptFilename());
+                    $this->assertSame('/foo', Arr::get($request->getParams(), 'PATH_INFO'));
+
+                    return true;
                 }));
 
-        touch($this->tempDir.'/index.php');
-        touch($this->tempDir.'/wp-config.php');
-        touch($this->tempDir.'/wp-login.php');
+        $file_exists->expects($this->any())
+                    ->willReturnCallback(function (string $path) {
+                        return in_array($path, ['/tmp/index.php', '/tmp/wp-config.php', '/tmp/tmp/index.php', '/tmp/wp-admin/index.php', '/tmp/wp-login.php']);
+                    });
 
-        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, $this->tempDir))->handle($event));
+        $file_get_contents->expects($this->any())
+                          ->with($this->identicalTo('/tmp/wp-config.php'))
+                          ->willReturn('');
 
-        @unlink($this->tempDir.'/index.php');
-        @unlink($this->tempDir.'/wp-config.php');
-        @unlink($this->tempDir.'/wp-login.php');
+        $is_dir->expects($this->any())
+               ->willReturn(false);
+
+        $this->assertInstanceOf(FastCgiHttpResponse::class, (new WordPressHttpEventHandler($logger, $process, '/tmp'))->handle($event));
     }
 }

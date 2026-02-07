@@ -16,15 +16,9 @@ namespace Ymir\Runtime;
 use AsyncAws\Ssm\Input\GetParametersByPathRequest;
 use AsyncAws\Ssm\ValueObject\Parameter;
 use Tightenco\Collect\Support\Arr;
-use Ymir\Runtime\Aws\LambdaClient;
+use Ymir\Runtime\Application\ApplicationFactory;
 use Ymir\Runtime\Aws\SsmClient;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
-use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
-use Ymir\Runtime\Lambda\Handler\Http as HttpHandler;
-use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
-use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
-use Ymir\Runtime\Lambda\Handler\Sqs;
-use Ymir\Runtime\Lambda\Handler\WarmUpEventHandler;
 
 /**
  * Ymir Runtime factory.
@@ -40,7 +34,6 @@ class Runtime
         $context = RuntimeContext::createFromEnvironment();
 
         $logger = $context->getLogger();
-        $rootDirectory = $context->getRootDirectory();
         $runtimeApiClient = $context->getRuntimeApiClient();
 
         try {
@@ -52,38 +45,20 @@ class Runtime
 
             self::injectSecretEnvironmentVariables($context);
 
-            $handlers = [
-                new PingLambdaEventHandler(),
-                new WarmUpEventHandler(LambdaClient::createFromContext($context), $logger),
-            ];
+            $application = ApplicationFactory::createFromContext($context);
+            $application->initialize();
 
             switch ($functionType) {
                 case ConsoleRuntime::TYPE:
-                    $runtime = new ConsoleRuntime($runtimeApiClient, new LambdaEventHandlerCollection($logger, array_merge($handlers, [
-                        new ConsoleCommandLambdaEventHandler($logger),
-                    ])), $logger);
+                    $runtime = ConsoleRuntime::createFromApplication($application);
 
                     break;
                 case QueueRuntime::TYPE:
-                    $runtime = new QueueRuntime($runtimeApiClient, new LambdaEventHandlerCollection($logger, array_merge($handlers, [
-                        // Application/Framework specific handlers
-                        new Sqs\LaravelSqsHandler($logger, $rootDirectory),
-                    ])), $logger);
+                    $runtime = QueueRuntime::createFromApplication($application);
 
                     break;
                 case WebsiteRuntime::TYPE:
-                    $phpFpmProcess = $context->getPhpFpmProcess();
-
-                    $runtime = new WebsiteRuntime($runtimeApiClient, new LambdaEventHandlerCollection($logger, array_merge($handlers, [
-                        // Application/Framework specific handlers
-                        new HttpHandler\WordPressHttpEventHandler($logger, $phpFpmProcess, $rootDirectory),
-                        new HttpHandler\BedrockHttpEventHandler($logger, $phpFpmProcess, $rootDirectory),
-                        new HttpHandler\RadicleHttpEventHandler($logger, $phpFpmProcess, $rootDirectory),
-                        new HttpHandler\LaravelHttpEventHandler($logger, $phpFpmProcess, $rootDirectory),
-
-                        // Fallback handlers
-                        new HttpHandler\PhpScriptHttpEventHandler($logger, $phpFpmProcess, $rootDirectory, getenv('_HANDLER') ?: 'index.php'),
-                    ])), $logger, $phpFpmProcess, $context->getMaxInvocations());
+                    $runtime = WebsiteRuntime::createFromApplication($application);
 
                     $runtime->start();
 

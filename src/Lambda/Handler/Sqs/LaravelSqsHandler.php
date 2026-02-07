@@ -15,7 +15,6 @@ namespace Ymir\Runtime\Lambda\Handler\Sqs;
 
 use Symfony\Component\Process\Process;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationContext;
-use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsRecord;
 use Ymir\Runtime\Logger;
 
@@ -36,16 +35,6 @@ class LaravelSqsHandler extends AbstractSqsHandler
         parent::__construct($logger);
 
         $this->rootDirectory = rtrim($rootDirectory, '/');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function canHandle(InvocationEventInterface $event): bool
-    {
-        return parent::canHandle($event)
-            && file_exists($this->rootDirectory.'/public/index.php')
-            && file_exists($this->rootDirectory.'/artisan');
     }
 
     /**
