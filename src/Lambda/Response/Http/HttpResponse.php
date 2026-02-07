@@ -15,6 +15,7 @@ namespace Ymir\Runtime\Lambda\Response\Http;
 
 use Tightenco\Collect\Support\Arr;
 use Tightenco\Collect\Support\Collection;
+use Ymir\Runtime\Exception\InvalidFormatVersionException;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
 
 /**
@@ -65,7 +66,7 @@ class HttpResponse implements ResponseInterface
     public function __construct(string $body, array $headers = [], int $statusCode = 200, string $formatVersion = '1.0', bool $compressible = true)
     {
         if (!in_array($formatVersion, ['1.0', '2.0'])) {
-            throw new \InvalidArgumentException('"formatVersion" must be either "1.0" or "2.0"');
+            throw new InvalidFormatVersionException($formatVersion);
         }
 
         $this->body = $body;

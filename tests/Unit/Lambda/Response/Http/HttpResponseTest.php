@@ -14,10 +14,18 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Response\Http;
 
 use PHPUnit\Framework\TestCase;
+use Ymir\Runtime\Exception\InvalidFormatVersionException;
 use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 
 class HttpResponseTest extends TestCase
 {
+    public function testConstructorThrowsExceptionWithInvalidFormatVersion(): void
+    {
+        $this->expectException(InvalidFormatVersionException::class);
+
+        new HttpResponse('foo', [], 200, '3.0');
+    }
+
     public function testGetResponseDataWithFormatVersion1And304Status(): void
     {
         $response = new HttpResponse('foo', [], 304);
