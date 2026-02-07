@@ -80,55 +80,7 @@ class BedrockHttpEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        touch($this->tempDir.'/config/application.php');
-        touch($this->tempDir.'/web/wp-config.php');
-
         $this->assertTrue((new BedrockHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/config/application.php');
-        @unlink($this->tempDir.'/web/wp-config.php');
-    }
-
-    public function testCanHandleWithBedrockAutoloaderPresent(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        $handler = new BedrockHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir);
-
-        touch($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-
-        $this->assertTrue($handler->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/web/app/mu-plugins/bedrock-autoloader.php');
-    }
-
-    public function testCanHandleWithMissingApplicationConfig(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        touch($this->tempDir.'/web/wp-config.php');
-
-        $this->assertFalse((new BedrockHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/web/wp-config.php');
-    }
-
-    public function testCanHandleWithMissingWpConfig(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        touch($this->tempDir.'/config/application.php');
-
-        $this->assertFalse((new BedrockHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/config/application.php');
-    }
-
-    public function testCanHandleWithNoBedrockAutoloaderOrApplicationOrWordPressConfig(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        $this->assertFalse((new BedrockHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
     }
 
     public function testCanHandleWrongEventType(): void

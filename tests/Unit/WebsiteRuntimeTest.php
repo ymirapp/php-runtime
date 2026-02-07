@@ -49,6 +49,24 @@ class WebsiteRuntimeTest extends TestCase
         new WebsiteRuntime($client, $handler, $logger, $process, 0);
     }
 
+    public function testCreateFromApplication(): void
+    {
+        $application = $this->getMockBuilder(\Ymir\Runtime\Application\ApplicationInterface::class)->getMock();
+        $context = new \Ymir\Runtime\RuntimeContext($this->getLoggerMock(), $this->getLambdaRuntimeApiClientMock(), 'us-east-1', '/var/task');
+        $handlers = $this->getMockBuilder(\Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection::class)
+                         ->disableOriginalConstructor()
+                         ->getMock();
+
+        $application->expects($this->once())
+                    ->method('getContext')
+                    ->willReturn($context);
+        $application->expects($this->once())
+                    ->method('getWebsiteHandlers')
+                    ->willReturn($handlers);
+
+        $this->assertInstanceOf(WebsiteRuntime::class, WebsiteRuntime::createFromApplication($application));
+    }
+
     public function testProcessNextEventWithMaxInvocationsReached(): void
     {
         $client = $this->getLambdaRuntimeApiClientMock();

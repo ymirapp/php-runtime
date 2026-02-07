@@ -80,55 +80,7 @@ class RadicleHttpEventHandlerTest extends TestCase
     {
         $process = $this->getPhpFpmProcessMock();
 
-        touch($this->tempDir.'/bedrock/application.php');
-        touch($this->tempDir.'/public/wp-config.php');
-
         $this->assertTrue((new RadicleHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/bedrock/application.php');
-        @unlink($this->tempDir.'/public/wp-config.php');
-    }
-
-    public function testCanHandleWithBedrockAutoloaderPresent(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        $handler = new RadicleHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir);
-
-        touch($this->tempDir.'/public/content/mu-plugins/bedrock-autoloader.php');
-
-        $this->assertTrue($handler->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/public/content/mu-plugins/bedrock-autoloader.php');
-    }
-
-    public function testCanHandleWithMissingApplicationConfig(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        touch($this->tempDir.'/public/wp-config.php');
-
-        $this->assertFalse((new RadicleHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/public/wp-config.php');
-    }
-
-    public function testCanHandleWithMissingWpConfig(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        touch($this->tempDir.'/bedrock/application.php');
-
-        $this->assertFalse((new RadicleHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
-
-        @unlink($this->tempDir.'/bedrock/application.php');
-    }
-
-    public function testCanHandleWithNoBedrockAutoloaderOrApplicationOrWordPressConfig(): void
-    {
-        $process = $this->getPhpFpmProcessMock();
-
-        $this->assertFalse((new RadicleHttpEventHandler($this->getLoggerMock(), $process, $this->tempDir))->canHandle($this->getHttpRequestEventMock()));
     }
 
     public function testCanHandleWrongEventType(): void
