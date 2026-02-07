@@ -43,16 +43,6 @@ class LaravelSqsHandlerTest extends TestCase
         $this->filesystem->remove($this->tempDir);
     }
 
-    public function testHandleThrowsExceptionForWrongEvent(): void
-    {
-        $this->expectException(InvalidHandlerEventException::class);
-        $this->expectExceptionMessageMatches('/LaravelSqsHandler cannot handle Mock_InvocationEventInterface[^\s]* event/');
-
-        $handler = new LaravelSqsHandler($this->getLoggerMock(), $this->tempDir);
-
-        $handler->handle($this->getInvocationEventInterfaceMock());
-    }
-
     public function testCanHandleReturnsFalseForWrongEvent(): void
     {
         $handler = new LaravelSqsHandler($this->getLoggerMock(), '/tmp');
@@ -80,7 +70,8 @@ class LaravelSqsHandlerTest extends TestCase
 
         $logger = $this->getLoggerMock();
         $logger->expects($this->once())
-               ->method('error');
+               ->method('error')
+               ->with($this->stringContains('Processing SQS message [id1] failed: Laravel queue job failed'));
 
         $handler = new LaravelSqsHandler($logger, '/tmp');
         $response = $handler->handle($event);
@@ -102,7 +93,8 @@ class LaravelSqsHandlerTest extends TestCase
 
         $logger = $this->getLoggerMock();
         $logger->expects($this->once())
-               ->method('error');
+               ->method('error')
+               ->with($this->stringContains('Processing SQS message [id1] failed: Failed to encode SQS message [id1]'));
 
         $handler = new LaravelSqsHandler($logger, '/tmp');
         $response = $handler->handle($event);
@@ -112,6 +104,16 @@ class LaravelSqsHandlerTest extends TestCase
                 ['itemIdentifier' => 'id1'],
             ],
         ], $response->getResponseData());
+    }
+
+    public function testHandleThrowsExceptionForWrongEvent(): void
+    {
+        $this->expectException(InvalidHandlerEventException::class);
+        $this->expectExceptionMessageMatches('/LaravelSqsHandler cannot handle Mock_InvocationEventInterface[^\s]* event/');
+
+        $handler = new LaravelSqsHandler($this->getLoggerMock(), $this->tempDir);
+
+        $handler->handle($this->getInvocationEventInterfaceMock());
     }
 
     public function testHandleUsesEnvironmentVariables(): void

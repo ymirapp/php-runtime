@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Lambda\Handler\Sqs;
 
 use Symfony\Component\Process\Process;
+use Ymir\Runtime\Exception\SqsRecordProcessingException;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationContext;
 use Ymir\Runtime\Lambda\InvocationEvent\SqsRecord;
 use Ymir\Runtime\Logger;
@@ -45,7 +46,7 @@ class LaravelSqsHandler extends AbstractSqsHandler
         $message = json_encode($record);
 
         if (empty($message) || JSON_ERROR_NONE !== json_last_error()) {
-            throw new \RuntimeException(sprintf('Failed to encode SQS message [%s]: %s', $record->getMessageId(), json_last_error_msg()));
+            throw new SqsRecordProcessingException(sprintf('Failed to encode SQS message [%s]', $record->getMessageId()), json_last_error_msg());
         }
 
         $arguments = [
@@ -68,7 +69,7 @@ class LaravelSqsHandler extends AbstractSqsHandler
         $process->run();
 
         if (!$process->isSuccessful()) {
-            throw new \RuntimeException(sprintf('Laravel queue job failed: %s', $process->getErrorOutput()));
+            throw new SqsRecordProcessingException('Laravel queue job failed', $process->getErrorOutput());
         }
     }
 
