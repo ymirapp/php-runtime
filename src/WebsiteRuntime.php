@@ -82,14 +82,7 @@ class WebsiteRuntime extends AbstractRuntime
      */
     public function start(): void
     {
-        try {
-            $this->phpFpmProcess->start();
-        } catch (\Throwable $exception) {
-            $this->logger->exception($exception);
-            $this->client->sendInitializationError($exception);
-
-            $this->terminate(1);
-        }
+        $this->phpFpmProcess->start();
     }
 
     /**

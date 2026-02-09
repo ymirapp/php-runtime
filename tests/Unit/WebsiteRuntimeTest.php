@@ -189,38 +189,6 @@ class WebsiteRuntimeTest extends TestCase
         $runtime->processNextEvent();
     }
 
-    public function testStartWithException(): void
-    {
-        $client = $this->getLambdaRuntimeApiClientMock();
-        $exception = new \Exception('test exception');
-        $handler = $this->getLambdaEventHandlerInterfaceMock();
-        $logger = $this->getLoggerMock();
-        $process = $this->getPhpFpmProcessMock();
-
-        $process->expects($this->once())
-                ->method('start')
-                ->willThrowException($exception);
-
-        $logger->expects($this->once())
-               ->method('exception')
-               ->with($this->identicalTo($exception));
-
-        $client->expects($this->once())
-               ->method('sendInitializationError')
-               ->with($this->identicalTo($exception));
-
-        $runtime = $this->getMockBuilder(WebsiteRuntime::class)
-                        ->setConstructorArgs([$client, $handler, $logger, $process])
-                        ->setMethods(['terminate'])
-                        ->getMock();
-
-        $runtime->expects($this->once())
-                 ->method('terminate')
-                 ->with(1);
-
-        $runtime->start();
-    }
-
     public function testStartWithNoException(): void
     {
         $client = $this->getLambdaRuntimeApiClientMock();
