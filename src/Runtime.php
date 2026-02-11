@@ -91,6 +91,8 @@ class Runtime
             return;
         }
 
+        $start = microtime(true);
+
         // Need to pass results through iterator_to_array manually because the collection object
         // preserves keys. This causes the next page of results to overwrite the previous page of
         // results because they use a numbered index.
@@ -105,5 +107,7 @@ class Runtime
             $context->getLogger()->debug(sprintf('Injecting [%s] secret environment variable into runtime', $name));
             $_ENV[$name] = $value;
         });
+
+        $context->getLogger()->debug(sprintf('Secret environment variables injected in %dms', (microtime(true) - $start) * 1000));
     }
 }
