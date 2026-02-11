@@ -72,7 +72,9 @@ class Runtime
             return $runtime;
         } catch (\Throwable $exception) {
             $logger->exception($exception);
-            $runtimeApiClient->sendInitializationError($exception);
+
+            // We send a regular error because sending an initialization error doesn't interrupt the Lambda runtime.
+            $runtimeApiClient->sendError($runtimeApiClient->getNextEvent()->getContext(), $exception);
 
             exit(1);
         }
