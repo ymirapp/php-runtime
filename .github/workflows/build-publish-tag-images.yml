@@ -88,6 +88,42 @@ jobs:
             CPU_ARCHITECTURE=${{ matrix.arch }}
             DOCKER_PLATFORM=${{ steps.meta.outputs.platform }}
 
+      - name: Verify Tag Aliases
+        run: |
+          CANONICAL_IMAGE="${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.tag }}"
+          COMPAT_IMAGE="${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.compat_tag }}"
+          TARGET_ARCH="${{ matrix.arch }}"
+
+          if [ "$TARGET_ARCH" = "x86_64" ]; then
+            TARGET_ARCH="amd64"
+          fi
+
+          resolve_digest() {
+            IMAGE="$1"
+            ARCH="$2"
+
+            docker manifest inspect "$IMAGE" | python3 -c "import json,sys; arch=sys.argv[1]; doc=json.load(sys.stdin); digest=doc.get('config', {}).get('digest', ''); manifests=doc.get('manifests', []); print(digest or next((m.get('digest', '') for m in manifests if m.get('platform', {}).get('os') == 'linux' and m.get('platform', {}).get('architecture') == arch), ''))" "$ARCH"
+          }
+
+          CANONICAL_DIGEST=$(resolve_digest "$CANONICAL_IMAGE" "$TARGET_ARCH")
+          COMPAT_DIGEST=$(resolve_digest "$COMPAT_IMAGE" "$TARGET_ARCH")
+
+          if [ -z "$CANONICAL_DIGEST" ] || [ -z "$COMPAT_DIGEST" ]; then
+            echo "[FAIL] Unable to resolve digest for tag aliases"
+            echo "canonical=$CANONICAL_IMAGE digest=$CANONICAL_DIGEST"
+            echo "compat=$COMPAT_IMAGE digest=$COMPAT_DIGEST"
+            exit 1
+          fi
+
+          if [ "$CANONICAL_DIGEST" != "$COMPAT_DIGEST" ]; then
+            echo "[FAIL] Tag aliases point to different images"
+            echo "canonical=$CANONICAL_IMAGE digest=$CANONICAL_DIGEST"
+            echo "compat=$COMPAT_IMAGE digest=$COMPAT_DIGEST"
+            exit 1
+          fi
+
+          echo "[OK] Tag aliases are in sync: $CANONICAL_DIGEST"
+
       - name: Export Layer ZIP
         run: |
           mkdir -p build
