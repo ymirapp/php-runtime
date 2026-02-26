@@ -88,6 +88,30 @@ jobs:
             CPU_ARCHITECTURE=${{ matrix.arch }}
             DOCKER_PLATFORM=${{ steps.meta.outputs.platform }}
 
+      - name: Verify Tag Aliases
+        run: |
+          CANONICAL_IMAGE="${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.tag }}"
+          COMPAT_IMAGE="${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.compat_tag }}"
+
+          CANONICAL_DIGEST=$(docker manifest inspect "$CANONICAL_IMAGE" | python -c "import json,sys; print(json.load(sys.stdin).get('config', {}).get('digest', ''))")
+          COMPAT_DIGEST=$(docker manifest inspect "$COMPAT_IMAGE" | python -c "import json,sys; print(json.load(sys.stdin).get('config', {}).get('digest', ''))")
+
+          if [ -z "$CANONICAL_DIGEST" ] || [ -z "$COMPAT_DIGEST" ]; then
+            echo "[FAIL] Unable to resolve digest for tag aliases"
+            echo "canonical=$CANONICAL_IMAGE digest=$CANONICAL_DIGEST"
+            echo "compat=$COMPAT_IMAGE digest=$COMPAT_DIGEST"
+            exit 1
+          fi
+
+          if [ "$CANONICAL_DIGEST" != "$COMPAT_DIGEST" ]; then
+            echo "[FAIL] Tag aliases point to different images"
+            echo "canonical=$CANONICAL_IMAGE digest=$CANONICAL_DIGEST"
+            echo "compat=$COMPAT_IMAGE digest=$COMPAT_DIGEST"
+            exit 1
+          fi
+
+          echo "[OK] Tag aliases are in sync: $CANONICAL_DIGEST"
+
       - name: Export Layer ZIP
         run: |
           mkdir -p build
