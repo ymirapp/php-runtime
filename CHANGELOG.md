@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.18.0](https://github.com/ymirapp/php-runtime/compare/v1.17.3...v1.18.0) (2026-02-26)
+
+
+### Features
+
+* Add event handler for laravel ([67d6040](https://github.com/ymirapp/php-runtime/commit/67d60404742462a47935a34e67a846504e545f16))
+* Add laravel handler for sqs events ([51ae7a6](https://github.com/ymirapp/php-runtime/commit/51ae7a61c8809841895baf15643062852f194e90))
+* Add queue function runtime ([74c440e](https://github.com/ymirapp/php-runtime/commit/74c440e8483601b22e844ff5e86a509ff7cbb734))
+* Add request and trace id to http requests and responses ([3cd567d](https://github.com/ymirapp/php-runtime/commit/3cd567d110b463752c5fc8f13d85845e7c8795bb))
+* Create a dynamic timeout for php-fpm based on remaining execution time ([6cd929f](https://github.com/ymirapp/php-runtime/commit/6cd929febbee99be01e5015f54679d04554d4ccc))
+* Disable jit and switch to storing opcode in a file cache ([5c774cc](https://github.com/ymirapp/php-runtime/commit/5c774ccb841ad03485878936aba87f0b619be108))
+* Set command timeout based on remaining time ([8c594ff](https://github.com/ymirapp/php-runtime/commit/8c594fff3aa8576e5b4ec23f76bd7b1d3f5f06fb))
+* Switch to `lru` for relay `eviction_policy` ([838bf8f](https://github.com/ymirapp/php-runtime/commit/838bf8f9a98671a403520c3dfd9e55aa29ff9de7))
+* Switch to using `CloudWatchFormatter` from ymir monolog library ([6f1eeb3](https://github.com/ymirapp/php-runtime/commit/6f1eeb358237a324c6544adaa74c0d3b0a18c79f))
+
+
+### Bug Fixes
+
+* Make `memory_limit` match the maximum allowed memory for lambdas ([b18fc2f](https://github.com/ymirapp/php-runtime/commit/b18fc2fb21be1c8a72f62029fcd2cd982e5bf56f))
+
+
+### Dependency Changes
+
+* Updated composer dependencies ([7fcaab7](https://github.com/ymirapp/php-runtime/commit/7fcaab793fcff9b61bd63df93e5e7d9dab707b9c))
+* Upgrade to monolog 2.0 ([59f7150](https://github.com/ymirapp/php-runtime/commit/59f7150bcd5e0866c4b21860b9bbb9558abe27d6))
+
 ## [1.17.3](https://github.com/ymirapp/php-runtime/compare/v1.17.2...v1.17.3) (2026-01-24)
 
 
