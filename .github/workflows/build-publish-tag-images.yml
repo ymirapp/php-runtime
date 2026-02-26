@@ -51,7 +51,8 @@ jobs:
             echo "platform=linux/arm64" >> $GITHUB_OUTPUT
             echo "archive_filename=arm-php-$VERSION_CLEAN" >> $GITHUB_OUTPUT
           fi
-          echo "tag=php-${{ matrix.php }}" >> $GITHUB_OUTPUT
+          echo "tag=php-$VERSION_CLEAN" >> $GITHUB_OUTPUT
+          echo "compat_tag=php-${{ matrix.php }}" >> $GITHUB_OUTPUT
           echo "dir=php-$VERSION_CLEAN" >> $GITHUB_OUTPUT
 
       - name: Build and Load Image
@@ -62,7 +63,9 @@ jobs:
           file: runtime/${{ steps.meta.outputs.dir }}/Dockerfile
           platforms: ${{ steps.meta.outputs.platform }}
           load: true
-          tags: ${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.tag }}
+          tags: |
+            ${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.tag }}
+            ${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.compat_tag }}
           build-args: |
             CPU_ARCHITECTURE=${{ matrix.arch }}
             DOCKER_PLATFORM=${{ steps.meta.outputs.platform }}
@@ -78,7 +81,9 @@ jobs:
           file: runtime/${{ steps.meta.outputs.dir }}/Dockerfile
           platforms: ${{ steps.meta.outputs.platform }}
           push: true
-          tags: ${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.tag }}
+          tags: |
+            ${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.tag }}
+            ${{ steps.meta.outputs.repo }}:${{ steps.meta.outputs.compat_tag }}
           build-args: |
             CPU_ARCHITECTURE=${{ matrix.arch }}
             DOCKER_PLATFORM=${{ steps.meta.outputs.platform }}
