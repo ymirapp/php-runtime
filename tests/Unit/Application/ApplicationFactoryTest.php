@@ -17,9 +17,9 @@ use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Application\ApplicationFactory;
 use Ymir\Runtime\Application\BedrockApplication;
 use Ymir\Runtime\Application\LaravelApplication;
+use Ymir\Runtime\Application\PhpScriptApplication;
 use Ymir\Runtime\Application\RadicleApplication;
 use Ymir\Runtime\Application\WordPressApplication;
-use Ymir\Runtime\Exception\ApplicationInitializationException;
 use Ymir\Runtime\RuntimeContext;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaRuntimeApiClientMockTrait;
@@ -65,6 +65,13 @@ class ApplicationFactoryTest extends TestCase
         $this->assertInstanceOf(LaravelApplication::class, ApplicationFactory::createFromContext($context));
     }
 
+    public function testCreateFromContextReturnsPhpScriptApplicationAsHandlerFallback(): void
+    {
+        $context = new RuntimeContext($this->getLoggerMock(), $this->getLambdaRuntimeApiClientMock(), 'us-east-1', $this->tempDir);
+
+        $this->assertInstanceOf(PhpScriptApplication::class, ApplicationFactory::createFromContext($context));
+    }
+
     public function testCreateFromContextReturnsRadicleApplication(): void
     {
         mkdir($this->tempDir.'/public/content/mu-plugins', 0777, true);
@@ -83,16 +90,6 @@ class ApplicationFactoryTest extends TestCase
         $context = new RuntimeContext($this->getLoggerMock(), $this->getLambdaRuntimeApiClientMock(), 'us-east-1', $this->tempDir);
 
         $this->assertInstanceOf(WordPressApplication::class, ApplicationFactory::createFromContext($context));
-    }
-
-    public function testCreateFromContextThrowsExceptionWhenNoApplicationFound(): void
-    {
-        $this->expectException(ApplicationInitializationException::class);
-        $this->expectExceptionMessage('Unable to create runtime application');
-
-        $context = new RuntimeContext($this->getLoggerMock(), $this->getLambdaRuntimeApiClientMock(), 'us-east-1', $this->tempDir);
-
-        ApplicationFactory::createFromContext($context);
     }
 
     private function removeDirectory(string $dir): void

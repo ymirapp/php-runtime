@@ -34,6 +34,9 @@ class ApplicationFactory
 
         // Laravel
         LaravelApplication::class,
+
+        // PHP script fallback via _HANDLER
+        PhpScriptApplication::class,
     ];
 
     /**
