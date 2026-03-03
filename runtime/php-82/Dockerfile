@@ -25,7 +25,7 @@ RUN dnf makecache && dnf install -y make gcc gcc-c++ autoconf automake libtool g
 RUN mkdir -p ${BUILD_DIR} ${INSTALL_DIR}/bin ${INSTALL_DIR}/etc/php ${INSTALL_DIR}/etc/php/conf.d ${INSTALL_DIR}/lib ${INSTALL_DIR}/lib64 ${INSTALL_DIR}/sbin
 
 # SQLite 3.51+
-ENV VERSION_SQLITE=3.51.1
+ENV VERSION_SQLITE=3.51.2
 RUN mkdir -p ${BUILD_DIR}/sqlite && curl -Ls https://github.com/sqlite/sqlite/archive/refs/tags/version-${VERSION_SQLITE}.tar.gz | tar xzC ${BUILD_DIR}/sqlite --strip-components=1
 WORKDIR ${BUILD_DIR}/sqlite
 RUN CFLAGS="-Os" CPPFLAGS="-Os" ./configure --prefix=${INSTALL_DIR} && make install
