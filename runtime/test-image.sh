@@ -59,7 +59,19 @@ fi
 
 # 5. Modules (with standard Lambda LD_LIBRARY_PATH)
 LAMBDA_LD_PATH="/opt/lib:/lib64:/usr/lib64"
-MODULES=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -m 2>/dev/null)
+# Capture both stdout and stderr to detect startup warnings
+MODULE_OUTPUT=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -m 2>&1)
+MODULES=$(echo "$MODULE_OUTPUT" | grep -v "PHP Warning" | grep -v "Failed loading" || true)
+STARTUP_ERRORS=$(echo "$MODULE_OUTPUT" | grep -E "PHP Warning|Failed loading|Unable to load" || true)
+
+if [ -n "$STARTUP_ERRORS" ]; then
+    echo "  [FAIL] PHP Startup Errors detected:"
+    echo "--------------------------------------------------------------------------------"
+    echo "$STARTUP_ERRORS"
+    echo "--------------------------------------------------------------------------------"
+    FAILED=1
+fi
+
 PHP_VER=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "echo PHP_VERSION_ID;" 2>/dev/null)
 
 REQUIRED=("apcu" "igbinary" "zstd" "imagick" "intl" "pdo_mysql")
@@ -72,12 +84,42 @@ REQUIRED+=("Zend OPcache")
 
 for mod in "${REQUIRED[@]}"; do
     if echo "$MODULES" | grep -qi "$mod"; then
-        echo "  [OK] $mod"
+        echo "  [OK] Module loaded: $mod"
     else
-        echo "  [FAIL] $mod missing!"
+        echo "  [FAIL] Module missing: $mod"
         FAILED=1
     fi
 done
+
+# 5.5 Extension File Verification
+echo "  [INFO] Verifying extension paths..."
+EXT_DIR=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "echo ini_get('extension_dir');" 2>/dev/null)
+if [ -z "$EXT_DIR" ]; then
+    echo "  [FAIL] Could not determine extension_dir"
+    FAILED=1
+else
+    if docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "[ -d $EXT_DIR ]"; then
+        echo "  [OK] Extension directory exists: $EXT_DIR"
+        for ext in "pdo_mysql.so"; do
+            if docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "[ -f $EXT_DIR/$ext ]"; then
+                echo "  [OK] Extension file exists: $ext"
+            else
+                echo "  [FAIL] Extension file missing: $EXT_DIR/$ext"
+                FAILED=1
+            fi
+        done
+        # Opcache can be built-in or shared
+        if ! docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -m | grep -qi "Zend OPcache"; then
+             if ! docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "[ -f $EXT_DIR/opcache.so ]"; then
+                 echo "  [FAIL] Zend OPcache missing (not in php -m and no opcache.so found)"
+                 FAILED=1
+             fi
+        fi
+    else
+        echo "  [FAIL] Extension directory missing: $EXT_DIR"
+        FAILED=1
+    fi
+fi
 
 # 6. Relay Configuration
 if [ -n "$PHP_VER" ] && [ "$PHP_VER" -ge 70400 ]; then
@@ -90,13 +132,23 @@ if [ -n "$PHP_VER" ] && [ "$PHP_VER" -ge 70400 ]; then
     fi
 fi
 
-# 7. Warnings
-WARNINGS=$(docker run --rm --platform "$PLATFORM" --entrypoint /opt/ymir/bin/php "$IMAGE" -v 2>&1 >/dev/null || true)
-if [ -n "$WARNINGS" ]; then
-    echo "  [FAIL] Warnings: $WARNINGS"
+# 7. Warnings (Comprehensive check)
+# Check multiple commands to ensure no hidden startup warnings
+PHP_COMMANDS=("-v" "-i" "-m")
+ANY_WARNINGS=""
+for cmd in "${PHP_COMMANDS[@]}"; do
+    CMD_WARNINGS=$(docker run --rm --platform "$PLATFORM" --entrypoint /opt/ymir/bin/php "$IMAGE" $cmd 2>&1 >/dev/null | grep -E "Warning|Error|failed" || true)
+    if [ -n "$CMD_WARNINGS" ]; then
+        ANY_WARNINGS="${ANY_WARNINGS}\nCommand 'php $cmd':\n$CMD_WARNINGS"
+    fi
+done
+
+if [ -n "$ANY_WARNINGS" ]; then
+    echo "  [FAIL] PHP Startup Warnings/Errors detected:"
+    echo -e "$ANY_WARNINGS"
     FAILED=1
 else
-    echo "  [OK] No warnings"
+    echo "  [OK] No PHP startup warnings"
 fi
 
 # 8. PHP-FPM
