@@ -125,6 +125,7 @@ class PhpFpmProcess
      */
     public function start(): void
     {
+        $start = microtime(true);
         $socketDirectory = dirname(self::SOCKET_PATH);
 
         if (!is_dir($socketDirectory)) {
@@ -145,6 +146,8 @@ class PhpFpmProcess
 
             return !$this->isStarted();
         }, 5000000);
+
+        $this->logger->info(sprintf('PHP-FPM process started in %dms', (microtime(true) - $start) * 1000));
     }
 
     /**

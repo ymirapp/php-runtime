@@ -64,7 +64,7 @@ class LaravelApplication extends AbstractApplication
 
         $this->createStorageDirectories();
 
-        $logger->debug('Creating Laravel cache');
+        $cacheStart = microtime(true);
 
         $process = new Process(['/opt/bin/php', $this->context->getRootDirectory().'/artisan', 'config:cache', '--no-ansi']);
         $process->run();
@@ -73,6 +73,6 @@ class LaravelApplication extends AbstractApplication
             throw new ApplicationInitializationException(sprintf('Failed to create Laravel cache: %s', $process->getErrorOutput()));
         }
 
-        $logger->debug('Laravel cache created');
+        $logger->debug(sprintf('Laravel cache created in %dms', (microtime(true) - $cacheStart) * 1000));
     }
 }
