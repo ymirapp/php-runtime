@@ -19,7 +19,7 @@ ENV PKG_CONFIG_PATH="${INSTALL_DIR}/lib64/pkgconfig:${INSTALL_DIR}/lib/pkgconfig
     MAKEFLAGS='-j4'
 
 RUN dnf makecache && dnf install -y make gcc gcc-c++ autoconf automake libtool git \
-    libcurl-devel zlib-devel readline-devel gettext-devel libicu-devel libxslt-devel libzip-devel oniguruma-devel openssl-devel libsodium-devel libffi-devel libpng-devel libjpeg-devel freetype-devel libwebp-devel libzstd-devel lz4-devel tar xz file \
+    libcurl-devel zlib-devel readline-devel gettext-devel libicu-devel libxslt-devel libzip-devel libpq-devel oniguruma-devel openssl-devel libsodium-devel libffi-devel libpng-devel libjpeg-devel freetype-devel libwebp-devel libzstd-devel lz4-devel tar xz file \
     perl-FindBin perl-IPC-Cmd
 
 RUN mkdir -p ${BUILD_DIR} ${INSTALL_DIR}/bin ${INSTALL_DIR}/etc/php ${INSTALL_DIR}/etc/php/conf.d ${INSTALL_DIR}/lib ${INSTALL_DIR}/lib64 ${INSTALL_DIR}/sbin
@@ -50,7 +50,7 @@ RUN ./buildconf --force && \
         --prefix=${INSTALL_DIR} --enable-option-checking=fatal --enable-sockets \
         --with-config-file-path=${INSTALL_DIR}/etc/php --with-config-file-scan-dir=${INSTALL_DIR}/etc/php/conf.d:/var/task/php/conf.d \
         --enable-fpm --disable-cgi --enable-cli --disable-phpdbg --with-sodium --with-readline --with-openssl --with-zlib --with-curl \
-        --enable-exif --enable-ftp --with-gettext --enable-mbstring --enable-opcache=shared --with-pdo-mysql=shared,mysqlnd --with-mysqli --enable-pcntl \
+        --enable-exif --enable-ftp --with-gettext --enable-mbstring --enable-opcache=shared --with-pdo-pgsql=shared --with-pgsql=shared --with-pdo-mysql=shared,mysqlnd --with-mysqli --enable-pcntl \
         --with-zip --enable-bcmath --enable-intl=shared --enable-soap --with-xsl --with-pear
 RUN make -j $(nproc) && make install PEAR_INSTALLER_URL='https://github.com/pear/pearweb_phars/raw/master/install-pear-nozlib.phar'
 RUN cp php.ini-production ${INSTALL_DIR}/etc/php/php.ini

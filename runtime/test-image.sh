@@ -74,7 +74,7 @@ fi
 
 PHP_VER=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "echo PHP_VERSION_ID;" 2>/dev/null)
 
-REQUIRED=("apcu" "igbinary" "zstd" "imagick" "intl" "pdo_mysql")
+REQUIRED=("apcu" "igbinary" "zstd" "imagick" "intl" "pdo_mysql" "pdo_pgsql" "pgsql")
 if [ -n "$PHP_VER" ] && [ "$PHP_VER" -ge 70400 ]; then
     REQUIRED+=("relay" "msgpack")
 else
@@ -100,7 +100,7 @@ if [ -z "$EXT_DIR" ]; then
 else
     if docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "[ -d $EXT_DIR ]"; then
         echo "  [OK] Extension directory exists: $EXT_DIR"
-        for ext in "pdo_mysql.so"; do
+        for ext in "pdo_mysql.so" "pdo_pgsql.so" "pgsql.so"; do
             if docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "[ -f $EXT_DIR/$ext ]"; then
                 echo "  [OK] Extension file exists: $ext"
             else
