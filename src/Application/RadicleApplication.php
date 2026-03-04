@@ -51,7 +51,7 @@ class RadicleApplication extends AbstractApplication
     {
         $logger = $this->context->getLogger();
 
-        $this->createStorageDirectories($logger);
+        $this->createStorageDirectories();
 
         $logger->debug('Creating Acorn cache');
 

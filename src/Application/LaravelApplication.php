@@ -62,7 +62,7 @@ class LaravelApplication extends AbstractApplication
     {
         $logger = $this->context->getLogger();
 
-        $this->createStorageDirectories($logger);
+        $this->createStorageDirectories();
 
         $logger->debug('Creating Laravel cache');
 

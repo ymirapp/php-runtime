@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Application;
 
 use Ymir\Runtime\Exception\ApplicationInitializationException;
-use Ymir\Runtime\Logger;
 
 /**
  * Creates Laravel storage directories.
@@ -24,10 +23,8 @@ trait CreatesLaravelStorageDirectoriesTrait
     /**
      * Create the necessary Laravel storage directories.
      */
-    private function createStorageDirectories(Logger $logger): void
+    private function createStorageDirectories(): void
     {
-        $logger->debug('Creating Laravel storage directories');
-
         collect(['/bootstrap/cache', '/framework/cache', '/framework/views'])
             ->map(function (string $path): string {
                 return '/tmp/storage'.$path;
@@ -35,12 +32,10 @@ trait CreatesLaravelStorageDirectoriesTrait
             ->filter(function (string $directory): bool {
                 return !is_dir($directory);
             })
-            ->each(function (string $directory) use ($logger): void {
+            ->each(function (string $directory): void {
                 if (!mkdir($directory, 0755, true) && !is_dir($directory)) {
                     throw new ApplicationInitializationException(sprintf('Failed to create "%s" directory', $directory));
                 }
-
-                $logger->debug(sprintf('"%s" directory created', $directory));
             });
     }
 }
