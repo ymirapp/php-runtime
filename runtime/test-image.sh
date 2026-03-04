@@ -44,10 +44,11 @@ done
 ENTRY_POINT_LOG=$(docker run --rm --platform "$PLATFORM" \
     -e AWS_LAMBDA_RUNTIME_API="localhost" \
     -e AWS_REGION="us-east-1" \
+    -e YMIR_FUNCTION_TYPE="console" \
     -e LAMBDA_TASK_ROOT="/var/task" \
     --entrypoint /opt/ymir/bin/php "$IMAGE" /opt/runtime.php 2>&1 | head -n 20 || true)
 
-if echo "$ENTRY_POINT_LOG" | grep -q "Loaded runtime Composer autoload file"; then
+if echo "$ENTRY_POINT_LOG" | grep -Eq "Loaded runtime Composer autoload file|Ymir PHP Runtime \(console\) initialized"; then
     echo "  [OK] Runtime entry point loadable"
 else
     echo "  [FAIL] Runtime entry point failed to boot"
