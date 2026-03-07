@@ -56,6 +56,7 @@ class RadicleApplication extends AbstractApplication
         $logger->debug('Creating Acorn cache');
 
         $process = new Process(['/opt/bin/php', $this->context->getRootDirectory().'/bin/wp', 'acorn', 'config:cache']);
+        $process->setEnv(['APP_RUNNING_IN_CONSOLE' => 'true']);
         $process->run();
 
         if (!$process->isSuccessful()) {

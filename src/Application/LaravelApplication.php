@@ -67,6 +67,7 @@ class LaravelApplication extends AbstractApplication
         $cacheStart = microtime(true);
 
         $process = new Process(['/opt/bin/php', $this->context->getRootDirectory().'/artisan', 'config:cache', '--no-ansi']);
+        $process->setEnv(['APP_RUNNING_IN_CONSOLE' => 'true']);
         $process->run();
 
         if (!$process->isSuccessful()) {
