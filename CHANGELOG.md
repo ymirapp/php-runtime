@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.2](https://github.com/ymirapp/php-runtime/compare/v1.18.1...v1.18.2) (2026-03-07)
+
+
+### Bug Fixes
+
+* Force `APP_RUNNING_IN_CONSOLE=true` when initializing laravel-based applications ([3d9f490](https://github.com/ymirapp/php-runtime/commit/3d9f490c67ba8b6f05ee0249a181acb2458521ef))
+
 ## [1.18.1](https://github.com/ymirapp/php-runtime/compare/v1.18.0...v1.18.1) (2026-03-07)
 
 
