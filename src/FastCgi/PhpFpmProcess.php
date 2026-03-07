@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\FastCgi;
 
+use hollodotme\FastCGI\Exceptions\ConnectException;
 use hollodotme\FastCGI\Exceptions\ReadFailedException;
 use hollodotme\FastCGI\Exceptions\TimedoutException;
 use hollodotme\FastCGI\Interfaces\ProvidesRequestData;
@@ -99,6 +100,8 @@ class PhpFpmProcess
     {
         try {
             $response = $this->client->handle($request, $timeoutMs);
+        } catch (ConnectException $exception) {
+            throw new PhpFpmProcessException('Unable to connect to PHP-FPM FastCGI socket');
         } catch (ReadFailedException $exception) {
             throw new PhpFpmProcessException('PHP-FPM process crashed unexpectedly');
         } catch (TimedoutException $exception) {

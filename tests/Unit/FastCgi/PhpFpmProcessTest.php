@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Tests\Unit\FastCgi;
 
+use hollodotme\FastCGI\Exceptions\ConnectException;
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmProcessException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
@@ -76,6 +77,26 @@ class PhpFpmProcessTest extends TestCase
         $phpFpmProcess = new PhpFpmProcess($client, $logger, $process);
 
         $this->assertSame($response, $phpFpmProcess->handle($request, 1000));
+    }
+
+    public function testHandleWithConnectException(): void
+    {
+        $this->expectException(PhpFpmProcessException::class);
+        $this->expectExceptionMessage('Unable to connect to PHP-FPM FastCGI socket');
+
+        $client = $this->getFastCgiServerClientMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getProcessMock();
+        $request = $this->getProvidesRequestDataMock();
+
+        $client->expects($this->once())
+               ->method('handle')
+               ->with($this->identicalTo($request), 1000)
+               ->willThrowException(new ConnectException('connection refused'));
+
+        $phpFpmProcess = new PhpFpmProcess($client, $logger, $process);
+
+        $phpFpmProcess->handle($request, 1000);
     }
 
     public function testHandleWithProcessStopped(): void
