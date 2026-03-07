@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.18.1](https://github.com/ymirapp/php-runtime/compare/v1.18.0...v1.18.1) (2026-03-07)
+
+
+### Bug Fixes
+
+* Remove `--no-ansi` from radicle acorn cache initialization command ([a76ab05](https://github.com/ymirapp/php-runtime/commit/a76ab052af166748e721b6e7e321c7b4e4cfad83))
+* Throw exception if we're unable to connect to php-fpm ([32e7843](https://github.com/ymirapp/php-runtime/commit/32e78432a20bb67aa1cd227546f62bad0f031023))
+
 ## [1.18.0](https://github.com/ymirapp/php-runtime/compare/v1.17.3...v1.18.0) (2026-03-04)
 
 
