@@ -83,6 +83,60 @@ class PhpFpmProcessTest extends TestCase
 
     public function testHandleWithConnectException(): void
     {
+        $client = $this->getFastCgiServerClientMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getProcessMock();
+        $request = $this->getProvidesRequestDataMock();
+        $response = $this->getProvidesResponseDataMock();
+        $calls = 0;
+
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'file_exists')
+             ->expects($this->once())
+             ->with('/tmp/.ymir/php-fpm.sock')
+             ->willReturn(false);
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'unlink')
+             ->expects($this->never());
+
+        $client->expects($this->exactly(2))
+               ->method('handle')
+               ->willReturnCallback(function ($receivedRequest, $receivedTimeoutMs) use (&$calls, $request, $response) {
+                   ++$calls;
+
+                   $this->assertSame($request, $receivedRequest);
+                   $this->assertSame(1000, $receivedTimeoutMs);
+
+                   if (1 === $calls) {
+                       throw new ConnectException('connection refused');
+                   }
+
+                   return $response;
+               });
+
+        $logger->expects($this->exactly(2))
+               ->method('info')
+               ->withConsecutive(
+                   ['Unable to connect to PHP-FPM FastCGI socket, restarting process and retrying request'],
+                   ['Restarting PHP-FPM process']
+               );
+
+        $process->method('isRunning')
+                ->willReturn(true);
+
+        $phpFpmProcess = $this->getMockBuilder(PhpFpmProcess::class)
+                              ->setConstructorArgs([$client, $logger, $process])
+                              ->setMethods(['start', 'stop'])
+                              ->getMock();
+
+        $phpFpmProcess->expects($this->once())
+                      ->method('stop');
+        $phpFpmProcess->expects($this->once())
+                      ->method('start');
+
+        $this->assertSame($response, $phpFpmProcess->handle($request, 1000));
+    }
+
+    public function testHandleWithConnectExceptionAfterRetry(): void
+    {
         $this->expectException(PhpFpmProcessException::class);
         $this->expectExceptionMessage('Unable to connect to PHP-FPM FastCGI socket');
 
@@ -91,12 +145,35 @@ class PhpFpmProcessTest extends TestCase
         $process = $this->getProcessMock();
         $request = $this->getProvidesRequestDataMock();
 
-        $client->expects($this->once())
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'file_exists')
+             ->expects($this->once())
+             ->with('/tmp/.ymir/php-fpm.sock')
+             ->willReturn(false);
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'unlink')
+             ->expects($this->never());
+
+        $client->expects($this->exactly(2))
                ->method('handle')
                ->with($this->identicalTo($request), 1000)
                ->willThrowException(new ConnectException('connection refused'));
 
-        $phpFpmProcess = new PhpFpmProcess($client, $logger, $process);
+        $logger->expects($this->exactly(3))
+               ->method('info')
+               ->withConsecutive(
+                   ['Unable to connect to PHP-FPM FastCGI socket, restarting process and retrying request'],
+                   ['Restarting PHP-FPM process'],
+                   ['Unable to connect to PHP-FPM FastCGI socket after retry']
+               );
+
+        $phpFpmProcess = $this->getMockBuilder(PhpFpmProcess::class)
+                              ->setConstructorArgs([$client, $logger, $process])
+                              ->setMethods(['start', 'stop'])
+                              ->getMock();
+
+        $phpFpmProcess->expects($this->once())
+                      ->method('stop');
+        $phpFpmProcess->expects($this->once())
+                      ->method('start');
 
         $phpFpmProcess->handle($request, 1000);
     }
@@ -185,6 +262,50 @@ class PhpFpmProcessTest extends TestCase
                       ->method('stop');
         $phpFpmProcess->expects($this->once())
                       ->method('start');
+
+        $phpFpmProcess->handle($request, 1000);
+    }
+
+    public function testHandleWithTimeoutAndRestartFailure(): void
+    {
+        $this->expectException(PhpFpmTimeoutException::class);
+        $this->expectExceptionMessage('PHP-FPM request timed out after 1000ms');
+
+        $client = $this->getFastCgiServerClientMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getProcessMock();
+        $request = $this->getProvidesRequestDataMock();
+
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'file_exists')
+             ->expects($this->once())
+             ->with('/tmp/.ymir/php-fpm.sock')
+             ->willReturn(false);
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'unlink')
+             ->expects($this->never());
+
+        $client->expects($this->once())
+               ->method('handle')
+               ->with($this->identicalTo($request), 1000)
+               ->willThrowException(new \hollodotme\FastCGI\Exceptions\TimedoutException());
+
+        $logger->expects($this->exactly(3))
+               ->method('info')
+               ->withConsecutive(
+                   ['PHP-FPM request timed out after 1000ms'],
+                   ['Restarting PHP-FPM process'],
+                   ['Failed to restart PHP-FPM process after timeout: PHP-FPM process failed to start']
+               );
+
+        $phpFpmProcess = $this->getMockBuilder(PhpFpmProcess::class)
+                              ->setConstructorArgs([$client, $logger, $process])
+                              ->setMethods(['start', 'stop'])
+                              ->getMock();
+
+        $phpFpmProcess->expects($this->once())
+                      ->method('stop');
+        $phpFpmProcess->expects($this->once())
+                      ->method('start')
+                      ->willThrowException(new PhpFpmProcessException('PHP-FPM process failed to start'));
 
         $phpFpmProcess->handle($request, 1000);
     }

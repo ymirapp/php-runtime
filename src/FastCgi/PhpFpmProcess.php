@@ -98,28 +98,31 @@ class PhpFpmProcess
      */
     public function handle(ProvidesRequestData $request, int $timeoutMs): ProvidesResponseData
     {
-        try {
-            $response = $this->client->handle($request, $timeoutMs);
-        } catch (ConnectException $exception) {
-            throw new PhpFpmProcessException('Unable to connect to PHP-FPM FastCGI socket');
-        } catch (ReadFailedException $exception) {
-            throw new PhpFpmProcessException('PHP-FPM process crashed unexpectedly');
-        } catch (TimedoutException $exception) {
-            $message = sprintf('PHP-FPM request timed out after %dms', $timeoutMs);
+        $hasRetriedAfterConnectException = false;
 
-            $this->logger->info($message);
+        while (true) {
+            try {
+                return $this->handleRequest($request, $timeoutMs);
+            } catch (ConnectException $exception) {
+                $message = 'Unable to connect to PHP-FPM FastCGI socket';
 
-            $this->restart();
+                if (true === $hasRetriedAfterConnectException) {
+                    $this->logger->info(sprintf('%s after retry', $message));
 
-            throw new PhpFpmTimeoutException($message);
+                    throw new PhpFpmProcessException($message);
+                }
+
+                $this->logger->info(sprintf('%s, restarting process and retrying request', $message));
+
+                $this->restart();
+
+                $hasRetriedAfterConnectException = true;
+            } catch (PhpFpmTimeoutException $exception) {
+                $this->restartAfterTimeout();
+
+                throw $exception;
+            }
         }
-
-        // This also triggers "updateStatus" inside the Symfony process which will make it output the logs from PHP-FPM.
-        if (!$this->process->isRunning()) {
-            throw new PhpFpmProcessException('PHP-FPM has stopped unexpectedly');
-        }
-
-        return $response;
     }
 
     /**
@@ -167,6 +170,31 @@ class PhpFpmProcess
     }
 
     /**
+     * Handle the request with the PHP-FPM process.
+     */
+    private function handleRequest(ProvidesRequestData $request, int $timeoutMs): ProvidesResponseData
+    {
+        try {
+            $response = $this->client->handle($request, $timeoutMs);
+        } catch (ReadFailedException $exception) {
+            throw new PhpFpmProcessException('PHP-FPM process crashed unexpectedly');
+        } catch (TimedoutException $exception) {
+            $message = sprintf('PHP-FPM request timed out after %dms', $timeoutMs);
+
+            $this->logger->info($message);
+
+            throw new PhpFpmTimeoutException($message);
+        }
+
+        // This also triggers "updateStatus" inside the Symfony process which will make it output the logs from PHP-FPM.
+        if (!$this->process->isRunning()) {
+            throw new PhpFpmProcessException('PHP-FPM has stopped unexpectedly');
+        }
+
+        return $response;
+    }
+
+    /**
      * Checks if the PHP-FPM process is started.
      */
     private function isStarted(): bool
@@ -198,6 +226,18 @@ class PhpFpmProcess
         $this->stop();
         $this->removeSocketFile();
         $this->start();
+    }
+
+    /**
+     * Attempt to restart PHP-FPM after a timeout without changing the request outcome.
+     */
+    private function restartAfterTimeout(): void
+    {
+        try {
+            $this->restart();
+        } catch (\Throwable $exception) {
+            $this->logger->info(sprintf('Failed to restart PHP-FPM process after timeout: %s', $exception->getMessage()));
+        }
     }
 
     /**
