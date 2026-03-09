@@ -99,7 +99,8 @@ RUN find /tmp/layer/ymir/bin -type f -exec strip --strip-all {} + || true && fin
 COPY shared/php.ini /tmp/layer/ymir/etc/php/php.ini
 COPY shared/php-fpm.conf /tmp/layer/ymir/etc/php-fpm.d/php-fpm.conf
 RUN sed -i '/extension=msgpack.so/d' /tmp/layer/ymir/etc/php/php.ini && \
-    sed -i '/decorate_workers_output = no/d' /tmp/layer/ymir/etc/php-fpm.d/php-fpm.conf
+    sed -i 's/^decorate_workers_output = /;decorate_workers_output = /' /tmp/layer/ymir/etc/php-fpm.d/php-fpm.conf && \
+    sed -i 's/^log_limit = /;log_limit = /' /tmp/layer/ymir/etc/php-fpm.d/php-fpm.conf
 
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE}
 ENV PATH="/opt/bin:${PATH}" LD_LIBRARY_PATH="/opt/lib"
