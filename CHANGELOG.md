@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.18.3](https://github.com/ymirapp/php-runtime/compare/v1.18.2...v1.18.3) (2026-03-09)
+
+
+### Bug Fixes
+
+* Add php-fpm `log_limit` to prevent long stderr messages from being truncated ([c28ee5f](https://github.com/ymirapp/php-runtime/commit/c28ee5ff6231f9d9136ef9ff60e1d66fa3086c64))
+* Restart php-fpm and retry once after fastcgi connect failure ([5cb8808](https://github.com/ymirapp/php-runtime/commit/5cb880870451cb63ba0c34c03a6168470070f28d))
+* Write php-fpm errors to stderr ([e24bd86](https://github.com/ymirapp/php-runtime/commit/e24bd862bedcfc4b3d24e90fba52ae65f5b59cf1))
+
 ## [1.18.2](https://github.com/ymirapp/php-runtime/compare/v1.18.1...v1.18.2) (2026-03-07)
 
 
