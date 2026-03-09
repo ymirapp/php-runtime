@@ -107,10 +107,9 @@ class PhpFpmProcess
         } catch (TimedoutException $exception) {
             $message = sprintf('PHP-FPM request timed out after %dms', $timeoutMs);
 
-            $this->logger->info(sprintf('%s, restarting process', $message));
+            $this->logger->info($message);
 
-            $this->stop();
-            $this->start();
+            $this->restart();
 
             throw new PhpFpmTimeoutException($message);
         }
@@ -175,6 +174,30 @@ class PhpFpmProcess
         clearstatcache(false, self::SOCKET_PATH);
 
         return file_exists(self::SOCKET_PATH);
+    }
+
+    /**
+     * Remove the PHP-FPM socket file.
+     */
+    private function removeSocketFile(): void
+    {
+        clearstatcache(false, self::SOCKET_PATH);
+
+        if (file_exists(self::SOCKET_PATH)) {
+            unlink(self::SOCKET_PATH);
+        }
+    }
+
+    /**
+     * Restart the PHP-FPM process.
+     */
+    private function restart(): void
+    {
+        $this->logger->info('Restarting PHP-FPM process');
+
+        $this->stop();
+        $this->removeSocketFile();
+        $this->start();
     }
 
     /**

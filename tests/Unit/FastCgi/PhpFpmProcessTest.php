@@ -19,6 +19,7 @@ use Ymir\Runtime\Exception\PhpFpm\PhpFpmProcessException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Tests\Mock\FastCgiServerClientMockTrait;
+use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\ProcessMockTrait;
 use Ymir\Runtime\Tests\Mock\ProvidesRequestDataMockTrait;
@@ -27,6 +28,7 @@ use Ymir\Runtime\Tests\Mock\ProvidesResponseDataMockTrait;
 class PhpFpmProcessTest extends TestCase
 {
     use FastCgiServerClientMockTrait;
+    use FunctionMockTrait;
     use LoggerMockTrait;
     use ProcessMockTrait;
     use ProvidesRequestDataMockTrait;
@@ -153,14 +155,68 @@ class PhpFpmProcessTest extends TestCase
         $process = $this->getProcessMock();
         $request = $this->getProvidesRequestDataMock();
 
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'file_exists')
+             ->expects($this->once())
+             ->with('/tmp/.ymir/php-fpm.sock')
+             ->willReturn(true);
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'unlink')
+             ->expects($this->once())
+             ->with('/tmp/.ymir/php-fpm.sock')
+             ->willReturn(true);
+
         $client->expects($this->once())
                ->method('handle')
                ->with($this->identicalTo($request), 1000)
                ->willThrowException(new \hollodotme\FastCGI\Exceptions\TimedoutException());
 
-        $logger->expects($this->once())
+        $logger->expects($this->exactly(2))
                ->method('info')
-               ->with('PHP-FPM request timed out after 1000ms, restarting process');
+               ->withConsecutive(
+                   ['PHP-FPM request timed out after 1000ms'],
+                   ['Restarting PHP-FPM process']
+               );
+
+        $phpFpmProcess = $this->getMockBuilder(PhpFpmProcess::class)
+                              ->setConstructorArgs([$client, $logger, $process])
+                              ->setMethods(['start', 'stop'])
+                              ->getMock();
+
+        $phpFpmProcess->expects($this->once())
+                      ->method('stop');
+        $phpFpmProcess->expects($this->once())
+                      ->method('start');
+
+        $phpFpmProcess->handle($request, 1000);
+    }
+
+    public function testHandleWithTimeoutWithoutSocketFile(): void
+    {
+        $this->expectException(PhpFpmTimeoutException::class);
+        $this->expectExceptionMessage('PHP-FPM request timed out after 1000ms');
+
+        $client = $this->getFastCgiServerClientMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getProcessMock();
+        $request = $this->getProvidesRequestDataMock();
+
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'file_exists')
+             ->expects($this->once())
+             ->with('/tmp/.ymir/php-fpm.sock')
+             ->willReturn(false);
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'unlink')
+             ->expects($this->never());
+
+        $client->expects($this->once())
+               ->method('handle')
+               ->with($this->identicalTo($request), 1000)
+               ->willThrowException(new \hollodotme\FastCGI\Exceptions\TimedoutException());
+
+        $logger->expects($this->exactly(2))
+               ->method('info')
+               ->withConsecutive(
+                   ['PHP-FPM request timed out after 1000ms'],
+                   ['Restarting PHP-FPM process']
+               );
 
         $phpFpmProcess = $this->getMockBuilder(PhpFpmProcess::class)
                               ->setConstructorArgs([$client, $logger, $process])
