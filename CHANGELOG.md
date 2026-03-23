@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/ymirapp/php-runtime/compare/v1.18.3...v1.19.0) (2026-03-23)
+
+
+### Features
+
+* Add acorn sqs handler ([5fae426](https://github.com/ymirapp/php-runtime/commit/5fae42623c0cc442642dfad4b1b81494ebbdee07))
+
 ## [1.18.3](https://github.com/ymirapp/php-runtime/compare/v1.18.2...v1.18.3) (2026-03-09)
 
 
