@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Lambda\Handler\Sqs;
 
-class LaravelSqsHandler extends AbstractIlluminateQueueSqsHandler
+class AcornSqsHandler extends AbstractIlluminateQueueSqsHandler
 {
     /**
      * {@inheritdoc}
@@ -22,7 +22,8 @@ class LaravelSqsHandler extends AbstractIlluminateQueueSqsHandler
     {
         return [
             '/opt/bin/php',
-            $this->getRootDirectory().'/artisan',
+            $this->getRootDirectory().'/bin/wp',
+            'acorn',
             'ymir:queue:work',
         ];
     }
@@ -32,6 +33,6 @@ class LaravelSqsHandler extends AbstractIlluminateQueueSqsHandler
      */
     protected function getQueueName(): string
     {
-        return 'Laravel';
+        return 'Acorn';
     }
 }

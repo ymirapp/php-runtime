@@ -17,6 +17,7 @@ use Symfony\Component\Process\Process;
 use Ymir\Runtime\Exception\ApplicationInitializationException;
 use Ymir\Runtime\Lambda\Handler\Http\RadicleHttpEventHandler;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerCollection;
+use Ymir\Runtime\Lambda\Handler\Sqs\AcornSqsHandler;
 
 /**
  * WordPress Radicle runtime application.
@@ -32,6 +33,16 @@ class RadicleApplication extends AbstractApplication
     {
         return file_exists($directory.'/public/content/mu-plugins/bedrock-autoloader.php')
             || (is_dir($directory.'/public/') && file_exists($directory.'/public/wp-config.php') && file_exists($directory.'/bedrock/application.php'));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getQueueHandlers(): LambdaEventHandlerCollection
+    {
+        return $this->getEventHandlerCollection([
+            new AcornSqsHandler($this->context->getLogger(), $this->context->getRootDirectory()),
+        ]);
     }
 
     /**

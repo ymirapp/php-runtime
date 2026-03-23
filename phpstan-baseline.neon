@@ -4,13 +4,13 @@ parameters:
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 1
-			path: src/Lambda/Handler/Sqs/LaravelSqsHandler.php
+			path: src/Lambda/Handler/Sqs/AbstractIlluminateQueueSqsHandler.php
 
 		-
 			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 3
-			path: src/Lambda/Handler/Sqs/LaravelSqsHandler.php
+			path: src/Lambda/Handler/Sqs/AbstractIlluminateQueueSqsHandler.php
 
 		-
 			message: '#^Class CurlHandle not found\.$#'

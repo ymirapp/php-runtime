@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Application\RadicleApplication;
 use Ymir\Runtime\Lambda\Handler\Http\RadicleHttpEventHandler;
 use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
+use Ymir\Runtime\Lambda\Handler\Sqs\AcornSqsHandler;
 use Ymir\Runtime\Lambda\Handler\WarmUpEventHandler;
 use Ymir\Runtime\RuntimeContext;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
@@ -42,6 +43,24 @@ class RadicleApplicationTest extends TestCase
     protected function tearDown(): void
     {
         $this->removeDirectory($this->tempDir);
+    }
+
+    public function testGetQueueHandlers(): void
+    {
+        $logger = $this->getLoggerMock();
+        $context = new RuntimeContext($logger, $this->getLambdaRuntimeApiClientMock(), 'us-east-1', $this->tempDir);
+
+        $application = new RadicleApplication($context);
+        $handlers = $application->getQueueHandlers();
+
+        $property = new \ReflectionProperty($handlers, 'handlers');
+        $property->setAccessible(true);
+        $handlers = $property->getValue($handlers);
+
+        $this->assertCount(3, $handlers);
+        $this->assertInstanceOf(PingLambdaEventHandler::class, $handlers[0]);
+        $this->assertInstanceOf(WarmUpEventHandler::class, $handlers[1]);
+        $this->assertInstanceOf(AcornSqsHandler::class, $handlers[2]);
     }
 
     public function testGetWebsiteHandlers(): void
