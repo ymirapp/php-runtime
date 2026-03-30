@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.1](https://github.com/ymirapp/php-runtime/compare/v1.19.0...v1.19.1) (2026-03-30)
+
+
+### Bug Fixes
+
+* Set openssl ca trust store for php 7.2-8.0 images ([ba6fdc1](https://github.com/ymirapp/php-runtime/commit/ba6fdc1a76aa860e364b01c6bbbb19142916aaaf))
+
 ## [1.19.0](https://github.com/ymirapp/php-runtime/compare/v1.18.3...v1.19.0) (2026-03-23)
 
 
