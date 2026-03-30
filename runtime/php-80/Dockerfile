@@ -97,6 +97,7 @@ COPY shared/copy-dependencies.php /tmp/copy-dependencies.php
 RUN ${INSTALL_DIR}/bin/php /tmp/copy-dependencies.php /tmp/layer/ymir/bin /tmp/layer/lib && ${INSTALL_DIR}/bin/php /tmp/copy-dependencies.php /tmp/layer/lib/php/extensions /tmp/layer/lib
 RUN find /tmp/layer/ymir/bin -type f -exec strip --strip-all {} + || true && find /tmp/layer/lib -type f -name "*.so*" -exec strip --strip-unneeded {} + || true && find /tmp/layer/lib -type f -name "*.a" -delete && find /tmp/layer/lib -type f -name "*.la" -delete
 COPY shared/php.ini /tmp/layer/ymir/etc/php/php.ini
+COPY shared/99-openssl-ca-legacy.ini /tmp/layer/ymir/etc/php/conf.d/99-openssl-ca-legacy.ini
 COPY shared/php-fpm.conf /tmp/layer/ymir/etc/php-fpm.d/php-fpm.conf
 
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE}

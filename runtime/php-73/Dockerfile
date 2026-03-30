@@ -97,6 +97,7 @@ RUN ${INSTALL_DIR}/bin/php /tmp/copy-dependencies.php /tmp/layer/ymir/bin /tmp/l
     PHP_EXT_DIR=$(${INSTALL_DIR}/bin/php-config --extension-dir) && ${INSTALL_DIR}/bin/php /tmp/copy-dependencies.php /tmp/layer/lib/php/extensions/$(basename ${PHP_EXT_DIR}) /tmp/layer/lib
 RUN find /tmp/layer/ymir/bin -type f -exec strip --strip-all {} + || true && find /tmp/layer/lib -type f -name "*.so*" -exec strip --strip-unneeded {} + || true && find /tmp/layer/lib -type f -name "*.a" -delete && find /tmp/layer/lib -type f -name "*.la" -delete
 COPY shared/php.ini /tmp/layer/ymir/etc/php/php.ini
+COPY shared/99-openssl-ca-legacy.ini /tmp/layer/ymir/etc/php/conf.d/99-openssl-ca-legacy.ini
 COPY shared/php-fpm.conf /tmp/layer/ymir/etc/php-fpm.d/php-fpm.conf
 RUN sed -i '/extension=msgpack.so/d' /tmp/layer/ymir/etc/php/php.ini
 

@@ -152,7 +152,21 @@ else
     echo "  [OK] No PHP startup warnings"
 fi
 
-# 8. PHP-FPM
+# 8. Generic TLS Crypto Validation
+TLS_OUTPUT=$(docker run --rm --platform "$PLATFORM" --entrypoint /opt/ymir/bin/php "$IMAGE" -r '$content=file_get_contents("https://www.google.com");if(false===$content){echo "tls_fetch_failed\n";exit(2);}echo "tls_fetch_ok\n";' 2>&1)
+TLS_STATUS=$?
+
+if [ "$TLS_STATUS" -eq 0 ] && echo "$TLS_OUTPUT" | grep -q "tls_fetch_ok"; then
+    echo "  [OK] Outbound TLS crypto succeeded"
+else
+    echo "  [FAIL] Outbound TLS crypto failed"
+    echo "--------------------------------------------------------------------------------"
+    echo "$TLS_OUTPUT"
+    echo "--------------------------------------------------------------------------------"
+    FAILED=1
+fi
+
+# 9. PHP-FPM
 FPM_BIN="/opt/ymir/bin/php-fpm"
 FPM_CONF="/opt/ymir/etc/php-fpm.d/php-fpm.conf"
 
