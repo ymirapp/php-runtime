@@ -71,7 +71,7 @@ RUN set -xe; mkdir -p ${BUILD_DIR}/php-redis; cd ${BUILD_DIR}/php-redis; \
     echo "extension=redis.so" > ${INSTALL_DIR}/etc/php/conf.d/20-redis.ini
 
 # Imagick
-ENV VERSION_IMAGICK=7.1.2-12 VERSION_IMAGICK_EXTENSION=3.8.1
+ENV VERSION_IMAGICK=7.1.2-22 VERSION_IMAGICK_EXTENSION=3.8.1
 RUN mkdir -p ${BUILD_DIR}/imagick && curl -Ls https://github.com/ImageMagick/ImageMagick/archive/${VERSION_IMAGICK}.tar.gz | tar xzC ${BUILD_DIR}/imagick --strip-components=1
 WORKDIR ${BUILD_DIR}/imagick
 RUN ./configure --prefix ${INSTALL_DIR} --exec-prefix ${INSTALL_DIR} --with-webp --disable-static --with-freetype=yes && make -j $(nproc) install
