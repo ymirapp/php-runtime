@@ -71,7 +71,9 @@ abstract class AbstractIlluminateQueueSqsHandler extends AbstractSqsHandler
 
         $process = new Process($arguments);
         $process->setTimeout(null);
-        $process->run();
+        $process->run(function (string $type, string $output): void {
+            $this->writeProcessOutput($type, $output);
+        });
 
         if ($process->isSuccessful()) {
             return;
@@ -84,6 +86,14 @@ abstract class AbstractIlluminateQueueSqsHandler extends AbstractSqsHandler
         }
 
         throw new SqsRecordProcessingException(sprintf('%s queue job failed', $this->getQueueName()), $output);
+    }
+
+    /**
+     * Write the queue process output.
+     */
+    protected function writeProcessOutput(string $type, string $output): void
+    {
+        fwrite(Process::ERR === $type ? STDERR : STDOUT, $output);
     }
 
     /**
