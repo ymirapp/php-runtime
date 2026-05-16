@@ -70,7 +70,7 @@ WORKDIR ${BUILD_DIR}/php-imagick
 RUN curl -Ls https://pecl.php.net/get/imagick | tar xz && cd imagick-*/ && ${INSTALL_DIR}/bin/phpize && ./configure --with-imagick=${INSTALL_DIR} --with-php-config=${INSTALL_DIR}/bin/php-config && make -j $(nproc) install
 
 # Relay
-ENV VERSION_RELAY_EXTENSION=0.20.0
+ENV VERSION_RELAY_EXTENSION=0.22.0
 RUN set -xe; mkdir -p ${BUILD_DIR}/relay; RELAY_ARCH=$(arch | sed -e 's/arm64/aarch64/;s/amd64\|x86_64/x86-64/'); \
     curl -L "https://builds.r2.relay.so/v${VERSION_RELAY_EXTENSION}/relay-v${VERSION_RELAY_EXTENSION}-php8.2-el9-${RELAY_ARCH}.tar.gz" | tar xzC ${BUILD_DIR}/relay --strip-components=1
 WORKDIR ${BUILD_DIR}/relay
