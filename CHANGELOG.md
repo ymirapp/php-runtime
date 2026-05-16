@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.19.2](https://github.com/ymirapp/php-runtime/compare/v1.19.1...v1.19.2) (2026-05-16)
+
+
+### Bug Fixes
+
+* Stream sqs queue process output ([866185d](https://github.com/ymirapp/php-runtime/commit/866185dc9f50f5bdf2e10183d688889e58fd8e23))
+
+
+### Dependency Changes
+
+* Updated composer dependencies ([374f1cf](https://github.com/ymirapp/php-runtime/commit/374f1cf04866502d297db5712aa917eeba41fb6f))
+* Upgrade imagick to 7.1.2-22 ([afce65a](https://github.com/ymirapp/php-runtime/commit/afce65ab2e9c3c194553122cb72e86e173661f1f))
+* Upgrade relay to 0.22.0 ([8e1ddae](https://github.com/ymirapp/php-runtime/commit/8e1ddaeea55cecc40f79428294f9a11afcd8dfa5))
+* Upgrade sqlite to 3.53.1 ([bf76b7c](https://github.com/ymirapp/php-runtime/commit/bf76b7cd298cd42a1672a4a7b1998e978b48b303))
+* Upgrade to php 8.2.31 ([c5bf53c](https://github.com/ymirapp/php-runtime/commit/c5bf53c9c4c8e5e0bbb29a79dd13cee0fd214aa2))
+* Upgrade to php 8.3.31 ([3955008](https://github.com/ymirapp/php-runtime/commit/39550082e2d8a422b70db8f63a445c9171eb2ac2))
+* Upgrade to php 8.4.21 ([a5c130f](https://github.com/ymirapp/php-runtime/commit/a5c130f20683c8fad99f2410b7d2922e20520261))
+* Upgrade to php 8.5.6 ([89bfee7](https://github.com/ymirapp/php-runtime/commit/89bfee7246eeb66ec9ee602b15843547f77b3fad))
+
 ## [1.19.1](https://github.com/ymirapp/php-runtime/compare/v1.19.0...v1.19.1) (2026-03-30)
 
 
