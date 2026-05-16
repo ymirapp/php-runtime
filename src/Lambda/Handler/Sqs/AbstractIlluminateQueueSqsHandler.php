@@ -93,7 +93,10 @@ abstract class AbstractIlluminateQueueSqsHandler extends AbstractSqsHandler
      */
     protected function writeProcessOutput(string $type, string $output): void
     {
-        fwrite(Process::ERR === $type ? STDERR : STDOUT, $output);
+        $stream = Process::ERR === $type ? STDERR : STDOUT;
+
+        fwrite($stream, $output);
+        fflush($stream);
     }
 
     /**
