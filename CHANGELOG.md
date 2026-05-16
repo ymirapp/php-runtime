@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.3](https://github.com/ymirapp/php-runtime/compare/v1.19.2...v1.19.3) (2026-05-16)
+
+
+### Bug Fixes
+
+* Flush streamed sqs process output ([56fa193](https://github.com/ymirapp/php-runtime/commit/56fa193d8faa23baa96ad6f3805d62f1969a3c6c))
+
 ## [1.19.2](https://github.com/ymirapp/php-runtime/compare/v1.19.1...v1.19.2) (2026-05-16)
 
 
