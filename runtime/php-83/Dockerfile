@@ -70,9 +70,10 @@ WORKDIR ${BUILD_DIR}/php-imagick
 RUN curl -Ls https://pecl.php.net/get/imagick | tar xz && cd imagick-*/ && ${INSTALL_DIR}/bin/phpize && ./configure --with-imagick=${INSTALL_DIR} --with-php-config=${INSTALL_DIR}/bin/php-config && make -j $(nproc) install
 
 # Relay
-ENV VERSION_RELAY_EXTENSION=0.22.0
-RUN set -xe; mkdir -p ${BUILD_DIR}/relay; RELAY_ARCH=$(arch | sed -e 's/arm64/aarch64/;s/amd64\|x86_64/x86-64/'); \
-    curl -L "https://builds.r2.relay.so/v${VERSION_RELAY_EXTENSION}/relay-v${VERSION_RELAY_EXTENSION}-php8.3-el9-${RELAY_ARCH}.tar.gz" | tar xzC ${BUILD_DIR}/relay --strip-components=1
+# Defaults to the latest release; uncomment to pin a specific version.
+# ENV VERSION_RELAY_EXTENSION=0.30.0
+RUN set -xe; mkdir -p ${BUILD_DIR}/relay; RELAY_VERSION="${VERSION_RELAY_EXTENSION:-$(curl -fsSL https://builds.r2.relay.so/meta/latest | sed 's/^v//')}"; RELAY_ARCH=$(arch | sed -e 's/arm64/aarch64/;s/amd64\|x86_64/x86-64/'); \
+    curl -L "https://builds.r2.relay.so/v${RELAY_VERSION}/relay-v${RELAY_VERSION}-php8.3-el9-${RELAY_ARCH}.tar.gz" | tar xzC ${BUILD_DIR}/relay --strip-components=1
 WORKDIR ${BUILD_DIR}/relay
 RUN cp relay.ini ${INSTALL_DIR}/etc/php/conf.d/50-relay.ini; PHP_EXT_DIR=$(${INSTALL_DIR}/bin/php-config --extension-dir) && cp relay-pkg.so ${PHP_EXT_DIR}/relay.so; \
     sed -i "s/00000000-0000-0000-0000-000000000000/$(cat /proc/sys/kernel/random/uuid)/" ${PHP_EXT_DIR}/relay.so
