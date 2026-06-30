@@ -11,7 +11,7 @@ ARG DOCKER_PLATFORM
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE} as build-environment
 
 # x-release-please-start-version
-ARG YMIR_RUNTIME_VERSION=1.19.3
+ARG YMIR_RUNTIME_VERSION=1.19.4
 # x-release-please-end
 
 ENV BUILD_DIR="/tmp/build" INSTALL_DIR="/opt/ymir"
