@@ -11,6 +11,10 @@ ARG DOCKER_PLATFORM
 
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE} as build-environment
 
+# x-release-please-start-version
+ARG YMIR_RUNTIME_VERSION=1.19.3
+# x-release-please-end
+
 ENV BUILD_DIR="/tmp/build" INSTALL_DIR="/opt/ymir"
 ENV PKG_CONFIG_PATH="${INSTALL_DIR}/lib64/pkgconfig:${INSTALL_DIR}/lib/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig" \
     PKG_CONFIG="/usr/bin/pkg-config" \
@@ -80,7 +84,7 @@ RUN curl -Ls https://pecl.php.net/get/imagick | tar xz && cd imagick-*/ && ${INS
 
 # Composer & Runtime
 RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --install-dir=${INSTALL_DIR}/bin/ --filename=composer
-RUN git clone https://github.com/ymirapp/php-runtime.git /tmp/runtime-build && cd /tmp/runtime-build && git checkout tags/v1.19.3 && cd /opt \
+RUN git clone https://github.com/ymirapp/php-runtime.git /tmp/runtime-build && cd /tmp/runtime-build && git checkout "tags/v${YMIR_RUNTIME_VERSION}" && cd /opt \
  && cp -R /tmp/runtime-build/composer.json /tmp/runtime-build/composer.lock /tmp/runtime-build/runtime/bootstrap /tmp/runtime-build/runtime/runtime.php /tmp/runtime-build/src /tmp/runtime-build/templates ./ \
  && chmod 0555 /opt/bootstrap /opt/runtime.php && /opt/ymir/bin/php /opt/ymir/bin/composer install --no-dev --optimize-autoloader --no-ansi --no-interaction && find /opt/vendor -type d -name "tests" -exec rm -rf {} + && find /opt/vendor -type d -name "test" -exec rm -rf {} + && find /opt/vendor -type d -name "docs" -exec rm -rf {} + && find /opt/vendor -type f -name "*.md" -delete && find /opt/vendor -type f -name "phpunit.xml*" -delete
 
