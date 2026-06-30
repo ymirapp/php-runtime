@@ -21,8 +21,18 @@ class PhpConsoleCommandEventTest extends TestCase
 {
     use InvocationContextMockTrait;
 
-    public function testGetCommand(): void
+    public static function provideCommands(): \Iterator
     {
-        $this->assertSame('/opt/bin/php foo', (new PhpConsoleCommandEvent($this->getInvocationContextMock(), 'foo'))->getCommand());
+        yield ['foo bar --baz', '/opt/bin/php foo bar --baz'];
+        yield ['php foo bar --baz', '/opt/bin/php foo bar --baz'];
+        yield ['  php foo bar --baz  ', '/opt/bin/php foo bar --baz'];
+    }
+
+    /**
+     * @dataProvider provideCommands
+     */
+    public function testGetCommand(string $command, string $expectedCommand): void
+    {
+        $this->assertSame($expectedCommand, (new PhpConsoleCommandEvent($this->getInvocationContextMock(), $command))->getCommand());
     }
 }

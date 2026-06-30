@@ -23,6 +23,12 @@ class PhpConsoleCommandEvent extends ConsoleCommandEvent
      */
     public function __construct(InvocationContext $context, string $command)
     {
+        $command = trim($command);
+
+        if (str_starts_with($command, 'php ')) {
+            $command = substr($command, 4);
+        }
+
         parent::__construct($context, sprintf('/opt/bin/php %s', $command));
     }
 }
