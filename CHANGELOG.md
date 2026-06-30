@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.19.4](https://github.com/ymirapp/php-runtime/compare/v1.19.3...v1.19.4) (2026-06-30)
+
+
+### Bug Fixes
+
+* Strip leading `php` from php console payloads ([c3302d6](https://github.com/ymirapp/php-runtime/commit/c3302d6a75215dbf57f7c5fe9d90e95f1e45156f))
+
+
+### Dependency Changes
+
+* Updated composer dependencies ([1cda050](https://github.com/ymirapp/php-runtime/commit/1cda05093531df54064b94ae96d03ed7eb0af2fa))
+* Upgrade imagick to 7.1.2-26 ([31fd499](https://github.com/ymirapp/php-runtime/commit/31fd499e6026524ee0fc4eeec0ffcfc638d405b9))
+* Upgrade relay to 0.30.0 ([d722012](https://github.com/ymirapp/php-runtime/commit/d722012a51199836698c429fae7cb45dc5ebd178))
+* Upgrade sqlite to 3.53.3 ([5dd2e5b](https://github.com/ymirapp/php-runtime/commit/5dd2e5b1144a179de526f3a603e1a2bc65bc14a4))
+* Upgrade to php 8.4.22 ([be01c69](https://github.com/ymirapp/php-runtime/commit/be01c691f6ba5c0ac9e619363887d9aa071040ae))
+* Upgrade to php 8.5.7 ([d315688](https://github.com/ymirapp/php-runtime/commit/d315688659c6bbaced5f0e3a43d24b90bac5f29d))
+
 ## [1.19.3](https://github.com/ymirapp/php-runtime/compare/v1.19.2...v1.19.3) (2026-05-16)
 
 
