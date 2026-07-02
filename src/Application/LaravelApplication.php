@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Ymir\Runtime\Application;
 
+use Dotenv\Dotenv;
+use Dotenv\Exception\ExceptionInterface as DotenvExceptionInterface;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use Ymir\Runtime\Exception\ApplicationInitializationException;
 use Ymir\Runtime\Lambda\Handler\Http\LaravelHttpEventHandler;
@@ -60,20 +63,101 @@ class LaravelApplication extends AbstractApplication
      */
     public function initialize(): void
     {
-        $logger = $this->context->getLogger();
-
         $this->createStorageDirectories();
+        $this->decryptEnvironmentFile();
+        $this->createConfigurationCache();
+    }
 
+    /**
+     * Run the given Artisan command.
+     */
+    protected function runArtisanCommand(array $arguments): void
+    {
+        $process = new Process(array_merge(['/opt/bin/php', $this->context->getRootDirectory().'/artisan'], $arguments));
+        $process->mustRun(null, ['APP_RUNNING_IN_CONSOLE' => 'true']);
+    }
+
+    /**
+     * Create the Laravel configuration cache.
+     */
+    private function createConfigurationCache(): void
+    {
+        $logger = $this->context->getLogger();
         $cacheStart = microtime(true);
 
-        $process = new Process(['/opt/bin/php', $this->context->getRootDirectory().'/artisan', 'config:cache', '--no-ansi']);
-        $process->setEnv(['APP_RUNNING_IN_CONSOLE' => 'true']);
-        $process->run();
-
-        if (!$process->isSuccessful()) {
-            throw new ApplicationInitializationException(sprintf('Failed to create Laravel cache: %s', $process->getErrorOutput()));
+        try {
+            $this->runArtisanCommand(['config:cache', '--no-ansi']);
+        } catch (ProcessFailedException $exception) {
+            throw new ApplicationInitializationException($this->getProcessFailureMessage('Failed to create Laravel cache', $exception->getProcess()));
         }
 
         $logger->debug(sprintf('Laravel cache created in %dms', (microtime(true) - $cacheStart) * 1000));
+    }
+
+    /**
+     * Decrypt and load the Laravel environment file, if configured.
+     */
+    private function decryptEnvironmentFile(): void
+    {
+        $encryptionKey = getenv('LARAVEL_ENV_ENCRYPTION_KEY');
+
+        if (!is_string($encryptionKey) || '' === $encryptionKey) {
+            return;
+        }
+
+        $environment = $this->getEnvironmentName();
+        $encryptedEnvironmentFile = sprintf('%s/.env.%s.encrypted', $this->context->getRootDirectory(), $environment);
+
+        if (!file_exists($encryptedEnvironmentFile)) {
+            throw new ApplicationInitializationException(sprintf('Laravel environment encryption key was provided, but encrypted environment file "%s" does not exist', $encryptedEnvironmentFile));
+        }
+
+        try {
+            $this->runArtisanCommand(['env:decrypt', '--env='.$environment, '--path=/tmp', '--force', '--no-ansi', '--no-interaction']);
+        } catch (ProcessFailedException $exception) {
+            throw new ApplicationInitializationException($this->getProcessFailureMessage(sprintf('Failed to decrypt Laravel environment file "%s"', $encryptedEnvironmentFile), $exception->getProcess()));
+        }
+
+        $this->loadDecryptedEnvironmentFile($environment);
+    }
+
+    /**
+     * Get the Laravel environment name to decrypt.
+     */
+    private function getEnvironmentName(): string
+    {
+        $environmentName = getenv('APP_ENV') ?: getenv('YMIR_ENVIRONMENT');
+
+        if (!is_string($environmentName) || '' === $environmentName) {
+            throw new ApplicationInitializationException('Unable to determine Laravel environment for encrypted environment file. Set "APP_ENV" or "YMIR_ENVIRONMENT"');
+        }
+
+        return $environmentName;
+    }
+
+    /**
+     * Get the process failure message.
+     */
+    private function getProcessFailureMessage(string $message, Process $process): string
+    {
+        $output = trim($process->getErrorOutput()) ?: trim($process->getOutput());
+
+        if (!empty($output)) {
+            $message = sprintf('%s: %s', $message, $output);
+        }
+
+        return $message;
+    }
+
+    /**
+     * Load the decrypted Laravel environment file.
+     */
+    private function loadDecryptedEnvironmentFile(string $environment): void
+    {
+        try {
+            Dotenv::createUnsafeMutable('/tmp', '.env.'.$environment)->load();
+        } catch (DotenvExceptionInterface $exception) {
+            throw new ApplicationInitializationException(sprintf('Failed to load decrypted Laravel environment file "/tmp/.env.%s": %s', $environment, $exception->getMessage()));
+        }
     }
 }

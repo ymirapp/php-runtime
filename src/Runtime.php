@@ -15,6 +15,8 @@ namespace Ymir\Runtime;
 
 use AsyncAws\Ssm\Input\GetParametersByPathRequest;
 use AsyncAws\Ssm\ValueObject\Parameter;
+use Dotenv\Repository\Adapter\PutenvAdapter;
+use Dotenv\Repository\RepositoryBuilder;
 use Tightenco\Collect\Support\Arr;
 use Ymir\Runtime\Application\ApplicationFactory;
 use Ymir\Runtime\Aws\SsmClient;
@@ -92,6 +94,9 @@ class Runtime
         }
 
         $start = microtime(true);
+        $environment = RepositoryBuilder::createWithDefaultAdapters()
+                                        ->addAdapter(PutenvAdapter::class)
+                                        ->make();
 
         // Need to pass results through iterator_to_array manually because the collection object
         // preserves keys. This causes the next page of results to overwrite the previous page of
@@ -103,9 +108,9 @@ class Runtime
             'WithDecryption' => true,
         ])), false))->mapWithKeys(function (Parameter $parameter) {
             return [Arr::last(explode('/', (string) $parameter->getName())) => (string) $parameter->getValue()];
-        })->filter()->each(function ($value, $name) use ($context): void {
+        })->filter()->each(function ($value, $name) use ($context, $environment): void {
             $context->getLogger()->debug(sprintf('Injecting [%s] secret environment variable into runtime', $name));
-            $_ENV[$name] = $value;
+            $environment->set((string) $name, (string) $value);
         });
 
         $context->getLogger()->debug(sprintf('Secret environment variables injected in %dms', (microtime(true) - $start) * 1000));
