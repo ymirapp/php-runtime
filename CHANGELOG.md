@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.0](https://github.com/ymirapp/php-runtime/compare/v1.19.4...v1.20.0) (2026-07-02)
+
+
+### Features
+
+* Support encrypted environment file ([bbf3f2c](https://github.com/ymirapp/php-runtime/commit/bbf3f2c9ef73471599a884eeae806a7d4fb8d17e))
+
 ## [1.19.4](https://github.com/ymirapp/php-runtime/compare/v1.19.3...v1.19.4) (2026-06-30)
 
 
