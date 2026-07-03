@@ -22,6 +22,7 @@ use Ymir\Runtime\Lambda\Handler\Http\LaravelHttpEventHandler;
 use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\Sqs\LaravelSqsHandler;
 use Ymir\Runtime\Lambda\Handler\WarmUpEventHandler;
+use Ymir\Runtime\Logger;
 use Ymir\Runtime\RuntimeContext;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaRuntimeApiClientMockTrait;
@@ -226,6 +227,24 @@ class LaravelApplicationTest extends TestCase
         $this->assertSame('runtime loaded', getenv('DECRYPTED_ENV_VALUE'));
     }
 
+    public function testInitializeLogsAndContinuesWhenEncryptedFileIsMissing(): void
+    {
+        $this->setEnvironmentVariable('APP_ENV', 'missing');
+        $this->setEnvironmentVariable('LARAVEL_ENV_ENCRYPTION_KEY', 'secret');
+
+        $logger = $this->getLoggerMock();
+        $logger->expects($this->exactly(2))
+               ->method('debug')
+               ->withConsecutive(
+                   [sprintf('Laravel environment encryption key was provided, but encrypted environment file "%s/.env.missing.encrypted" does not exist', $this->tempDir)],
+                   [$this->stringStartsWith('Laravel cache created in')]
+               );
+
+        $this->getLaravelApplication([
+            ['config:cache', '--no-ansi'],
+        ], [], [], $logger)->initialize();
+    }
+
     public function testInitializeThrowsClearExceptionWhenDecryptionFails(): void
     {
         $this->setEnvironmentVariable('APP_ENV', 'staging');
@@ -241,18 +260,6 @@ class LaravelApplicationTest extends TestCase
         ], [], [
             $this->getProcessFailedException('bad key'),
         ])->initialize();
-    }
-
-    public function testInitializeThrowsClearExceptionWhenEncryptedFileIsMissing(): void
-    {
-        $this->setEnvironmentVariable('APP_ENV', 'missing');
-        $this->setEnvironmentVariable('LARAVEL_ENV_ENCRYPTION_KEY', 'secret');
-
-        $this->expectException(ApplicationInitializationException::class);
-        $this->expectExceptionMessage('Laravel environment encryption key was provided');
-        $this->expectExceptionMessage(sprintf('%s/.env.missing.encrypted', $this->tempDir));
-
-        $this->getLaravelApplication()->initialize();
     }
 
     public function testInitializeThrowsExceptionWhenApplicationAndYmirEnvironmentsAreMissing(): void
@@ -280,12 +287,20 @@ class LaravelApplicationTest extends TestCase
     public function testInitializeUsesApplicationEnvironmentForEncryptedFilePath(): void
     {
         $this->setEnvironmentVariable('APP_ENV', 'preview');
+        $this->setEnvironmentVariable('YMIR_ENVIRONMENT', 'branch');
         $this->setEnvironmentVariable('LARAVEL_ENV_ENCRYPTION_KEY', 'secret');
 
-        $this->expectException(ApplicationInitializationException::class);
-        $this->expectExceptionMessage(sprintf('encrypted environment file "%s/.env.preview.encrypted" does not exist', $this->tempDir));
+        $logger = $this->getLoggerMock();
+        $logger->expects($this->exactly(2))
+               ->method('debug')
+               ->withConsecutive(
+                   [sprintf('Laravel environment encryption key was provided, but encrypted environment file "%s/.env.preview.encrypted" does not exist', $this->tempDir)],
+                   [$this->stringStartsWith('Laravel cache created in')]
+               );
 
-        $this->getLaravelApplication()->initialize();
+        $this->getLaravelApplication([
+            ['config:cache', '--no-ansi'],
+        ], [], [], $logger)->initialize();
     }
 
     public function testPresentReturnsFalseWhenFilesMissing(): void
@@ -315,9 +330,9 @@ class LaravelApplicationTest extends TestCase
         return is_string($value) ? $value : null;
     }
 
-    private function getLaravelApplication(array $commands = [], array $callbacks = [], array $exceptions = []): LaravelApplication
+    private function getLaravelApplication(array $commands = [], array $callbacks = [], array $exceptions = [], ?Logger $logger = null): LaravelApplication
     {
-        $context = new RuntimeContext($this->getLoggerMock(), $this->getLambdaRuntimeApiClientMock(), 'us-east-1', $this->tempDir);
+        $context = new RuntimeContext($logger ?: $this->getLoggerMock(), $this->getLambdaRuntimeApiClientMock(), 'us-east-1', $this->tempDir);
 
         $application = $this->getMockBuilder(LaravelApplication::class)
                             ->setConstructorArgs([$context])

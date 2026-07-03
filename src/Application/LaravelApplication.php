@@ -137,7 +137,9 @@ class LaravelApplication extends AbstractApplication
         $encryptedEnvironmentFile = sprintf('%s/.env.%s.encrypted', $this->context->getRootDirectory(), $environment);
 
         if (!file_exists($encryptedEnvironmentFile)) {
-            throw new ApplicationInitializationException(sprintf('Laravel environment encryption key was provided, but encrypted environment file "%s" does not exist', $encryptedEnvironmentFile));
+            $this->context->getLogger()->debug(sprintf('Laravel environment encryption key was provided, but encrypted environment file "%s" does not exist', $encryptedEnvironmentFile));
+
+            return;
         }
 
         try {
