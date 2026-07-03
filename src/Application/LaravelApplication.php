@@ -64,7 +64,7 @@ class LaravelApplication extends AbstractApplication
     public function initialize(): void
     {
         $this->createStorageDirectories();
-        $this->decryptEnvironmentFile();
+        $this->loadEncryptedEnvironmentFile();
         $this->createConfigurationCache();
     }
 
@@ -95,37 +95,6 @@ class LaravelApplication extends AbstractApplication
     }
 
     /**
-     * Decrypt and load the Laravel environment file, if configured.
-     */
-    private function decryptEnvironmentFile(): void
-    {
-        $encryptionKey = getenv('LARAVEL_ENV_ENCRYPTION_KEY');
-
-        if (!is_string($encryptionKey) || '' === $encryptionKey) {
-            return;
-        }
-
-        $environment = $this->getEnvironmentName();
-        $encryptedEnvironmentFile = sprintf('%s/.env.%s.encrypted', $this->context->getRootDirectory(), $environment);
-
-        if (!file_exists($encryptedEnvironmentFile)) {
-            throw new ApplicationInitializationException(sprintf('Laravel environment encryption key was provided, but encrypted environment file "%s" does not exist', $encryptedEnvironmentFile));
-        }
-
-        try {
-            $this->runArtisanCommand(['env:decrypt', '--env='.$environment, '--path=/tmp', '--force', '--no-ansi', '--no-interaction']);
-        } catch (ProcessFailedException $exception) {
-            throw new ApplicationInitializationException($this->getProcessFailureMessage(sprintf('Failed to decrypt Laravel environment file "%s"', $encryptedEnvironmentFile), $exception->getProcess()));
-        }
-
-        try {
-            Dotenv::createUnsafeMutable('/tmp', '.env.'.$environment)->load();
-        } catch (DotenvExceptionInterface $exception) {
-            throw new ApplicationInitializationException(sprintf('Failed to load decrypted Laravel environment file "/tmp/.env.%s": %s', $environment, $exception->getMessage()));
-        }
-    }
-
-    /**
      * Get the Laravel environment name to decrypt.
      */
     private function getEnvironmentName(): string
@@ -151,5 +120,36 @@ class LaravelApplication extends AbstractApplication
         }
 
         return $message;
+    }
+
+    /**
+     * Decrypt and load the Laravel environment file, if present.
+     */
+    private function loadEncryptedEnvironmentFile(): void
+    {
+        $encryptionKey = getenv('LARAVEL_ENV_ENCRYPTION_KEY');
+
+        if (!is_string($encryptionKey) || '' === $encryptionKey) {
+            return;
+        }
+
+        $environment = $this->getEnvironmentName();
+        $encryptedEnvironmentFile = sprintf('%s/.env.%s.encrypted', $this->context->getRootDirectory(), $environment);
+
+        if (!file_exists($encryptedEnvironmentFile)) {
+            throw new ApplicationInitializationException(sprintf('Laravel environment encryption key was provided, but encrypted environment file "%s" does not exist', $encryptedEnvironmentFile));
+        }
+
+        try {
+            $this->runArtisanCommand(['env:decrypt', '--env='.$environment, '--path=/tmp', '--force', '--no-ansi', '--no-interaction']);
+        } catch (ProcessFailedException $exception) {
+            throw new ApplicationInitializationException($this->getProcessFailureMessage(sprintf('Failed to decrypt Laravel environment file "%s"', $encryptedEnvironmentFile), $exception->getProcess()));
+        }
+
+        try {
+            Dotenv::createUnsafeMutable('/tmp', '.env.'.$environment)->load();
+        } catch (DotenvExceptionInterface $exception) {
+            throw new ApplicationInitializationException(sprintf('Failed to load decrypted Laravel environment file "/tmp/.env.%s": %s', $environment, $exception->getMessage()));
+        }
     }
 }
