@@ -118,7 +118,11 @@ class LaravelApplication extends AbstractApplication
             throw new ApplicationInitializationException($this->getProcessFailureMessage(sprintf('Failed to decrypt Laravel environment file "%s"', $encryptedEnvironmentFile), $exception->getProcess()));
         }
 
-        $this->loadDecryptedEnvironmentFile($environment);
+        try {
+            Dotenv::createUnsafeMutable('/tmp', '.env.'.$environment)->load();
+        } catch (DotenvExceptionInterface $exception) {
+            throw new ApplicationInitializationException(sprintf('Failed to load decrypted Laravel environment file "/tmp/.env.%s": %s', $environment, $exception->getMessage()));
+        }
     }
 
     /**
@@ -147,17 +151,5 @@ class LaravelApplication extends AbstractApplication
         }
 
         return $message;
-    }
-
-    /**
-     * Load the decrypted Laravel environment file.
-     */
-    private function loadDecryptedEnvironmentFile(string $environment): void
-    {
-        try {
-            Dotenv::createUnsafeMutable('/tmp', '.env.'.$environment)->load();
-        } catch (DotenvExceptionInterface $exception) {
-            throw new ApplicationInitializationException(sprintf('Failed to load decrypted Laravel environment file "/tmp/.env.%s": %s', $environment, $exception->getMessage()));
-        }
     }
 }
