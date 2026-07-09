@@ -19,6 +19,7 @@ use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\Http\HttpResponse;
 use Ymir\Runtime\Lambda\Response\Http\NotFoundHttpResponse;
+use Ymir\Runtime\Lambda\Response\Http\ServiceUnavailableHttpResponse;
 use Ymir\Runtime\Lambda\Response\Http\StaticFileHttpResponse;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
 
@@ -61,6 +62,10 @@ abstract class AbstractHttpRequestEventHandler implements LambdaEventHandlerInte
 
         $filePath = $this->getEventFilePath($event);
 
+        if ($this->isMaintenanceModeEnabled()) {
+            return new ServiceUnavailableHttpResponse();
+        }
+
         if (!$this->isPubliclyAccessible($filePath)) {
             return new NotFoundHttpResponse();
         }
@@ -96,4 +101,12 @@ abstract class AbstractHttpRequestEventHandler implements LambdaEventHandlerInte
      * Create the Lambda response for the given Lambda invocation event.
      */
     abstract protected function createLambdaEventResponse(HttpRequestEvent $event): HttpResponse;
+
+    /**
+     * Checks if maintenance mode is enabled.
+     */
+    private function isMaintenanceModeEnabled(): bool
+    {
+        return in_array(getenv('YMIR_MAINTENANCE_MODE'), ['true', '1'], true);
+    }
 }
