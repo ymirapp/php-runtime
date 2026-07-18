@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.21.0](https://github.com/ymirapp/php-runtime/compare/v1.20.0...v1.21.0) (2026-07-18)
+
+
+### Features
+
+* Add runtime maintenance mode support ([35ea720](https://github.com/ymirapp/php-runtime/commit/35ea720ddf488ac21237031fc9896fa7881d54a1))
+
+
+### Bug Fixes
+
+* Don't fail if encrypted environment file is missing ([2b3951f](https://github.com/ymirapp/php-runtime/commit/2b3951f3d65ca9ca5300057c174fb79c372748ef))
+
+
+### Dependency Changes
+
+* Upgrade imagick to 7.1.2-27 ([0de63bb](https://github.com/ymirapp/php-runtime/commit/0de63bb517f8a44e86896dbecf3db6f132ab6cb0))
+* Upgrade to php 8.2.32 ([e2a878a](https://github.com/ymirapp/php-runtime/commit/e2a878a26f82a85e3520996d2204132186bba814))
+* Upgrade to php 8.3.32 ([fbbf993](https://github.com/ymirapp/php-runtime/commit/fbbf993f8bcc8a5f17e0ec6a42032a8c22e30b11))
+* Upgrade to php 8.4.23 ([275e9bc](https://github.com/ymirapp/php-runtime/commit/275e9bc1c809a4e60b76914a0212c85efe0eb027))
+* Upgrade to php 8.5.8 ([5aaec15](https://github.com/ymirapp/php-runtime/commit/5aaec1598c4c2432ca4152328e5060ac52202bf4))
+
 ## [1.20.0](https://github.com/ymirapp/php-runtime/compare/v1.19.4...v1.20.0) (2026-07-02)
 
 
