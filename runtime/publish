@@ -18,9 +18,108 @@ use GuzzleHttp\Promise\Promise;
 
 require_once __DIR__.'/../vendor/autoload.php';
 
+$arguments = array_values(array_slice($argv, 1));
+$force = false;
+$fromLayer = null;
+$fromRegion = null;
+$maxUploadAttempts = 3;
+$profile = null;
+
+for ($index = 0; $index < count($arguments); ++$index) {
+    $argument = $arguments[$index];
+
+    if (0 === strpos($argument, '--from-region=')) {
+        $fromRegion = substr($argument, 14);
+
+        continue;
+    }
+
+    if (0 === strpos($argument, '--from-layer=')) {
+        $fromLayer = substr($argument, 13);
+
+        continue;
+    }
+
+    if ('--from-region' === $argument) {
+        $fromRegion = $arguments[$index + 1] ?? null;
+        ++$index;
+
+        continue;
+    }
+
+    if ('--from-layer' === $argument) {
+        $fromLayer = $arguments[$index + 1] ?? null;
+        ++$index;
+
+        continue;
+    }
+
+    if (0 === strpos($argument, '--upload-retries=')) {
+        $maxUploadAttempts = (int) substr($argument, 17);
+
+        continue;
+    }
+
+    if ('--upload-retries' === $argument) {
+        $maxUploadAttempts = isset($arguments[$index + 1]) ? (int) $arguments[$index + 1] : 0;
+        ++$index;
+
+        continue;
+    }
+
+    if ('--force' === $argument) {
+        $force = true;
+
+        continue;
+    }
+
+    if (0 === strpos($argument, '--')) {
+        throw new InvalidArgumentException(sprintf('Unknown option "%s".', $argument));
+    }
+
+    if (null === $profile) {
+        $profile = $argument;
+
+        continue;
+    }
+
+    throw new InvalidArgumentException(sprintf('Unknown argument "%s".', $argument));
+}
+
+if (null !== $fromRegion && '' === trim($fromRegion)) {
+    throw new InvalidArgumentException('The "--from-region" option requires a value.');
+}
+
+if (null !== $fromLayer && '' === trim($fromLayer)) {
+    throw new InvalidArgumentException('The "--from-layer" option requires a value.');
+}
+
+if (1 > $maxUploadAttempts) {
+    throw new InvalidArgumentException('The "--upload-retries" option must be greater than 0.');
+}
+
 $layers = collect(json_decode(file_get_contents(__DIR__.'/layers.json'), true));
-$profile = $argv[1] ?? null;
 $regions = collect(json_decode(file_get_contents(__DIR__.'/regions.json'), true));
+
+if (null !== $fromRegion) {
+    $fromRegionIndex = array_search($fromRegion, $regions->all(), true);
+
+    if (false === $fromRegionIndex) {
+        throw new InvalidArgumentException(sprintf('The "%s" region was not found in regions.json.', $fromRegion));
+    }
+
+    $regions = $regions->slice($fromRegionIndex)->values();
+}
+
+if (null !== $fromLayer) {
+    $fromLayerIndex = array_search($fromLayer, $layers->keys()->all(), true);
+
+    if (false === $fromLayerIndex) {
+        throw new InvalidArgumentException(sprintf('The "%s" layer was not found in layers.json.', $fromLayer));
+    }
+
+    $layers = $layers->slice($fromLayerIndex);
+}
 
 $layers->keys()->each(function (string $layer) {
     if (!file_exists(__DIR__."/../build/{$layer}.zip")) {
@@ -28,13 +127,76 @@ $layers->keys()->each(function (string $layer) {
     }
 });
 
+$layerHashes = $layers->keys()->mapWithKeys(function (string $layer) {
+    return [$layer => base64_encode(hash_file('sha256', __DIR__."/../build/$layer.zip", true))];
+});
+
 foreach ($regions as $region) {
-    $bucket = 'ymir-layer-'.time();
+    printf('[%s]: Starting layer publishing'.PHP_EOL, $region);
+
     $lambda = new LambdaClient([
         'profile' => $profile,
         'region' => $region,
         'version' => 'latest',
     ]);
+
+    $layersToPublish = $layers;
+
+    if (false === $force) {
+        $layersToPublish = $layers->reject(function (string $description, string $layer) use ($lambda, $layerHashes, $region) {
+            try {
+                $response = $lambda->listLayerVersions([
+                    'LayerName' => 'ymir-'.$layer,
+                    'MaxItems' => 1,
+                ]);
+            } catch (Throwable $exception) {
+                printf('[%s]: "%s" layer could not be inspected for resume; uploading'.PHP_EOL, $region, $layer);
+
+                return false;
+            }
+
+            $layerVersions = $response->get('LayerVersions');
+            $latestLayerVersion = $layerVersions[0] ?? null;
+
+            if (null === $latestLayerVersion || !isset($latestLayerVersion['Version'])) {
+                return false;
+            }
+
+            try {
+                $layerVersion = $lambda->getLayerVersion([
+                    'LayerName' => 'ymir-'.$layer,
+                    'VersionNumber' => $latestLayerVersion['Version'],
+                ]);
+            } catch (Throwable $exception) {
+                printf('[%s]: "%s" layer version could not be inspected for resume; uploading'.PHP_EOL, $region, $layer);
+
+                return false;
+            }
+
+            $content = $layerVersion->get('Content');
+
+            if (!is_array($content) || !isset($content['CodeSha256'])) {
+                return false;
+            }
+
+            if ($layerHashes[$layer] !== $content['CodeSha256']) {
+                return false;
+            }
+
+            printf('[%s]: "%s" layer already matches latest version; skipping upload and publish'.PHP_EOL, $region, $layer);
+
+            return true;
+        });
+    }
+
+    if ($layersToPublish->isEmpty()) {
+        printf('[%s]: All selected layers are already published; skipping region'.PHP_EOL, $region);
+        printf('[%s]: Finished layer publishing'.PHP_EOL, $region);
+
+        continue;
+    }
+
+    $bucket = 'ymir-layer-'.time();
     $s3 = new S3Client([
         'profile' => $profile,
         'region' => $region,
@@ -45,19 +207,35 @@ foreach ($regions as $region) {
         'Bucket' => $bucket,
     ]);
 
-    $layers->keys()->map(function($layer) use ($bucket, $s3) {
+    $layersToPublish->keys()->map(function ($layer) use ($bucket, $maxUploadAttempts, $region, $s3) {
         $file = "$layer.zip";
 
-        return $s3->putObjectAsync([
-            'Bucket' => $bucket,
-            'Key' => $file,
-            'SourceFile' => __DIR__."/../build/$file",
-        ]);
-    })->each(function(Promise $promise) {
-        $promise->wait();
+        printf('[%s]: "%s" layer upload started'.PHP_EOL, $region, $layer);
+
+        for ($attempt = 1; $attempt <= $maxUploadAttempts; ++$attempt) {
+            try {
+                $s3->putObject([
+                    'Bucket' => $bucket,
+                    'Key' => $file,
+                    'SourceFile' => __DIR__."/../build/$file",
+                ]);
+
+                break;
+            } catch (Throwable $exception) {
+                if ($maxUploadAttempts === $attempt) {
+                    throw $exception;
+                }
+
+                printf('[%s]: "%s" layer upload failed (attempt %d/%d): %s'.PHP_EOL, $region, $layer, $attempt, $maxUploadAttempts, $exception->getMessage());
+
+                usleep((int) (250000 * (2 ** ($attempt - 1))));
+            }
+        }
+
+        printf('[%s]: "%s" layer upload completed'.PHP_EOL, $region, $layer);
     });
 
-    $results = $layers->map(function (string $description, string $layer) use ($bucket, $lambda) {
+    $results = $layersToPublish->map(function (string $description, string $layer) use ($bucket, $lambda) {
             return $lambda->publishLayerVersionAsync([
                 'CompatibleArchitectures' => str_starts_with($layer, 'arm-') ? ['arm64'] : ['x86_64'],
                 'CompatibleRuntimes' => ['provided.al2'],
@@ -71,19 +249,25 @@ foreach ($regions as $region) {
     })->map(function (Promise $promise) use ($region) {
         $result = $promise->wait();
 
-        echo sprintf('[%s]: %s'.PHP_EOL, $region, $result->get('LayerVersionArn'));
+        printf('[%s]: "%s" layer created'.PHP_EOL, $region, $result->get('LayerVersionArn'));
 
         return $result;
     });
 
-    $layers->keys()->each(function (string $layer) use ($bucket, $s3) {
+    printf('[%s]: Deleting layer files'.PHP_EOL, $region);
+
+    $layersToPublish->keys()->each(function (string $layer) use ($bucket, $s3) {
         $s3->deleteObject([
             'Bucket' => $bucket,
             'Key' => "$layer.zip",
         ]);
     });
 
+    printf('[%s]: Deleting bucket'.PHP_EOL, $region);
+
     $s3->deleteBucket([
         'Bucket' => $bucket,
     ]);
+
+    printf('[%s]: Finished layer publishing'.PHP_EOL, $region);
 }
