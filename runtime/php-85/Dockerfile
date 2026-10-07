@@ -41,7 +41,7 @@ RUN ./config --prefix=${INSTALL_DIR}/openssl11 --openssldir=${INSTALL_DIR}/opens
 ENV VERSION_PHP=8.5.11
 RUN mkdir -p ${BUILD_DIR}/php
 WORKDIR ${BUILD_DIR}/php
-RUN curl --location --silent --show-error --fail https://www.php.net/get/php-${VERSION_PHP}.tar.gz/from/this/mirror | tar xzC . --strip-components=1
+RUN curl --location --silent --show-error --fail https://www.php.net/distributions/php-${VERSION_PHP}.tar.gz | tar xzC . --strip-components=1
 RUN ./buildconf --force && \
     CFLAGS="-fstack-protector-strong -fpic -fpie -Os -I${INSTALL_DIR}/include -I/usr/include -ffunction-sections -fdata-sections" \
     CPPFLAGS="-fstack-protector-strong -fpic -fpie -Os -I${INSTALL_DIR}/include -I/usr/include -ffunction-sections -fdata-sections" \
