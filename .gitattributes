@@ -8,7 +8,6 @@
 .gitignore export-ignore
 .php-cs-fixer.dist.php export-ignore
 .release-please-manifest.json export-ignore
-Makefile export-ignore
 phpstan.neon export-ignore
 phpunit.xml.dist export-ignore
 rector.php export-ignore
