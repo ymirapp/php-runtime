@@ -1,0 +1,108 @@
+name: Publish release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Verify release commit
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Determine release version
+        id: version
+        run: |
+          VERSION=$(jq -r '."."' .release-please-manifest.json)
+          SUBJECT=$(git log -1 --format=%s)
+
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Releases can only be published from main"
+            exit 1
+          fi
+
+          if ! [[ "$SUBJECT" =~ ^"chore: release $VERSION"( \(#[0-9]+\))?$ ]]; then
+            echo "::error::The latest commit isn't the release commit for $VERSION: $SUBJECT"
+            exit 1
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" > /dev/null; then
+            echo "::error::The v$VERSION tag already exists"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build
+    needs: prepare
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/build-publish-tag-images.yml
+    secrets: inherit
+
+  publish:
+    name: Publish layers for ${{ needs.prepare.outputs.version }}
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 240
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+
+      - name: Install dependencies
+        run: composer install --no-ansi --no-interaction --no-scripts --no-security-blocking --prefer-dist
+
+      - name: Download layers
+        uses: actions/download-artifact@v7
+        with:
+          name: layers
+          path: build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-session-name: php-runtime-publish-release
+          role-duration-seconds: 14400
+          aws-region: us-east-1
+
+      - name: Publish layers
+        run: php -d memory_limit=-1 runtime/publish
+
+      - name: Update layer versions
+        run: php -d memory_limit=-1 runtime/layer-versions
+
+      - name: Grant public access to layers
+        run: php -d memory_limit=-1 runtime/permissions
+
+      - name: Commit layer versions and tag release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add layers.json layers.php
+          git diff --cached --quiet || git commit -m "chore: update layer versions for $VERSION"
+          git tag -a "v$VERSION" -m "v$VERSION"
+          git push --atomic origin HEAD:refs/heads/main "refs/tags/v$VERSION"
