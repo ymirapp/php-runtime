@@ -2,6 +2,7 @@
 /build export-ignore
 /runtime export-ignore
 /tests export-ignore
+.dockerignore export-ignore
 .editorconfig export-ignore
 .gitattributes export-ignore
 .gitignore export-ignore

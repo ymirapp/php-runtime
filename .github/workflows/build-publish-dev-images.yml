@@ -5,8 +5,11 @@ on:
     branches:
       - main
     paths:
+      - 'composer.json'
+      - 'composer.lock'
       - 'runtime/**'
       - 'src/**'
+      - 'templates/**'
       - '.github/workflows/build-publish-dev-images.yml'
 
 permissions:
@@ -61,7 +64,7 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           project: ${{ secrets.DEPOT_PROJECT_ID }}
-          context: runtime
+          context: .
           file: runtime/${{ steps.meta.outputs.dir }}/Dockerfile
           platforms: ${{ steps.meta.outputs.platform }}
           load: true
@@ -79,7 +82,7 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           project: ${{ secrets.DEPOT_PROJECT_ID }}
-          context: runtime
+          context: .
           file: runtime/${{ steps.meta.outputs.dir }}/Dockerfile
           platforms: ${{ steps.meta.outputs.platform }}
           push: true

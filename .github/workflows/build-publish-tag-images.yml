@@ -59,7 +59,7 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           project: ${{ secrets.DEPOT_PROJECT_ID }}
-          context: runtime
+          context: .
           file: runtime/${{ steps.meta.outputs.dir }}/Dockerfile
           platforms: ${{ steps.meta.outputs.platform }}
           load: true
@@ -77,7 +77,7 @@ jobs:
         uses: depot/build-push-action@v1
         with:
           project: ${{ secrets.DEPOT_PROJECT_ID }}
-          context: runtime
+          context: .
           file: runtime/${{ steps.meta.outputs.dir }}/Dockerfile
           platforms: ${{ steps.meta.outputs.platform }}
           push: true

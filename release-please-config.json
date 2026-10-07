@@ -8,44 +8,6 @@
         ".": {
             "release-type": "php",
             "pull-request-title-pattern": "chore: release ${version}",
-            "extra-files": [
-                {
-                    "type": "generic",
-                    "path": "runtime/php-72/Dockerfile"
-                },
-                {
-                    "type": "generic",
-                    "path": "runtime/php-73/Dockerfile"
-                },
-                {
-                    "type": "generic",
-                    "path": "runtime/php-74/Dockerfile"
-                },
-                {
-                    "type": "generic",
-                    "path": "runtime/php-80/Dockerfile"
-                },
-                {
-                    "type": "generic",
-                    "path": "runtime/php-81/Dockerfile"
-                },
-                {
-                    "type": "generic",
-                    "path": "runtime/php-82/Dockerfile"
-                },
-                {
-                    "type": "generic",
-                    "path": "runtime/php-83/Dockerfile"
-                },
-                {
-                    "type": "generic",
-                    "path": "runtime/php-84/Dockerfile"
-                },
-                {
-                    "type": "generic",
-                    "path": "runtime/php-85/Dockerfile"
-                }
-            ],
             "changelog-sections": [
                 { "type" :"feat", "section" :"Features", "hidden": false },
                 { "type":"fix", "section": "Bug Fixes", "hidden": false },

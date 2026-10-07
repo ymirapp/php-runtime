@@ -12,10 +12,10 @@ build-php-%:
 	rm -f ${PWD}/../build/$(PHP_VER).zip
 	rm -f ${PWD}/../build/arm-$(PHP_VER).zip
 	# Build x86_64
-	depot build -t ymirapp/php-runtime:php-$(PHP_VER) -f $(PHP_DIR)/Dockerfile . --load --build-arg CPU_ARCHITECTURE=x86_64 --build-arg DOCKER_PLATFORM=linux/amd64
+	depot build -t ymirapp/php-runtime:php-$(PHP_VER) -f $(PHP_DIR)/Dockerfile .. --load --build-arg CPU_ARCHITECTURE=x86_64 --build-arg DOCKER_PLATFORM=linux/amd64
 	docker run --rm --platform linux/amd64 --entrypoint "/export.sh" --env ARCHIVE_FILENAME=$(PHP_VER) --volume ${PWD}/../:/ymir --volume ${PWD}/export.sh:/export.sh:ro ymirapp/php-runtime:php-$(PHP_VER) .
 	# Build arm64
-	depot build -t ymirapp/arm-php-runtime:php-$(PHP_VER) -f $(PHP_DIR)/Dockerfile . --load --build-arg CPU_ARCHITECTURE=arm64 --build-arg DOCKER_PLATFORM=linux/arm64
+	depot build -t ymirapp/arm-php-runtime:php-$(PHP_VER) -f $(PHP_DIR)/Dockerfile .. --load --build-arg CPU_ARCHITECTURE=arm64 --build-arg DOCKER_PLATFORM=linux/arm64
 	docker run --rm --platform linux/arm64 --entrypoint "/export.sh" --env ARCHIVE_FILENAME=arm-$(PHP_VER) --volume ${PWD}/../:/ymir --volume ${PWD}/export.sh:/export.sh:ro ymirapp/arm-php-runtime:php-$(PHP_VER) .
 
 publish-images-%:
@@ -25,7 +25,7 @@ publish-images-%:
 	@for ver in $(PHP_VERSIONS); do \
 		PHP_DIR=php-$$(echo $$ver | sed 's/\.//g'); \
 		echo "Publishing PHP $$ver for $(CPU_ARCHITECTURE)..."; \
-		depot build -t $(RUNTIME_REPO):php-$$ver -f $$PHP_DIR/Dockerfile . --push --platform=$(DOCKER_PLATFORM) --build-arg DOCKER_PLATFORM=$(DOCKER_PLATFORM) --build-arg CPU_ARCHITECTURE=$(CPU_ARCHITECTURE); \
+		depot build -t $(RUNTIME_REPO):php-$$ver -f $$PHP_DIR/Dockerfile .. --push --platform=$(DOCKER_PLATFORM) --build-arg DOCKER_PLATFORM=$(DOCKER_PLATFORM) --build-arg CPU_ARCHITECTURE=$(CPU_ARCHITECTURE); \
 	done
 
 publish-images: publish-images-linux_amd64-x86_64 publish-images-linux_arm64-arm64
@@ -37,7 +37,7 @@ publish-dev-images-%:
 	@for ver in $(PHP_VERSIONS); do \
 		PHP_DIR=php-$$(echo $$ver | sed 's/\.//g'); \
 		echo "Publishing Dev PHP $$ver for $(CPU_ARCHITECTURE)..."; \
-		depot build -t $(RUNTIME_REPO):php-$$ver -f $$PHP_DIR/Dockerfile . --push --platform=$(DOCKER_PLATFORM) --build-arg DOCKER_PLATFORM=$(DOCKER_PLATFORM) --build-arg CPU_ARCHITECTURE=$(CPU_ARCHITECTURE); \
+		depot build -t $(RUNTIME_REPO):php-$$ver -f $$PHP_DIR/Dockerfile .. --push --platform=$(DOCKER_PLATFORM) --build-arg DOCKER_PLATFORM=$(DOCKER_PLATFORM) --build-arg CPU_ARCHITECTURE=$(CPU_ARCHITECTURE); \
 	done
 
 publish-dev-images: publish-dev-images-linux_amd64-x86_64 publish-dev-images-linux_arm64-arm64

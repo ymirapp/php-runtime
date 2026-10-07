@@ -10,10 +10,6 @@ ARG DOCKER_PLATFORM
 
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE} as build-environment
 
-# x-release-please-start-version
-ARG YMIR_RUNTIME_VERSION=1.21.0
-# x-release-please-end
-
 ENV BUILD_DIR="/tmp/build" INSTALL_DIR="/opt/ymir"
 ENV PKG_CONFIG_PATH="${INSTALL_DIR}/lib64/pkgconfig:${INSTALL_DIR}/lib/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig" \
     PKG_CONFIG="/usr/bin/pkg-config" \
@@ -86,9 +82,10 @@ RUN cp relay.ini ${INSTALL_DIR}/etc/php/conf.d/50-relay.ini; PHP_EXT_DIR=$(${INS
 
 # Composer & Runtime
 RUN curl -sS https://getcomposer.org/installer | ${INSTALL_DIR}/bin/php -- --install-dir=${INSTALL_DIR}/bin/ --filename=composer
-RUN git clone https://github.com/ymirapp/php-runtime.git /tmp/runtime-build && cd /tmp/runtime-build && git checkout "tags/v${YMIR_RUNTIME_VERSION}" && cd /opt \
- && cp -R /tmp/runtime-build/composer.json /tmp/runtime-build/composer.lock /tmp/runtime-build/runtime/bootstrap /tmp/runtime-build/runtime/runtime.php /tmp/runtime-build/src /tmp/runtime-build/templates ./ \
- && chmod 0555 /opt/bootstrap /opt/runtime.php && /opt/ymir/bin/php /opt/ymir/bin/composer install --no-dev --optimize-autoloader --no-ansi --no-interaction && find /opt/vendor -type d -name "tests" -exec rm -rf {} + && find /opt/vendor -type d -name "test" -exec rm -rf {} + && find /opt/vendor -type d -name "docs" -exec rm -rf {} + && find /opt/vendor -type f -name "*.md" -delete && find /opt/vendor -type f -name "phpunit.xml*" -delete
+COPY composer.json composer.lock runtime/bootstrap runtime/runtime.php /opt/
+COPY src /opt/src
+COPY templates /opt/templates
+RUN cd /opt && chmod 0555 /opt/bootstrap /opt/runtime.php && /opt/ymir/bin/php /opt/ymir/bin/composer install --no-dev --optimize-autoloader --no-ansi --no-interaction && find /opt/vendor -type d -name "tests" -exec rm -rf {} + && find /opt/vendor -type d -name "test" -exec rm -rf {} + && find /opt/vendor -type d -name "docs" -exec rm -rf {} + && find /opt/vendor -type f -name "*.md" -delete && find /opt/vendor -type f -name "phpunit.xml*" -delete
 
 # Layer Assembly
 RUN mkdir -p /tmp/layer/bin /tmp/layer/ymir/bin /tmp/layer/lib /tmp/layer/ymir/etc/php/conf.d /tmp/layer/ymir/etc/php-fpm.d && rm -rf /tmp/layer/ymir/lib && ln -s ../lib /tmp/layer/ymir/lib
@@ -98,12 +95,12 @@ RUN mkdir -p /tmp/layer/lib/php/extensions && cp -R ${INSTALL_DIR}/lib/php/exten
 RUN cp ${INSTALL_DIR}/etc/php/conf.d/* /tmp/layer/ymir/etc/php/conf.d/
 RUN cp ${INSTALL_DIR}/lib/libsqlite3.so* /tmp/layer/lib/ && cp ${INSTALL_DIR}/lib/libssl.so.1.1 /tmp/layer/lib/ || true && cp ${INSTALL_DIR}/lib/libcrypto.so.1.1 /tmp/layer/lib/ || true && \
     cp ${INSTALL_DIR}/lib/libMagickWand-7.Q16HDRI.so* /tmp/layer/lib/ && cp ${INSTALL_DIR}/lib/libMagickCore-7.Q16HDRI.so* /tmp/layer/lib/
-COPY shared/copy-dependencies.php /tmp/copy-dependencies.php
+COPY runtime/shared/copy-dependencies.php /tmp/copy-dependencies.php
 RUN ${INSTALL_DIR}/bin/php /tmp/copy-dependencies.php /tmp/layer/ymir/bin /tmp/layer/lib && ${INSTALL_DIR}/bin/php /tmp/copy-dependencies.php /tmp/layer/lib/php/extensions /tmp/layer/lib
 RUN find /tmp/layer/ymir/bin -type f -exec strip --strip-all {} + || true && find /tmp/layer/lib -type f -name "*.so*" -exec strip --strip-unneeded {} + || true && find /tmp/layer/lib -type f -name "*.a" -delete && find /tmp/layer/lib -type f -name "*.la" -delete
-COPY shared/php.ini /tmp/layer/ymir/etc/php/php.ini
-COPY shared/99-openssl-ca-legacy.ini /tmp/layer/ymir/etc/php/conf.d/99-openssl-ca-legacy.ini
-COPY shared/php-fpm.conf /tmp/layer/ymir/etc/php-fpm.d/php-fpm.conf
+COPY runtime/shared/php.ini /tmp/layer/ymir/etc/php/php.ini
+COPY runtime/shared/99-openssl-ca-legacy.ini /tmp/layer/ymir/etc/php/conf.d/99-openssl-ca-legacy.ini
+COPY runtime/shared/php-fpm.conf /tmp/layer/ymir/etc/php-fpm.d/php-fpm.conf
 
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE}
 ENV PATH="/opt/bin:${PATH}" LD_LIBRARY_PATH="/opt/lib"

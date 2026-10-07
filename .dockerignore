@@ -1,0 +1,8 @@
+*
+!composer.json
+!composer.lock
+!runtime/bootstrap
+!runtime/runtime.php
+!runtime/shared
+!src
+!templates
