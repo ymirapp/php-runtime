@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.21.1](https://github.com/ymirapp/php-runtime/compare/v1.21.0...v1.21.1) (2026-10-08)
+
+
+### Dependency Changes
+
+* Updated composer dependencies ([f9403e1](https://github.com/ymirapp/php-runtime/commit/f9403e13070186a15f292867c68344ab52598821))
+* Upgrade `actions/checkout` to version 5 ([ce65ed9](https://github.com/ymirapp/php-runtime/commit/ce65ed9106a784d2e775529bdcb94caa819ae291))
+* Upgrade imagick to 7.1.2-32 ([30eed29](https://github.com/ymirapp/php-runtime/commit/30eed29b3bfa311547a3131f0711825238505a88))
+* Upgrade sqlite to 3.53.4 ([0818e04](https://github.com/ymirapp/php-runtime/commit/0818e0471358c546a62fe50d97d205f5b17aa8d2))
+* Upgrade to php 8.2.34 ([efd865a](https://github.com/ymirapp/php-runtime/commit/efd865aa30a93608a78c5d6344534b8417a84625))
+* Upgrade to php 8.3.35 ([09f39e5](https://github.com/ymirapp/php-runtime/commit/09f39e556a6ac380c659d8d4501c8b0aea4e8419))
+* Upgrade to php 8.4.26 ([ea3719a](https://github.com/ymirapp/php-runtime/commit/ea3719a87019109db49c21eb3ce95fe1e37e3f11))
+* Upgrade to php 8.5.11 ([df4f909](https://github.com/ymirapp/php-runtime/commit/df4f90967ce66e6bb626924652894cf1f1912885))
+
 ## [1.21.0](https://github.com/ymirapp/php-runtime/compare/v1.20.0...v1.21.0) (2026-07-18)
 
 
