@@ -15,6 +15,7 @@ namespace Ymir\Runtime\Tests\Unit\FastCgi;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\FastCgi\FastCgiRequest;
+use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\HttpRequestEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
@@ -24,6 +25,35 @@ class FastCgiRequestTest extends TestCase
     use FunctionMockTrait;
     use HttpRequestEventMockTrait;
     use InvocationContextMockTrait;
+
+    public function testCreateFromInvocationEventDoesntSetHealthCheckFromRequestValues(): void
+    {
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
+
+        $microtime->expects($this->once())
+                  ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+             ->willReturn(1617733986);
+
+        $event = new HttpRequestEvent($this->getInvocationContextMock(), [
+            'body' => '{"ymirHealthCheck":true}',
+            'headers' => ['YMIR_HEALTH_CHECK' => '1', 'ymir-health-check' => '1'],
+            'rawQueryString' => 'ymirHealthCheck=1',
+            'requestContext' => ['http' => ['method' => 'GET'], 'ymirHealthCheck' => true],
+            'version' => '2.0',
+        ]);
+
+        $parameters = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php')->getParams();
+
+        $this->assertSame('0', $parameters['YMIR_HEALTH_CHECK']);
+        $this->assertSame('1', $parameters['HTTP_YMIR_HEALTH_CHECK']);
+    }
 
     public function testCreateFromInvocationEventSetsContentLengthWithTraceMethod(): void
     {
@@ -110,6 +140,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => '0',
             '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
@@ -201,6 +232,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => '0',
             '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
@@ -292,6 +324,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => '0',
             '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
@@ -384,6 +417,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => '0',
             '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
@@ -474,6 +508,102 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => '0',
+            '_X_AMZN_TRACE_ID' => 'test-trace-id',
+        ], $request->getParams());
+    }
+
+    public function testCreateFromInvocationEventWithHealthCheck(): void
+    {
+        $context = $this->getInvocationContextMock();
+        $event = $this->getHttpRequestEventMock();
+        $getcwd = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'getcwd');
+        $microtime = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'microtime');
+        $time = $this->getFunctionMock($this->getNamespace(FastCgiRequest::class), 'time');
+
+        $getcwd->expects($this->once())
+               ->willReturn('/tmp');
+
+        $context->expects($this->once())
+                ->method('getRequestId')
+                ->willReturn('test-request-id');
+
+        $context->expects($this->once())
+                ->method('getTraceId')
+                ->willReturn('test-trace-id');
+
+        $event->expects($this->once())
+              ->method('getBody')
+              ->willReturn('foo');
+
+        $event->expects($this->once())
+              ->method('getContext')
+              ->willReturn($context);
+
+        $event->expects($this->once())
+              ->method('getHeaders')
+              ->willReturn([]);
+
+        $event->expects($this->once())
+              ->method('getMethod')
+              ->willReturn('get');
+
+        $event->expects($this->once())
+              ->method('getPath')
+              ->willReturn('/');
+
+        $event->expects($this->once())
+              ->method('getProtocol')
+              ->willReturn('HTTP/1.1');
+
+        $event->expects($this->once())
+              ->method('getQueryString')
+              ->willReturn('');
+
+        $event->expects($this->once())
+              ->method('getSourceIp')
+              ->willReturn('127.0.0.1');
+
+        $event->expects($this->once())
+              ->method('isHealthCheck')
+              ->willReturn(true);
+
+        $microtime->expects($this->once())
+                  ->willReturn(1617733986.080936);
+
+        $time->expects($this->once())
+             ->willReturn(1617733986);
+
+        $request = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php');
+
+        $this->assertSame('foo', $request->getContent());
+        $this->assertSame([
+            'AWS_REQUEST_ID' => 'test-request-id',
+            'CONTENT_LENGTH' => 3,
+            'DOCUMENT_ROOT' => '/tmp',
+            'GATEWAY_INTERFACE' => 'FastCGI/1.0',
+            'HTTP_HOST' => 'localhost',
+            'HTTP_X_AMZN_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_AMZN_TRACE_ID' => 'test-trace-id',
+            'HTTP_X_REQUEST_ID' => 'test-request-id',
+            'HTTP_X_TRACE_ID' => 'test-trace-id',
+            'PATH_INFO' => '',
+            'PHP_SELF' => '/foo.php',
+            'QUERY_STRING' => '',
+            'REMOTE_ADDR' => '127.0.0.1',
+            'REMOTE_PORT' => 80,
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_TIME' => 1617733986,
+            'REQUEST_TIME_FLOAT' => 1617733986.080936,
+            'REQUEST_URI' => '/',
+            'SCRIPT_FILENAME' => '/tmp/foo.php',
+            'SCRIPT_NAME' => '/foo.php',
+            'SERVER_ADDR' => '127.0.0.1',
+            'SERVER_NAME' => 'localhost',
+            'SERVER_PORT' => 80,
+            'SERVER_PROTOCOL' => 'HTTP/1.1',
+            'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => '1',
             '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
@@ -564,6 +694,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => '0',
             '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
@@ -654,6 +785,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => '0',
             '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
@@ -744,6 +876,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => '0',
             '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
@@ -834,6 +967,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => '0',
             '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
@@ -925,6 +1059,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => '0',
             '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }
@@ -1017,6 +1152,7 @@ class FastCgiRequestTest extends TestCase
             'SERVER_PORT' => 80,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => '0',
             '_X_AMZN_TRACE_ID' => 'test-trace-id',
         ], $request->getParams());
     }

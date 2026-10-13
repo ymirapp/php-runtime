@@ -21,6 +21,16 @@ class HttpRequestEventTest extends TestCase
 {
     use InvocationContextMockTrait;
 
+    public static function provideNonBooleanTrueHealthCheckValues(): \Iterator
+    {
+        yield 'array' => [[true]];
+        yield 'false' => [false];
+        yield 'integer' => [1];
+        yield 'null' => [null];
+        yield 'numeric string' => ['1'];
+        yield 'string' => ['true'];
+    }
+
     public function testGetBodyCastsValue(): void
     {
         $this->assertSame('1', (new HttpRequestEvent($this->getInvocationContextMock(), ['body' => 1]))->getBody());
@@ -177,5 +187,34 @@ class HttpRequestEventTest extends TestCase
     public function testGetSourceIpWithPayloadVersion2Value(): void
     {
         $this->assertSame('127.1.1.1', (new HttpRequestEvent($this->getInvocationContextMock(), ['requestContext' => ['http' => ['sourceIp' => '127.1.1.1']]]))->getSourceIp());
+    }
+
+    public function testIsHealthCheckDefaultValue(): void
+    {
+        $this->assertFalse((new HttpRequestEvent($this->getInvocationContextMock()))->isHealthCheck());
+    }
+
+    public function testIsHealthCheckIgnoresRequestValues(): void
+    {
+        $this->assertFalse((new HttpRequestEvent($this->getInvocationContextMock(), [
+            'body' => '{"ymirHealthCheck":true}',
+            'headers' => ['YMIR_HEALTH_CHECK' => '1', 'ymir-health-check' => '1'],
+            'rawQueryString' => 'ymirHealthCheck=true',
+            'requestContext' => ['http' => ['method' => 'GET'], 'ymirHealthCheck' => true],
+            'version' => '2.0',
+        ]))->isHealthCheck());
+    }
+
+    /**
+     * @dataProvider provideNonBooleanTrueHealthCheckValues
+     */
+    public function testIsHealthCheckWithNonBooleanTrueValue($value): void
+    {
+        $this->assertFalse((new HttpRequestEvent($this->getInvocationContextMock(), ['ymirHealthCheck' => $value]))->isHealthCheck());
+    }
+
+    public function testIsHealthCheckWithTrueValue(): void
+    {
+        $this->assertTrue((new HttpRequestEvent($this->getInvocationContextMock(), ['ymirHealthCheck' => true]))->isHealthCheck());
     }
 }

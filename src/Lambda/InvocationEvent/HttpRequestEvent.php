@@ -135,4 +135,12 @@ class HttpRequestEvent extends AbstractEvent
     {
         return (string) ($this->event['requestContext']['http']['sourceIp'] ?? $this->event['requestContext']['identity']['sourceIp'] ?? '127.0.0.1');
     }
+
+    /**
+     * Check if the invocation event carries the health check marker.
+     */
+    public function isHealthCheck(): bool
+    {
+        return true === ($this->event['ymirHealthCheck'] ?? null);
+    }
 }

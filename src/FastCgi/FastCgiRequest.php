@@ -93,6 +93,7 @@ class FastCgiRequest implements ProvidesRequestData
             'SERVER_PORT' => $port,
             'SERVER_PROTOCOL' => $event->getProtocol(),
             'SERVER_SOFTWARE' => 'ymir',
+            'YMIR_HEALTH_CHECK' => $event->isHealthCheck() ? '1' : '0',
             '_X_AMZN_TRACE_ID' => $traceId,
         ];
 
