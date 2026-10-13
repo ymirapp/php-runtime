@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.0](https://github.com/ymirapp/php-runtime/compare/v1.21.1...v1.22.0) (2026-10-13)
+
+
+### Features
+
+* Add support for private application health checks ([63d8e25](https://github.com/ymirapp/php-runtime/commit/63d8e2584cf99e4cb1eed5a5b0b92f926785ce11))
+
 ## [1.21.1](https://github.com/ymirapp/php-runtime/compare/v1.21.0...v1.21.1) (2026-10-08)
 
 
