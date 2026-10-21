@@ -37,8 +37,8 @@ WORKDIR ${BUILD_DIR}/openssl11
 RUN ./config --prefix=${INSTALL_DIR}/openssl11 --openssldir=${INSTALL_DIR}/openssl11/ssl shared zlib && make -j $(nproc) && make install_sw \
     && cp ${INSTALL_DIR}/openssl11/lib/libssl.so.1.1 ${INSTALL_DIR}/lib/ && cp ${INSTALL_DIR}/openssl11/lib/libcrypto.so.1.1 ${INSTALL_DIR}/lib/
 
-# PHP 8.5.11
-ENV VERSION_PHP=8.5.11
+# PHP 8.5.12
+ENV VERSION_PHP=8.5.12
 RUN mkdir -p ${BUILD_DIR}/php
 WORKDIR ${BUILD_DIR}/php
 RUN curl --location --silent --show-error --fail https://www.php.net/distributions/php-${VERSION_PHP}.tar.gz | tar xzC . --strip-components=1
