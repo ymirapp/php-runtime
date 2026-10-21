@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.1](https://github.com/ymirapp/php-runtime/compare/v1.22.0...v1.22.1) (2026-10-21)
+
+
+### Dependency Changes
+
+* Upgrade PHP runtimes for October security releases ([711827f](https://github.com/ymirapp/php-runtime/commit/711827f83c7585b2bb1197ffcc79e49b3bbc6c13))
+
 ## [1.22.0](https://github.com/ymirapp/php-runtime/compare/v1.21.1...v1.22.0) (2026-10-13)
 
 
