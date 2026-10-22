@@ -19,7 +19,7 @@ ENV PKG_CONFIG_PATH="${INSTALL_DIR}/lib64/pkgconfig:${INSTALL_DIR}/lib/pkgconfig
     MAKEFLAGS='-j4'
 
 RUN dnf makecache && dnf install -y make gcc gcc-c++ autoconf automake libtool git \
-    libcurl-devel zlib-devel readline-devel gettext-devel libicu-devel libxslt-devel libzip-devel libpq-devel oniguruma-devel openssl-devel libsodium-devel libffi-devel libpng-devel libjpeg-devel freetype-devel libwebp-devel libzstd-devel lz4-devel tar xz file \
+    libcurl-devel zlib-devel readline-devel gettext-devel libicu-devel libxslt-devel libzip-devel libpq-devel oniguruma-devel openssl-devel libsodium-devel libffi-devel libpng-devel libjpeg-devel freetype-devel libwebp-devel libzstd-devel lz4-devel tar xz file bison re2c \
     perl-FindBin perl-IPC-Cmd
 
 RUN mkdir -p ${BUILD_DIR} ${INSTALL_DIR}/bin ${INSTALL_DIR}/etc/php ${INSTALL_DIR}/etc/php/conf.d ${INSTALL_DIR}/lib ${INSTALL_DIR}/lib64 ${INSTALL_DIR}/sbin
@@ -37,13 +37,15 @@ WORKDIR ${BUILD_DIR}/openssl11
 RUN ./config --prefix=${INSTALL_DIR}/openssl11 --openssldir=${INSTALL_DIR}/openssl11/ssl shared zlib && make -j $(nproc) && make install_sw \
     && cp ${INSTALL_DIR}/openssl11/lib/libssl.so.1.1 ${INSTALL_DIR}/lib/ && cp ${INSTALL_DIR}/openssl11/lib/libcrypto.so.1.1 ${INSTALL_DIR}/lib/
 
-# PHP 8.0.30
-ENV VERSION_PHP=8.0.30
+# PHP 8.0 official PHP-8.0-CVE-2026-109618-109619 security branch (builds as 8.0.30)
+# The checksum pins GitHub's archive bytes; on mismatch, investigate and reapprove rather than update it.
+ENV PHP_SOURCE_COMMIT=82f8f31b16a035c1b67cc253e79f7cc288f4cc20 \
+    PHP_SOURCE_SHA256=089bcd02d0813f6c7327aa475f01209d404df8c1577b368346ed6f43bf8ab344
 RUN mkdir -p ${BUILD_DIR}/php
 WORKDIR ${BUILD_DIR}/php
-RUN curl --location --silent --show-error --fail https://www.php.net/distributions/php-${VERSION_PHP}.tar.gz | tar xzC . --strip-components=1
-COPY runtime/patches/php-8.0-security.patch /tmp/php-patches/
-RUN git apply /tmp/php-patches/php-8.0-security.patch
+RUN curl --location --silent --show-error --fail -o /tmp/php-src.tar.gz https://github.com/php/php-src/archive/${PHP_SOURCE_COMMIT}.tar.gz \
+    && echo "${PHP_SOURCE_SHA256}  /tmp/php-src.tar.gz" | sha256sum --check --strict \
+    && tar xzf /tmp/php-src.tar.gz -C . --strip-components=1 && rm /tmp/php-src.tar.gz
 RUN ./buildconf --force && \
     export PKG_CONFIG_PATH="${INSTALL_DIR}/openssl11/lib/pkgconfig:$PKG_CONFIG_PATH" && \
     CFLAGS="-fstack-protector-strong -fpic -fpie -Os -I${INSTALL_DIR}/include -I${INSTALL_DIR}/openssl11/include -I/usr/include -ffunction-sections -fdata-sections" \
@@ -56,7 +58,13 @@ RUN ./buildconf --force && \
         --enable-exif --enable-ftp --with-gettext --enable-mbstring --enable-opcache=shared --with-pdo-pgsql=shared --with-pgsql=shared --with-pdo-mysql=shared,mysqlnd --with-mysqli --enable-pcntl \
         --with-zip --enable-bcmath --enable-intl=shared --enable-soap --with-xsl --with-pear
 RUN make -j $(nproc)
-RUN make install PEAR_INSTALLER_URL='https://github.com/pear/pearweb_phars/raw/master/install-pear-nozlib.phar'
+# Git snapshots lack the release-bundled PEAR installer; place a pinned vendor copy where make install expects it.
+ENV PEAR_INSTALLER_URL=https://raw.githubusercontent.com/pear/pearweb_phars/72aa5f771f56aaf826641b21159453f993e44450/install-pear-nozlib.phar \
+    PEAR_INSTALLER_SHA256=a71349da29f1a6e3f0792695b167e582375a93c70c0e9d35e7c4675697c5f039
+RUN curl --location --silent --show-error --fail -o /tmp/install-pear-nozlib.phar ${PEAR_INSTALLER_URL} \
+    && echo "${PEAR_INSTALLER_SHA256}  /tmp/install-pear-nozlib.phar" | sha256sum --check --strict \
+    && mv /tmp/install-pear-nozlib.phar pear/install-pear-nozlib.phar
+RUN make install PEAR_INSTALLER_URL="${PEAR_INSTALLER_URL}"
 RUN cp php.ini-production ${INSTALL_DIR}/etc/php/php.ini
 
 # PECL

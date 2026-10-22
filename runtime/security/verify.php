@@ -82,7 +82,6 @@ group = root
 php_admin_value[memory_limit] = 32M
 php_admin_flag[log_errors] = on
 php_admin_flag[display_errors] = off
-php_admin_value[session.save_path] = /tmp/ymir-security
 php_admin_flag[session.upload_progress.enabled] = on
 php_admin_flag[session.upload_progress.cleanup] = off
 php_admin_value[session.upload_progress.freq] = 1
@@ -100,6 +99,11 @@ try {
     $masterPid = $process->getPid();
 
     $tests = [
+        'native default session storage persists data' => function () use ($initial): void {
+            check('' === ini_get('session.save_path') && '' === $initial['save_path'], 'CLI/FPM default session.save_path changed from the system temp directory');
+            $file = sys_get_temp_dir().'/sess_ymir-security';
+            check(is_file($file) && str_contains((string) file_get_contents($file), 'preserved'), 'Session data was not persisted in the default save path');
+        },
         'normal and nested multipart uploads' => function () use ($fpm, $workerPid): void {
             $result = data(request($fpm, '', ['title' => 'normal', 'nested[a][b]' => 'deep', 'nested[a][c]' => 'sibling', 'items[]' => 'item'], ['document' => '/tmp/ymir-security/upload.txt', 'uploads[document]' => '/tmp/ymir-security/upload.txt']));
             check(['title' => 'normal', 'nested' => ['a' => ['b' => 'deep', 'c' => 'sibling']], 'items' => ['item']] === $result['post'], 'Multipart fields/nesting changed');

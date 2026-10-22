@@ -4,6 +4,5 @@
 !runtime/bootstrap
 !runtime/runtime.php
 !runtime/shared
-!runtime/patches
 !src
 !templates

@@ -9,6 +9,24 @@
 ARG CPU_ARCHITECTURE
 ARG DOCKER_PLATFORM
 
+# Sury PHP 7.2 source package
+# Vendor-maintained security backports. dpkg-source applies the complete vendor patch series.
+# Sury's pool does not guarantee retention; if a pinned file disappears, review a pinned vendor replacement and never loosen the digest guards.
+FROM --platform=${DOCKER_PLATFORM} debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad as php-source
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl dpkg-dev xz-utils
+COPY <<EOF /tmp/sury/SHA256SUMS
+a06c4b5deeeed7ac81be430c95b74a9f456d21e19ca8d1aae8a2f319d4b1dcfe  php7.2_7.2.34-66+0~20261021.122+debian13~1.gbpe0bcd4.dsc
+409e11bc6a2c18707dfc44bc61c820ddfd81e17481470f3405ee7822d8379903  php7.2_7.2.34.orig.tar.xz
+4a5a49d808a4d0cd4d32709fbf471519e8c04d81fbc8f237baae073a87454ee9  php7.2_7.2.34-66+0~20261021.122+debian13~1.gbpe0bcd4.debian.tar.xz
+EOF
+WORKDIR /tmp/sury
+RUN set -e; for file in $(awk '{print $2}' SHA256SUMS); do \
+        curl --location --silent --show-error --fail -o "$file" "https://packages.sury.org/php/pool/main/p/php7.2/$(echo "$file" | sed 's/+/%2B/g')"; \
+    done; \
+    sha256sum --check --strict SHA256SUMS && \
+    dpkg-source --require-strong-checksums -x php7.2_7.2.34-66+0~20261021.122+debian13~1.gbpe0bcd4.dsc /tmp/php && \
+    awk 'NF && $1 !~ /^#/ {print $1}' /tmp/php/debian/patches/series | cmp - /tmp/php/.pc/applied-patches
+
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE} as build-environment
 
 ENV BUILD_DIR="/tmp/build" INSTALL_DIR="/opt/ymir"
@@ -39,15 +57,11 @@ RUN ./config --prefix=${INSTALL_DIR}/openssl11 --openssldir=${INSTALL_DIR}/opens
     && cp ${INSTALL_DIR}/openssl11/lib/libssl.so.1.1 ${INSTALL_DIR}/lib/ && cp ${INSTALL_DIR}/openssl11/lib/libcrypto.so.1.1 ${INSTALL_DIR}/lib/
 
 # PHP 7.2.34
-ENV VERSION_PHP=7.2.34
-RUN mkdir -p ${BUILD_DIR}/php
+COPY --from=php-source /tmp/php ${BUILD_DIR}/php
 WORKDIR ${BUILD_DIR}/php
-RUN curl --location --silent --show-error --fail https://www.php.net/distributions/php-${VERSION_PHP}.tar.gz | tar xzC . --strip-components=1
-COPY runtime/patches/php-7.2-zstr-max-len.patch runtime/patches/php-7.2-security.patch runtime/patches/php-7.2-7.3-multipart-limit.patch /tmp/php-patches/
-RUN git apply /tmp/php-patches/php-7.2-zstr-max-len.patch && \
-    git apply /tmp/php-patches/php-7.2-security.patch && \
-    git apply /tmp/php-patches/php-7.2-7.3-multipart-limit.patch
-RUN ./buildconf --force && \
+# Vendor build preparation from debian/rules and build/build2.mk.
+RUN mv ext/ext_skel ext/ext_skel.in && \
+    make -f build/build.mk generated_lists && make -B -f build/build2.mk aclocal.m4 && ./buildconf --force && \
     export PKG_CONFIG_PATH="${INSTALL_DIR}/openssl11/lib/pkgconfig:$PKG_CONFIG_PATH" && \
     CFLAGS="-fstack-protector-strong -fpic -fpie -Os -I${INSTALL_DIR}/include -I${INSTALL_DIR}/openssl11/include -I/usr/include -ffunction-sections -fdata-sections" \
     CPPFLAGS="-fstack-protector-strong -fpic -fpie -Os -I${INSTALL_DIR}/include -I${INSTALL_DIR}/openssl11/include -I/usr/include -ffunction-sections -fdata-sections" \
@@ -59,8 +73,13 @@ RUN ./buildconf --force && \
         --enable-exif --enable-ftp --with-gettext --enable-mbstring --enable-opcache=shared --with-pdo-pgsql=shared --with-pgsql=shared --with-pdo-mysql=shared,mysqlnd --with-mysqli --enable-pcntl \
         --enable-zip --enable-bcmath --enable-intl=shared --enable-soap --with-xsl --with-pear
 RUN make -j $(nproc)
-RUN make install PEAR_INSTALLER_URL='https://github.com/pear/pearweb_phars/raw/master/install-pear-nozlib.phar'
+RUN make install PEAR_INSTALLDIR=${INSTALL_DIR}/lib/php PEAR_INSTALLER_URL='https://github.com/pear/pearweb_phars/raw/master/install-pear-nozlib.phar'
 RUN cp php.ini-production ${INSTALL_DIR}/etc/php/php.ini
+
+# Vendor phpize copies Debian's shtool, libtool aux and aclocal paths. Its dpkg probe only picks the aux
+# directory name and falls back to libtool/config here; reevaluate any other dpkg use rather than stubbing it.
+RUN cp ${BUILD_DIR}/php/build/shtool /usr/bin/shtool && mkdir -p ${INSTALL_DIR}/share /usr/share/libtool && \
+    ln -s /usr/share/aclocal ${INSTALL_DIR}/share/aclocal && ln -s /usr/share/libtool/build-aux /usr/share/libtool/config
 
 # PECL
 RUN set -xe; cd ${BUILD_DIR}; \
@@ -102,6 +121,7 @@ RUN ${INSTALL_DIR}/bin/php /tmp/copy-dependencies.php /tmp/layer/ymir/bin /tmp/l
     PHP_EXT_DIR=$(${INSTALL_DIR}/bin/php-config --extension-dir) && ${INSTALL_DIR}/bin/php /tmp/copy-dependencies.php /tmp/layer/lib/php/extensions/$(basename ${PHP_EXT_DIR}) /tmp/layer/lib
 RUN find /tmp/layer/ymir/bin -type f -exec strip --strip-all {} + || true && find /tmp/layer/lib -type f -name "*.so*" -exec strip --strip-unneeded {} + || true && find /tmp/layer/lib -type f -name "*.a" -delete && find /tmp/layer/lib -type f -name "*.la" -delete
 COPY runtime/shared/php.ini /tmp/layer/ymir/etc/php/php.ini
+COPY runtime/shared/sury-defaults.ini /tmp/layer/ymir/etc/php/conf.d/sury-defaults.ini
 COPY runtime/shared/99-openssl-ca-legacy.ini /tmp/layer/ymir/etc/php/conf.d/99-openssl-ca-legacy.ini
 COPY runtime/shared/php-fpm.conf /tmp/layer/ymir/etc/php-fpm.d/php-fpm.conf
 RUN sed -i '/extension=msgpack.so/d' /tmp/layer/ymir/etc/php/php.ini && \

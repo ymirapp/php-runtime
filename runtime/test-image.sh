@@ -111,9 +111,17 @@ if [ -z "$EXT_DIR" ]; then
     echo "  [FAIL] Could not determine extension_dir"
     FAILED=1
 else
+    if ! [[ "$EXT_DIR" =~ ^/opt/ymir/lib/php/extensions/no-debug-non-zts-[0-9]{8}$ ]]; then
+        echo "  [FAIL] extension_dir changed: $EXT_DIR"
+        FAILED=1
+    fi
     if docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "[ -d $EXT_DIR ]"; then
         echo "  [OK] Extension directory exists: $EXT_DIR"
-        for ext in "pdo_mysql.so" "pdo_pgsql.so" "pgsql.so"; do
+        INI_CONTENT=$(docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "cat /opt/ymir/etc/php/php.ini /opt/ymir/etc/php/conf.d/*.ini 2>/dev/null") || exit 1
+        # shortcut: shipped INIs use relative .so names; normalize paths if that format changes.
+        INI_EXTENSIONS=$(printf '%s\n' "$INI_CONTENT" | sed -nE 's/^[[:space:]]*(zend_)?extension[[:space:]]*=[[:space:]]*"?([^";[:space:]]+)"?.*/\2/p')
+        if [ -z "$INI_EXTENSIONS" ]; then echo "  [FAIL] No extension entries found in shipped INI files"; exit 1; fi
+        for ext in "pdo_mysql.so" "pdo_pgsql.so" "pgsql.so" $INI_EXTENSIONS; do
             if docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "[ -f $EXT_DIR/$ext ]"; then
                 echo "  [OK] Extension file exists: $ext"
             else
@@ -132,6 +140,15 @@ else
         echo "  [FAIL] Extension directory missing: $EXT_DIR"
         FAILED=1
     fi
+fi
+
+# 5.6 Default paths (empty session.save_path means the system temp directory)
+DEFAULT_PATHS=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "echo ini_get('session.save_path'), '|', ini_get('include_path');" 2>/dev/null)
+if [ "$DEFAULT_PATHS" = "|.:/opt/ymir/lib/php" ]; then
+    echo "  [OK] Default session.save_path and include_path"
+else
+    echo "  [FAIL] Default session.save_path|include_path changed: '$DEFAULT_PATHS'"
+    FAILED=1
 fi
 
 # 6. Relay Configuration

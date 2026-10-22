@@ -76,6 +76,7 @@ echo json_encode([
     'upload' => isset($_FILES['document']['tmp_name']) && is_uploaded_file($_FILES['document']['tmp_name']) ? file_get_contents($_FILES['document']['tmp_name']) : null,
     'nested_upload' => isset($_FILES['uploads']['tmp_name']['document']) && is_uploaded_file($_FILES['uploads']['tmp_name']['document']) ? file_get_contents($_FILES['uploads']['tmp_name']['document']) : null,
     'session' => $session,
+    'save_path' => ini_get('session.save_path'),
     'progress_enabled' => ini_get('session.upload_progress.enabled'),
     'progress_cleanup' => ini_get('session.upload_progress.cleanup'),
     'multipart_limit' => ini_get('max_multipart_body_parts'),
