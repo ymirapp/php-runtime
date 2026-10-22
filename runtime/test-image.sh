@@ -10,9 +10,20 @@ if [ -z "$PLATFORM" ]; then PLATFORM="linux/amd64"; fi
 echo "Testing $IMAGE on $PLATFORM..."
 
 FAILED=0
+CID=""
+SECURITY_CID=""
+cleanup() {
+    if [ -n "$CID" ]; then docker rm -f "$CID" > /dev/null 2>&1 || true; fi
+    if [ -n "$SECURITY_CID" ]; then docker rm -f "$SECURITY_CID" > /dev/null 2>&1 || true; fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 # 1. Size
-OPT_SIZE_MB=$(( $(docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "du -sk /opt | cut -f1") / 1024 ))
+OPT_SIZE_KB=$(docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "du -sk /opt | cut -f1") || exit 1
+if ! [[ "$OPT_SIZE_KB" =~ ^[0-9]+$ ]]; then echo "  [FAIL] Could not determine image size"; exit 1; fi
+OPT_SIZE_MB=$(( OPT_SIZE_KB / 1024 ))
 
 if [ "$OPT_SIZE_MB" -gt 250 ]; then
     echo "  [FAIL] Size: ${OPT_SIZE_MB}MB (exceeds 250MB Lambda limit)"
@@ -26,7 +37,7 @@ fi
 
 # 2. PHP binary & Version
 echo "--------------------------------------------------------------------------------"
-docker run --rm --platform "$PLATFORM" --entrypoint /opt/ymir/bin/php "$IMAGE" -v
+docker run --rm --platform "$PLATFORM" --entrypoint /opt/ymir/bin/php "$IMAGE" -v || FAILED=1
 echo "--------------------------------------------------------------------------------"
 
 # 3. Filesystem layout
@@ -73,7 +84,8 @@ if [ -n "$STARTUP_ERRORS" ]; then
     FAILED=1
 fi
 
-PHP_VER=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "echo PHP_VERSION_ID;" 2>/dev/null)
+PHP_VER=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "echo PHP_VERSION_ID;" 2>/dev/null) || exit 1
+if ! [[ "$PHP_VER" =~ ^[0-9]+$ ]]; then echo "  [FAIL] Could not determine PHP version"; exit 1; fi
 
 REQUIRED=("apcu" "igbinary" "zstd" "imagick" "intl" "pdo_mysql" "pdo_pgsql" "pgsql")
 if [ -n "$PHP_VER" ] && [ "$PHP_VER" -ge 70400 ]; then
@@ -171,21 +183,39 @@ FPM_BIN="/opt/ymir/bin/php-fpm"
 FPM_CONF="/opt/ymir/etc/php-fpm.d/php-fpm.conf"
 
 if docker run --rm --platform "$PLATFORM" --entrypoint $FPM_BIN "$IMAGE" -t --fpm-config $FPM_CONF --allow-to-run-as-root; then
-    CID=$(docker run -d --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "mkdir -p /tmp/.ymir && exec $FPM_BIN -F --fpm-config $FPM_CONF --allow-to-run-as-root")
+    CID=$(docker run -d --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "mkdir -p /tmp/.ymir && exec $FPM_BIN -F --fpm-config $FPM_CONF --allow-to-run-as-root") || exit 1
     sleep 2
-    if docker ps -q --no-trunc | grep -q "$CID"; then
+    if [ "$(docker inspect --format '{{.State.Running}}' "$CID")" = "true" ]; then
         echo "  [OK] PHP-FPM started"
-        docker stop "$CID" > /dev/null
-        docker rm "$CID" > /dev/null
+        docker stop "$CID" > /dev/null || exit 1
+        docker rm "$CID" > /dev/null || exit 1
     else
         echo "  [FAIL] PHP-FPM failed to start"
         docker logs "$CID"
-        docker rm "$CID" > /dev/null
+        docker rm "$CID" > /dev/null || exit 1
         FAILED=1
     fi
+    CID=""
 else
     echo "  [FAIL] PHP-FPM configuration test failed"
     FAILED=1
+fi
+
+# 10. Focused EOL mitigation regressions (supported branches have different OOM semantics).
+if [ "$PHP_VER" -ge 70200 ] && [ "$PHP_VER" -lt 80200 ]; then
+    SECURITY_DIR="$(cd "$(dirname "$0")/security" && pwd)" || exit 1
+    SECURITY_CID=$(docker create --platform "$PLATFORM" --network none --memory 256m --pids-limit 64 \
+        --mount "type=bind,source=$SECURITY_DIR,target=/security,readonly" \
+        -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /usr/bin/timeout "$IMAGE" \
+        90 /opt/ymir/bin/php /security/verify.php) || exit 1
+    docker start --attach "$SECURITY_CID" || exit 1
+    SECURITY_STATUS=$(docker wait "$SECURITY_CID") || exit 1
+    if [ "$SECURITY_STATUS" != "0" ]; then
+        echo "  [FAIL] Legacy security regressions (container exit $SECURITY_STATUS)"
+        FAILED=1
+    fi
+    docker rm "$SECURITY_CID" > /dev/null || exit 1
+    SECURITY_CID=""
 fi
 
 if [ $FAILED -eq 1 ]; then

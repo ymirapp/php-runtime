@@ -42,6 +42,8 @@ ENV VERSION_PHP=8.0.30
 RUN mkdir -p ${BUILD_DIR}/php
 WORKDIR ${BUILD_DIR}/php
 RUN curl --location --silent --show-error --fail https://www.php.net/distributions/php-${VERSION_PHP}.tar.gz | tar xzC . --strip-components=1
+COPY runtime/patches/php-8.0-security.patch /tmp/php-patches/
+RUN git apply /tmp/php-patches/php-8.0-security.patch
 RUN ./buildconf --force && \
     export PKG_CONFIG_PATH="${INSTALL_DIR}/openssl11/lib/pkgconfig:$PKG_CONFIG_PATH" && \
     CFLAGS="-fstack-protector-strong -fpic -fpie -Os -I${INSTALL_DIR}/include -I${INSTALL_DIR}/openssl11/include -I/usr/include -ffunction-sections -fdata-sections" \
