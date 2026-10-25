@@ -167,6 +167,31 @@ class LaravelApplicationTest extends TestCase
         $this->assertStringNotContainsString('--key', implode(' ', $decryptCommand));
     }
 
+    public function testInitializeDoesNotExposeDecryptedValuesWhenEnvironmentFileIsInvalid(): void
+    {
+        $this->setEnvironmentVariable('APP_ENV', 'testing');
+        $this->setEnvironmentVariable('LARAVEL_ENV_ENCRYPTION_KEY', 'secret');
+
+        touch($this->tempDir.'/.env.testing.encrypted');
+
+        $application = $this->getLaravelApplication([
+            ['env:decrypt', '--env=testing', '--path=/tmp', '--force', '--no-ansi', '--no-interaction'],
+        ], [
+            function (): void {
+                $this->writeTemporaryFile('/tmp/.env.testing', "DECRYPTED_ENV_VALUE=\"synthetic-secret-do-not-log\n");
+            },
+        ]);
+
+        try {
+            $application->initialize();
+            $this->fail('Invalid decrypted environment file did not stop initialization');
+        } catch (ApplicationInitializationException $exception) {
+            $this->assertSame('Failed to load decrypted Laravel environment file "/tmp/.env.testing"', $exception->getMessage());
+            $this->assertNull($exception->getPrevious());
+            $this->assertStringNotContainsString('synthetic-secret-do-not-log', (string) $exception);
+        }
+    }
+
     public function testInitializeDoesNotRunDecryptCommandWhenEncryptionKeyIsMissing(): void
     {
         $application = $this->getLaravelApplication([

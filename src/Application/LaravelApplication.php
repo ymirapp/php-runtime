@@ -151,7 +151,7 @@ class LaravelApplication extends AbstractApplication
         try {
             Dotenv::createUnsafeMutable('/tmp', '.env.'.$environment)->load();
         } catch (DotenvExceptionInterface $exception) {
-            throw new ApplicationInitializationException(sprintf('Failed to load decrypted Laravel environment file "/tmp/.env.%s": %s', $environment, $exception->getMessage()));
+            throw new ApplicationInitializationException(sprintf('Failed to load decrypted Laravel environment file "/tmp/.env.%s"', $environment));
         }
     }
 }
