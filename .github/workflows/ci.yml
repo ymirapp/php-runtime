@@ -8,6 +8,8 @@ on:
       - 'tests/**'
       - 'composer.json'
       - 'composer.lock'
+      - 'requirements-dev.txt'
+      - 'ruff.toml'
 
 jobs:
   code-quality:
@@ -28,6 +30,16 @@ jobs:
         run: composer phpstan
       - name: Run Rector
         run: composer rector
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install Python development dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Lint integration tests
+        run: composer tests:integration:lint
+      - name: Test integration harness
+        run: composer tests:integration:harness
   php-tests:
     name: Run tests on ${{ matrix.php-versions }}
     runs-on: ubuntu-latest

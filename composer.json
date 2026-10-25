@@ -70,6 +70,11 @@
         "phpstan:generate-baseline": "phpstan analyze --generate-baseline",
         "rector": "rector --dry-run",
         "rector:fix": "rector",
+        "tests:integration:harness": "python3 -B tests/Integration/test_harness.py",
+        "tests:integration:lint": [
+            "ruff check .",
+            "ruff format --check ."
+        ],
         "tests:unit": "phpunit --testsuite unit"
     }
 }

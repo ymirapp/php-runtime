@@ -10,15 +10,10 @@ if [ -z "$PLATFORM" ]; then PLATFORM="linux/amd64"; fi
 echo "Testing $IMAGE on $PLATFORM..."
 
 FAILED=0
-CID=""
-cleanup() {
-    if [ -n "$CID" ]; then docker rm -f "$CID" > /dev/null 2>&1 || true; fi
-}
-trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-# 1. Size
+# Size
 OPT_SIZE_KB=$(docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "du -sk /opt | cut -f1") || exit 1
 if ! [[ "$OPT_SIZE_KB" =~ ^[0-9]+$ ]]; then echo "  [FAIL] Could not determine image size"; exit 1; fi
 OPT_SIZE_MB=$(( OPT_SIZE_KB / 1024 ))
@@ -33,12 +28,12 @@ else
     echo "  [OK] Size: ${OPT_SIZE_MB}MB"
 fi
 
-# 2. PHP binary & Version
+# PHP binary & Version
 echo "--------------------------------------------------------------------------------"
 docker run --rm --platform "$PLATFORM" --entrypoint /opt/ymir/bin/php "$IMAGE" -v || FAILED=1
 echo "--------------------------------------------------------------------------------"
 
-# 3. Filesystem layout
+# Filesystem layout
 FILES_TO_CHECK=("/opt/bootstrap" "/opt/runtime.php" "/opt/vendor" "/opt/vendor/autoload.php" "/opt/src" "/opt/templates")
 for file in "${FILES_TO_CHECK[@]}"; do
     if docker run --rm --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "[ -e $file ]"; then
@@ -49,25 +44,7 @@ for file in "${FILES_TO_CHECK[@]}"; do
     fi
 done
 
-# 4. Runtime Entry Point Verification
-ENTRY_POINT_LOG=$(docker run --rm --platform "$PLATFORM" \
-    -e AWS_LAMBDA_RUNTIME_API="localhost" \
-    -e AWS_REGION="us-east-1" \
-    -e YMIR_FUNCTION_TYPE="console" \
-    -e LAMBDA_TASK_ROOT="/var/task" \
-    --entrypoint /opt/ymir/bin/php "$IMAGE" /opt/runtime.php 2>&1 | head -n 20 || true)
-
-if echo "$ENTRY_POINT_LOG" | grep -Eq "Loaded runtime Composer autoload file|Ymir PHP Runtime \(console\) initialized"; then
-    echo "  [OK] Runtime entry point loadable"
-else
-    echo "  [FAIL] Runtime entry point failed to boot"
-    echo "--------------------------------------------------------------------------------"
-    echo "$ENTRY_POINT_LOG"
-    echo "--------------------------------------------------------------------------------"
-    FAILED=1
-fi
-
-# 5. Modules (with standard Lambda LD_LIBRARY_PATH)
+# Modules (with standard Lambda LD_LIBRARY_PATH)
 LAMBDA_LD_PATH="/opt/lib:/lib64:/usr/lib64"
 # Capture both stdout and stderr to detect startup warnings
 MODULE_OUTPUT=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -m 2>&1)
@@ -102,7 +79,7 @@ for mod in "${REQUIRED[@]}"; do
     fi
 done
 
-# 5.5 Extension File Verification
+# Extension File Verification
 echo "  [INFO] Verifying extension paths..."
 EXT_DIR=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "echo ini_get('extension_dir');" 2>/dev/null)
 if [ -z "$EXT_DIR" ]; then
@@ -140,16 +117,7 @@ else
     fi
 fi
 
-# 5.6 Default paths (empty session.save_path means the system temp directory)
-DEFAULT_PATHS=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "echo ini_get('session.save_path'), '|', ini_get('include_path');" 2>/dev/null)
-if [ "$DEFAULT_PATHS" = "|.:/opt/ymir/lib/php" ]; then
-    echo "  [OK] Default session.save_path and include_path"
-else
-    echo "  [FAIL] Default session.save_path|include_path changed: '$DEFAULT_PATHS'"
-    FAILED=1
-fi
-
-# 6. Relay Configuration
+# Relay Configuration
 if [ -n "$PHP_VER" ] && [ "$PHP_VER" -ge 70400 ]; then
     EVICTION_POLICY=$(docker run --rm --platform "$PLATFORM" -e LD_LIBRARY_PATH="$LAMBDA_LD_PATH" --entrypoint /opt/ymir/bin/php "$IMAGE" -r "echo ini_get('relay.eviction_policy');" 2>/dev/null)
     if [ "$EVICTION_POLICY" = "lru" ]; then
@@ -160,7 +128,7 @@ if [ -n "$PHP_VER" ] && [ "$PHP_VER" -ge 70400 ]; then
     fi
 fi
 
-# 7. Warnings (Comprehensive check)
+# Warnings (Comprehensive check)
 # Check multiple commands to ensure no hidden startup warnings
 PHP_COMMANDS=("-v" "-i" "-m")
 ANY_WARNINGS=""
@@ -179,7 +147,7 @@ else
     echo "  [OK] No PHP startup warnings"
 fi
 
-# 8. Generic TLS Crypto Validation
+# Generic TLS Crypto Validation
 TLS_OUTPUT=$(docker run --rm --platform "$PLATFORM" --entrypoint /opt/ymir/bin/php "$IMAGE" -r '$content=file_get_contents("https://www.google.com");if(false===$content){echo "tls_fetch_failed\n";exit(2);}echo "tls_fetch_ok\n";' 2>&1)
 TLS_STATUS=$?
 
@@ -193,28 +161,13 @@ else
     FAILED=1
 fi
 
-# 9. PHP-FPM
-FPM_BIN="/opt/ymir/bin/php-fpm"
-FPM_CONF="/opt/ymir/etc/php-fpm.d/php-fpm.conf"
-
-if docker run --rm --platform "$PLATFORM" --entrypoint $FPM_BIN "$IMAGE" -t --fpm-config $FPM_CONF --allow-to-run-as-root; then
-    CID=$(docker run -d --platform "$PLATFORM" --entrypoint /bin/sh "$IMAGE" -c "mkdir -p /tmp/.ymir && exec $FPM_BIN -F --fpm-config $FPM_CONF --allow-to-run-as-root") || exit 1
-    sleep 2
-    if [ "$(docker inspect --format '{{.State.Running}}' "$CID")" = "true" ]; then
-        echo "  [OK] PHP-FPM started"
-        docker stop "$CID" > /dev/null || exit 1
-        docker rm "$CID" > /dev/null || exit 1
-    else
-        echo "  [FAIL] PHP-FPM failed to start"
-        docker logs "$CID"
-        docker rm "$CID" > /dev/null || exit 1
-        FAILED=1
-    fi
-    CID=""
-else
-    echo "  [FAIL] PHP-FPM configuration test failed"
-    FAILED=1
-fi
+# Lambda invocations through RIE (also covers runtime boot, PHP-FPM startup and default paths)
+# Run in the background so INT/TERM reach the suite, which removes its containers before exiting.
+python3 "$(dirname "$0")/../tests/Integration/test_runtime.py" "$IMAGE" "$PLATFORM" &
+SUITE_PID=$!
+trap 'kill -INT "$SUITE_PID"; wait "$SUITE_PID"; exit 130' INT
+trap 'kill -TERM "$SUITE_PID"; wait "$SUITE_PID"; exit 143' TERM
+wait "$SUITE_PID" || FAILED=1
 
 if [ $FAILED -eq 1 ]; then
     echo "Verification FAILED!"

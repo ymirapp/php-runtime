@@ -10,6 +10,7 @@ on:
       - 'runtime/**'
       - 'src/**'
       - 'templates/**'
+      - 'tests/Integration/**'
       - '.github/workflows/build-publish-dev-images.yml'
 
 permissions:
