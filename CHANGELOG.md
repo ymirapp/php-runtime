@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.22.2](https://github.com/ymirapp/php-runtime/compare/v1.22.1...v1.22.2) (2026-10-25)
+
+
+### Bug Fixes
+
+* Build legacy PHP runtimes from vendor security backports ([4367d84](https://github.com/ymirapp/php-runtime/commit/4367d8430e867633914a174badd43f62b740d133))
+* Redact decrypted environment parsing errors ([e994508](https://github.com/ymirapp/php-runtime/commit/e994508ecd8919ffb7bfdecd812f31e2e565c565))
+
+
+### Dependency Changes
+
+* Updated composer dependencies ([0db0a0d](https://github.com/ymirapp/php-runtime/commit/0db0a0d100d7083e1e979f23eab3da819caea5b6))
+* Upgrade imagick to 7.1.2-34 ([c4a02f3](https://github.com/ymirapp/php-runtime/commit/c4a02f37436786393e9ac6f7f6b501e8379f674a))
+* Upgrade sqlite to 3.54.1 ([7e67571](https://github.com/ymirapp/php-runtime/commit/7e67571462084cf6a3be2dcd57f7a66372bcded4))
+
 ## [1.22.1](https://github.com/ymirapp/php-runtime/compare/v1.22.0...v1.22.1) (2026-10-21)
 
 
