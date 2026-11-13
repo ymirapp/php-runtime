@@ -377,6 +377,7 @@ class LambdaTestCase(unittest.TestCase):
         self.assertEqual('/var/task', identity['cwd'])
         self.assertEqual('.:/opt/ymir/lib/php', identity['include_path'])
         self.assertEqual('', identity['session_save_path'])
+        self.assertEqual('0', identity['session_upload_progress_enabled'])
         self.assertEqual('/tmp', identity['temp_dir'])
         self.assertTrue(identity['tmp_writable'])
         self.assertFalse(identity['task_root_writable'])

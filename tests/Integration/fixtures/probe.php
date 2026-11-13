@@ -36,6 +36,7 @@ function probe_identity(): array
         'sapi' => PHP_SAPI,
         'scanned_ini_files' => array_map('trim', explode(',', (string) php_ini_scanned_files())),
         'session_save_path' => ini_get('session.save_path'),
+        'session_upload_progress_enabled' => ini_get('session.upload_progress.enabled'),
         'task_root_writable' => is_writable('/var/task'),
         'temp_dir' => sys_get_temp_dir(),
         'tmp_writable' => $tmpWritable,
