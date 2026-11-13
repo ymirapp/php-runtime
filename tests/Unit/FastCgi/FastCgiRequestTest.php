@@ -55,6 +55,26 @@ class FastCgiRequestTest extends TestCase
         $this->assertSame('1', $parameters['HTTP_YMIR_HEALTH_CHECK']);
     }
 
+    public function testCreateFromInvocationEventRemovesRejectedForwardedHostHeaders(): void
+    {
+        $event = $this->getHttpRequestEventMock();
+
+        $event->method('getContext')
+              ->willReturn($this->getInvocationContextMock());
+
+        $event->method('getForwardedHost')
+              ->willReturn(null);
+
+        $event->method('getHeaders')
+              ->willReturn(['host' => ['origin.example.com'], 'x-forwarded-host' => ['attacker.example'], 'x_forwarded_host' => ['attacker.example']]);
+
+        $parameters = FastCgiRequest::createFromInvocationEvent($event, '/tmp/foo.php')->getParams();
+
+        $this->assertSame('origin.example.com', $parameters['HTTP_HOST']);
+        $this->assertSame('origin.example.com', $parameters['SERVER_NAME']);
+        $this->assertArrayNotHasKey('HTTP_X_FORWARDED_HOST', $parameters);
+    }
+
     public function testCreateFromInvocationEventSetsContentLengthWithTraceMethod(): void
     {
         $context = $this->getInvocationContextMock();
@@ -998,6 +1018,10 @@ class FastCgiRequestTest extends TestCase
         $event->expects($this->once())
               ->method('getContext')
               ->willReturn($context);
+
+        $event->expects($this->once())
+              ->method('getForwardedHost')
+              ->willReturn('test.local');
 
         $event->expects($this->once())
               ->method('getHeaders')

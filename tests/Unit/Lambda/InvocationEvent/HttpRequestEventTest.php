@@ -15,11 +15,40 @@ namespace Ymir\Runtime\Tests\Unit\Lambda\InvocationEvent;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
+use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
 
 class HttpRequestEventTest extends TestCase
 {
+    use FunctionMockTrait;
     use InvocationContextMockTrait;
+
+    public static function provideForwardedHosts(): \Iterator
+    {
+        $domains = 'app.example.com,shop.example.net,*.example.org,site.ymirsites.com';
+
+        yield 'mapped domain' => [$domains, ['app.example.com'], 'app.example.com'];
+        yield 'alternate mapped domain' => [$domains, ['shop.example.net'], 'shop.example.net'];
+        yield 'vanity domain' => [$domains, ['site.ymirsites.com'], 'site.ymirsites.com'];
+        yield 'single-label wildcard' => [$domains, ['a.example.org'], 'a.example.org'];
+        yield 'case-insensitive domain' => [strtoupper($domains), ['APP.Example.COM'], 'app.example.com'];
+        yield 'HTTPS port' => [$domains, ['app.example.com:443'], 'app.example.com'];
+        yield 'unmapped domain' => [$domains, ['attacker.example'], null];
+        yield 'mapped name is not a prefix' => [$domains, ['app.example.com.attacker.example'], null];
+        yield 'mapped name is not a suffix' => [$domains, ['evilapp.example.com'], null];
+        yield 'wildcard excludes apex' => [$domains, ['example.org'], null];
+        yield 'wildcard excludes deeper names' => [$domains, ['a.b.example.org'], null];
+        yield 'wildcard is not a literal host' => [$domains, ['*.example.org'], null];
+        yield 'wildcard label must be a hostname' => [$domains, ['-a.example.org'], null];
+        yield 'non-HTTPS port' => [$domains, ['app.example.com:8443'], null];
+        yield 'URL instead of hostname' => [$domains, ['https://app.example.com'], null];
+        yield 'trailing newline' => [$domains, ["app.example.com\n"], null];
+        yield 'comma-separated hosts' => [$domains, ['app.example.com, attacker.example'], null];
+        yield 'repeated hosts' => [$domains, ['app.example.com', 'attacker.example'], null];
+        yield 'missing mapped domains' => [null, ['app.example.com'], null];
+        yield 'empty mapped domains' => ['', ['app.example.com'], null];
+        yield 'no forwarded host' => [$domains, [], null];
+    }
 
     public static function provideNonBooleanTrueHealthCheckValues(): \Iterator
     {
@@ -49,6 +78,24 @@ class HttpRequestEventTest extends TestCase
     public function testGetBodyWithValue(): void
     {
         $this->assertSame('foo', (new HttpRequestEvent($this->getInvocationContextMock(), ['body' => 'foo']))->getBody());
+    }
+
+    /**
+     * @dataProvider provideForwardedHosts
+     */
+    public function testGetForwardedHostOnlyReturnsMappedDomains(?string $domains, array $forwardedHosts, ?string $expected): void
+    {
+        $this->getFunctionMock($this->getNamespace(HttpRequestEvent::class), 'getenv')
+             ->expects($this->any())
+             ->with('YMIR_DOMAIN_NAMES')
+             ->willReturn($domains ?? false);
+
+        $headers = empty($forwardedHosts) ? [] : ['X-Forwarded-Host' => $forwardedHosts];
+
+        $this->assertSame($expected, (new HttpRequestEvent($this->getInvocationContextMock(), ['multiValueHeaders' => $headers]))->getForwardedHost());
+        $this->assertSame($expected, (new HttpRequestEvent($this->getInvocationContextMock(), ['headers' => array_map(function (array $values): string {
+            return implode(', ', $values);
+        }, $headers), 'version' => '2.0']))->getForwardedHost());
     }
 
     public function testGetHeadersAddsCookieHeaderWithPayloadVersion2(): void

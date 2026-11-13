@@ -50,6 +50,41 @@ class HttpRequestEvent extends AbstractEvent
     }
 
     /**
+     * Get the forwarded host when it matches a domain name mapped to the environment.
+     */
+    public function getForwardedHost(): ?string
+    {
+        $hosts = $this->getHeaders()['x-forwarded-host'] ?? [];
+
+        if (1 !== count($hosts)) {
+            return null;
+        }
+
+        $authority = explode(':', strtolower($hosts[0]), 2);
+
+        if (isset($authority[1]) && '443' !== $authority[1]) {
+            return null;
+        }
+
+        $host = $authority[0];
+
+        if (false === filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+            return null;
+        }
+
+        $labels = explode('.', $host, 2);
+        $wildcardDomainName = isset($labels[1]) ? '*.'.$labels[1] : null;
+
+        $matchesMappedDomain = collect(explode(',', (string) getenv('YMIR_DOMAIN_NAMES')))->map(function (string $domainName): string {
+            return strtolower(trim($domainName));
+        })->contains(function (string $domainName) use ($host, $wildcardDomainName): bool {
+            return $host === $domainName || $wildcardDomainName === $domainName;
+        });
+
+        return $matchesMappedDomain ? $host : null;
+    }
+
+    /**
      * Get the headers of the invocation request.
      */
     public function getHeaders(): array

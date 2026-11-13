@@ -52,6 +52,7 @@ class FastCgiRequest implements ProvidesRequestData
         $content = $event->getBody();
         $context = $event->getContext();
         $documentRoot = getcwd() ?: '';
+        $forwardedHost = $event->getForwardedHost();
         $headers = $event->getHeaders();
         $method = strtoupper($event->getMethod());
         $path = $event->getPath();
@@ -89,7 +90,7 @@ class FastCgiRequest implements ProvidesRequestData
             'SCRIPT_FILENAME' => $scriptFilename,
             'SCRIPT_NAME' => $scriptName,
             'SERVER_ADDR' => '127.0.0.1',
-            'SERVER_NAME' => $headers['x-forwarded-host'][0] ?? $headers['host'][0] ?? 'localhost',
+            'SERVER_NAME' => $forwardedHost ?? $headers['host'][0] ?? 'localhost',
             'SERVER_PORT' => $port,
             'SERVER_PROTOCOL' => $event->getProtocol(),
             'SERVER_SOFTWARE' => 'ymir',
@@ -119,7 +120,13 @@ class FastCgiRequest implements ProvidesRequestData
             $parameters['HTTP_'.strtoupper(str_replace('-', '_', $header))] = $value[0];
         }
 
-        // Force "HTTP_HOST" and "SERVER_NAME" to match because of the "X_FORWARDED_HOST" header.
+        // Header names like "x_forwarded_host" also map to "HTTP_X_FORWARDED_HOST", so only the validated host can remain.
+        unset($parameters['HTTP_X_FORWARDED_HOST']);
+
+        if (null !== $forwardedHost) {
+            $parameters['HTTP_X_FORWARDED_HOST'] = $forwardedHost;
+        }
+
         $parameters['HTTP_HOST'] = $parameters['SERVER_NAME'];
 
         ksort($parameters);
