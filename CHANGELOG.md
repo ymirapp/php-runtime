@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.3](https://github.com/ymirapp/php-runtime/compare/v1.22.2...v1.22.3) (2026-11-13)
+
+
+### Bug Fixes
+
+* Only trust forwarded hosts that match the environment's domain names ([dfb0e4f](https://github.com/ymirapp/php-runtime/commit/dfb0e4f75b2e81ef3903e395568cfe202e4ebdbf))
+
 ## [1.22.2](https://github.com/ymirapp/php-runtime/compare/v1.22.1...v1.22.2) (2026-10-25)
 
 
