@@ -76,6 +76,9 @@ class PhpFpmProcessTest extends TestCase
         $process->method('isRunning')
                 ->willReturn(true);
 
+        $response->method('getOutput')
+                 ->willReturn("Status: 204 No Content\r\n\r\n");
+
         $phpFpmProcess = new PhpFpmProcess($client, $logger, $process);
 
         $this->assertSame($response, $phpFpmProcess->handle($request, 1000));
@@ -121,6 +124,9 @@ class PhpFpmProcessTest extends TestCase
 
         $process->method('isRunning')
                 ->willReturn(true);
+
+        $response->method('getOutput')
+                 ->willReturn("Content-type: text/html\r\n\r\nfoo");
 
         $phpFpmProcess = $this->getMockBuilder(PhpFpmProcess::class)
                               ->setConstructorArgs([$client, $logger, $process])
@@ -174,6 +180,33 @@ class PhpFpmProcessTest extends TestCase
                       ->method('stop');
         $phpFpmProcess->expects($this->once())
                       ->method('start');
+
+        $phpFpmProcess->handle($request, 1000);
+    }
+
+    public function testHandleWithEmptyOutput(): void
+    {
+        $this->expectException(PhpFpmProcessException::class);
+        $this->expectExceptionMessage('PHP-FPM ended the request without a response');
+
+        $client = $this->getFastCgiServerClientMock();
+        $logger = $this->getLoggerMock();
+        $process = $this->getProcessMock();
+        $request = $this->getProvidesRequestDataMock();
+        $response = $this->getProvidesResponseDataMock();
+
+        $client->expects($this->once())
+               ->method('handle')
+               ->with($this->identicalTo($request), 1000)
+               ->willReturn($response);
+
+        $process->method('isRunning')
+                ->willReturn(true);
+
+        $response->method('getOutput')
+                 ->willReturn('');
+
+        $phpFpmProcess = new PhpFpmProcess($client, $logger, $process);
 
         $phpFpmProcess->handle($request, 1000);
     }

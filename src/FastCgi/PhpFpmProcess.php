@@ -191,6 +191,11 @@ class PhpFpmProcess
             throw new PhpFpmProcessException('PHP-FPM has stopped unexpectedly');
         }
 
+        // PHP-FPM writes headers for every request it runs. Empty output means the worker failed to start the request and exited.
+        if ('' === $response->getOutput()) {
+            throw new PhpFpmProcessException('PHP-FPM ended the request without a response');
+        }
+
         return $response;
     }
 
