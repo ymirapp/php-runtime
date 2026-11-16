@@ -175,6 +175,8 @@ class RuntimeApiClient
             throw new RuntimeApiException('Error sending data to the Lambda runtime API: '.$errorMessage);
         }
 
+        $statusCode = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+
         curl_setopt($handle, CURLOPT_HEADERFUNCTION, null);
         curl_setopt($handle, CURLOPT_READFUNCTION, null);
         curl_setopt($handle, CURLOPT_WRITEFUNCTION, null);
@@ -183,5 +185,9 @@ class RuntimeApiClient
         curl_reset($handle);
 
         curl_close($handle);
+
+        if ($statusCode < 200 || $statusCode >= 300) {
+            throw new RuntimeApiException(sprintf('The Lambda runtime API rejected the data sent to "%s" with HTTP status %d', ltrim($uri, '/'), $statusCode));
+        }
     }
 }

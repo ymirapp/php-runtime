@@ -32,6 +32,14 @@ class RuntimeApiClientTest extends TestCase
     use LoggerMockTrait;
     use ResponseInterfaceMockTrait;
 
+    public static function provideRejectedStatusCodes(): \Iterator
+    {
+        yield 'bad request' => [400];
+        yield 'forbidden' => [403];
+        yield 'payload too large' => [413];
+        yield 'server error' => [500];
+    }
+
     public function testConstructorThrowsExceptionOnCurlInitFailure(): void
     {
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_init')->expects($this->once())->willReturn(false);
@@ -120,12 +128,39 @@ class RuntimeApiClientTest extends TestCase
         \curl_close($handle);
     }
 
+    /**
+     * @dataProvider provideRejectedStatusCodes
+     */
+    public function testSendDataThrowsExceptionWhenRuntimeApiRejectsData(int $statusCode): void
+    {
+        $handle = \curl_init();
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_init')->expects($this->exactly(2))->willReturn($handle);
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_setopt')->expects($this->any())->willReturn(true);
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_exec')->expects($this->once())->willReturn('{"errorMessage":"secret payload"}');
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_error')->expects($this->any())->willReturn('');
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_getinfo')->expects($this->once())->willReturn($statusCode);
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_close')->expects($this->any());
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_reset')->expects($this->any());
+
+        $client = new RuntimeApiClient('api-url', $this->getLoggerMock());
+        $context = $this->getInvocationContextMock();
+        $context->method('getRequestId')->willReturn('request-id');
+
+        $this->expectException(RuntimeApiException::class);
+        $this->expectExceptionMessageMatches('/^'.preg_quote(sprintf('The Lambda runtime API rejected the data sent to "invocation/request-id/error" with HTTP status %d', $statusCode), '/').'$/');
+
+        $client->sendError($context, new \Exception('secret payload'));
+
+        \curl_close($handle);
+    }
+
     public function testSendError(): void
     {
         $handle = \curl_init();
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_init')->expects($this->exactly(2))->willReturn($handle);
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_error')->expects($this->any())->willReturn('');
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_exec')->expects($this->once())->willReturn(true);
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_getinfo')->expects($this->any())->willReturn(202);
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_close')->expects($this->any());
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_reset')->expects($this->any());
 
@@ -161,6 +196,7 @@ class RuntimeApiClientTest extends TestCase
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_init')->expects($this->exactly(2))->willReturn($handle);
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_error')->expects($this->any())->willReturn('');
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_exec')->expects($this->once())->willReturn(true);
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_getinfo')->expects($this->any())->willReturn(202);
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_close')->expects($this->any());
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_reset')->expects($this->any());
 
@@ -194,6 +230,7 @@ class RuntimeApiClientTest extends TestCase
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_init')->expects($this->exactly(2))->willReturn($handle);
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_error')->expects($this->any())->willReturn('');
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_exec')->expects($this->once())->willReturn(true);
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_getinfo')->expects($this->any())->willReturn(202);
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_close')->expects($this->any());
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_reset')->expects($this->any());
 
@@ -237,6 +274,7 @@ class RuntimeApiClientTest extends TestCase
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_init')->expects($this->exactly(2))->willReturn($handle);
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_error')->expects($this->any())->willReturn('');
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_exec')->expects($this->once())->willReturn(true);
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_getinfo')->expects($this->any())->willReturn(202);
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_close')->expects($this->any());
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_reset')->expects($this->any());
 
@@ -269,6 +307,7 @@ class RuntimeApiClientTest extends TestCase
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_init')->expects($this->exactly(2))->willReturn($handle);
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_error')->expects($this->any())->willReturn('');
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_exec')->expects($this->once())->willReturn(true);
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_getinfo')->expects($this->any())->willReturn(202);
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_close')->expects($this->any());
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_reset')->expects($this->any());
 
@@ -308,6 +347,7 @@ class RuntimeApiClientTest extends TestCase
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_init')->expects($this->exactly(2))->willReturn($handle);
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_error')->expects($this->any())->willReturn('');
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_exec')->expects($this->once())->willReturn(true);
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_getinfo')->expects($this->any())->willReturn(202);
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_close')->expects($this->any());
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_reset')->expects($this->any());
 
