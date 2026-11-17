@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4b877f008de7801329e86e8771c5cf4f",
+    "content-hash": "4ce32698e1c923abb734305ea3239a95",
     "packages": [
         {
             "name": "async-aws/core",
@@ -1632,16 +1632,16 @@
         },
         {
             "name": "ymirapp/monolog-bridge",
-            "version": "v1.0.0",
+            "version": "v2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ymirapp/monolog-bridge.git",
-                "reference": "0f6715de32709e688db9b6ecc605159da28aaed7"
+                "reference": "5cf39483f07a41b3bf55d4d8fdcf1e77be15ddf9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ymirapp/monolog-bridge/zipball/0f6715de32709e688db9b6ecc605159da28aaed7",
-                "reference": "0f6715de32709e688db9b6ecc605159da28aaed7",
+                "url": "https://api.github.com/repos/ymirapp/monolog-bridge/zipball/5cf39483f07a41b3bf55d4d8fdcf1e77be15ddf9",
+                "reference": "5cf39483f07a41b3bf55d4d8fdcf1e77be15ddf9",
                 "shasum": ""
             },
             "require": {
@@ -1673,9 +1673,10 @@
             "description": "Monolog integration for Ymir",
             "support": {
                 "issues": "https://github.com/ymirapp/monolog-bridge/issues",
-                "source": "https://github.com/ymirapp/monolog-bridge/tree/v1.0.0"
+                "source": "https://github.com/ymirapp/monolog-bridge/tree/v2.0.0"
             },
-            "time": "2026-02-01T19:25:34+00:00"
+            "time": "2026-11-17T15:13:23+00:00",
+            "published-time": "2026-11-17T15:13:41+00:00"
         }
     ],
     "packages-dev": [
@@ -5718,5 +5719,5 @@
     "platform-overrides": {
         "php": "7.4.33"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
