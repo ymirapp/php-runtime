@@ -69,7 +69,7 @@ abstract class AbstractIlluminateQueueSqsHandler extends AbstractSqsHandler
             $arguments[] = '--force';
         }
 
-        $process = new Process($arguments);
+        $process = new Process($arguments, null, ['AWS_REQUEST_ID' => $context->getRequestId()]);
         $process->setTimeout(null);
         $process->run(function (string $type, string $output): void {
             $this->writeProcessOutput($type, $output);

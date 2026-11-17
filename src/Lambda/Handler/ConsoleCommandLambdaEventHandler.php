@@ -58,8 +58,10 @@ class ConsoleCommandLambdaEventHandler implements LambdaEventHandlerInterface
             throw new InvalidHandlerEventException($this, $event);
         }
 
-        $process = Process::fromShellCommandline("{$event->getCommand()} 2>&1");
-        $process->setTimeout(max(1, $event->getContext()->getRemainingTimeInMs() / 1000 - 1));
+        $context = $event->getContext();
+
+        $process = Process::fromShellCommandline("{$event->getCommand()} 2>&1", null, ['AWS_REQUEST_ID' => $context->getRequestId()]);
+        $process->setTimeout(max(1, $context->getRemainingTimeInMs() / 1000 - 1));
         $process->run(function ($type, $output): void {
             $this->logger->info($output);
         });

@@ -60,6 +60,37 @@ class AbstractRuntimeTest extends TestCase
         $runtime->processNextEvent();
     }
 
+    public function testProcessNextEventSetsRequestIdOnlyWhileHandlingEvent(): void
+    {
+        $client = $this->getLambdaRuntimeApiClientMock();
+        $context = $this->getInvocationContextMock();
+        $event = $this->getInvocationEventInterfaceMock();
+        $exception = new \Exception('test exception');
+        $handler = $this->getLambdaEventHandlerInterfaceMock();
+        $logger = $this->getLoggerMock();
+        $requestIds = [];
+
+        $runtime = $this->getMockForAbstractClass(AbstractRuntime::class, [$client, $handler, $logger]);
+
+        $context->method('getRequestId')->willReturn('lambda-request-id');
+        $event->method('getContext')->willReturn($context);
+        $client->method('getNextEvent')->willReturn($event);
+        $handler->method('canHandle')->willReturn(true);
+        $handler->method('handle')->willReturnCallback(function () use (&$requestIds, $exception): void {
+            $requestIds[] = $_SERVER['AWS_REQUEST_ID'] ?? null;
+
+            throw $exception;
+        });
+        $logger->method('exception')->willReturnCallback(function () use (&$requestIds): void {
+            $requestIds[] = $_SERVER['AWS_REQUEST_ID'] ?? null;
+        });
+
+        $runtime->processNextEvent();
+
+        $this->assertSame(['lambda-request-id', 'lambda-request-id'], $requestIds);
+        $this->assertArrayNotHasKey('AWS_REQUEST_ID', $_SERVER);
+    }
+
     public function testProcessNextEventWithException(): void
     {
         $client = $this->getLambdaRuntimeApiClientMock();

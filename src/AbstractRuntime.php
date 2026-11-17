@@ -60,11 +60,15 @@ abstract class AbstractRuntime implements RuntimeInterface
     {
         $event = $this->client->getNextEvent();
 
+        $_SERVER['AWS_REQUEST_ID'] = $event->getContext()->getRequestId();
+
         try {
             $this->handleEvent($event);
         } catch (\Throwable $exception) {
             $this->logger->exception($exception);
             $this->client->sendError($event->getContext(), $exception);
+        } finally {
+            unset($_SERVER['AWS_REQUEST_ID']);
         }
     }
 

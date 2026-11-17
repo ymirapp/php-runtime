@@ -48,6 +48,25 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
         $this->assertFalse((new ConsoleCommandLambdaEventHandler($this->getLoggerMock()))->canHandle($this->getInvocationEventInterfaceMock()));
     }
 
+    public function testHandlePassesRequestIdToCommand(): void
+    {
+        $context = $this->getInvocationContextMock();
+        $event = $this->getConsoleCommandEventMock();
+        $logger = $this->getLoggerMock();
+
+        $event->method('getCommand')->willReturn('printf %s "$AWS_REQUEST_ID"');
+        $event->method('getContext')->willReturn($context);
+
+        $context->method('getRemainingTimeInMs')->willReturn(60000);
+        $context->method('getRequestId')->willReturn('lambda-request-id');
+
+        $logger->expects($this->once())
+               ->method('info')
+               ->with('lambda-request-id');
+
+        (new ConsoleCommandLambdaEventHandler($logger))->handle($event);
+    }
+
     /**
      * @dataProvider provideTimeouts
      */
