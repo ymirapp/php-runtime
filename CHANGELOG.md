@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.23.0](https://github.com/ymirapp/php-runtime/compare/v1.22.2...v1.23.0) (2026-11-17)
+
+
+### Features
+
+* Pass the lambda request id to console and queue processes ([9b83e6f](https://github.com/ymirapp/php-runtime/commit/9b83e6ff01edbea76d0cadb7252c79c1dcf3f2f5))
+
+
+### Bug Fixes
+
+* Disable php session upload progress by default ([fd5572a](https://github.com/ymirapp/php-runtime/commit/fd5572a0b06b3fd1c591425bcdb52df6989ebad9))
+* Fail when the lambda runtime api rejects a submission ([2b0067e](https://github.com/ymirapp/php-runtime/commit/2b0067e34f3606a4bfc1a106e94997a140ebf1d4))
+* Only trust forwarded hosts that match the environment's domain names ([dfb0e4f](https://github.com/ymirapp/php-runtime/commit/dfb0e4f75b2e81ef3903e395568cfe202e4ebdbf))
+* Return 502 when php-fpm fails to start a request ([24dcb8d](https://github.com/ymirapp/php-runtime/commit/24dcb8d68ba3bee1ce520db82a7fe840a0a9232a))
+
+
+### Dependency Changes
+
+* Upgrade imagick to 7.1.2-36 ([ba2da91](https://github.com/ymirapp/php-runtime/commit/ba2da91fc56519c02437e084288d98f0b4641d47))
+* Upgrade monolog bridge to 2.0 ([dcdb622](https://github.com/ymirapp/php-runtime/commit/dcdb622a9897f255b21bf453f7f78e5d366b9ca8))
+* Upgrade php 7.3 security backports to sury 7.3.33-37 ([9cdc252](https://github.com/ymirapp/php-runtime/commit/9cdc252b40dca6f69b5b0d94bfa0fc5c49a4163e))
+
 ## [1.22.2](https://github.com/ymirapp/php-runtime/compare/v1.22.1...v1.22.2) (2026-10-25)
 
 
