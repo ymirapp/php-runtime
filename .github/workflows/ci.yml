@@ -10,6 +10,11 @@ on:
       - 'composer.lock'
       - 'requirements-dev.txt'
       - 'ruff.toml'
+      - '.php-cs-fixer.dist.php'
+      - 'phpstan.neon'
+      - 'phpstan-baseline.neon'
+      - 'phpunit.xml.dist'
+      - 'rector.php'
 
 jobs:
   code-quality:
