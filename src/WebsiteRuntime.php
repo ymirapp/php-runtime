@@ -15,6 +15,7 @@ namespace Ymir\Runtime;
 
 use Ymir\Runtime\Application\ApplicationInterface;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
+use Ymir\Runtime\Exception\PhpFpm\PhpFpmException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmProcessException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
@@ -110,11 +111,13 @@ class WebsiteRuntime extends AbstractRuntime
         } catch (PhpFpmTimeoutException $exception) {
             $this->client->sendResponse($event, new GatewayTimeoutHttpResponse($exception->getMessage()));
 
-            $this->recordTimeout($event, $exception);
+            $this->recordError('timeout', $event, $exception);
         } catch (PhpFpmProcessException $exception) {
             $this->logger->exception($exception);
 
             $this->client->sendResponse($event, new BadGatewayHttpResponse($exception->getMessage()));
+
+            $this->recordError('crash', $event, $exception);
 
             $this->logger->info('PHP-FPM process has crashed, killing lambda function');
 
@@ -129,9 +132,9 @@ class WebsiteRuntime extends AbstractRuntime
     }
 
     /**
-     * Record the PHP-FPM timeout so that the application reports it the next time it boots.
+     * Record the PHP-FPM error so that the application reports it the next time it boots.
      */
-    private function recordTimeout(InvocationEventInterface $event, PhpFpmTimeoutException $exception): void
+    private function recordError(string $type, InvocationEventInterface $event, PhpFpmException $exception): void
     {
         if (!$event instanceof HttpRequestEvent) {
             return;
@@ -144,7 +147,7 @@ class WebsiteRuntime extends AbstractRuntime
         }
 
         $record = json_encode([
-            'type' => 'timeout',
+            'type' => $type,
             'message' => $exception->getMessage(),
             'method' => $event->getMethod(),
             'path' => $event->getPath(),
