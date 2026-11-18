@@ -19,6 +19,7 @@ use Ymir\Runtime\Exception\PhpFpm\PhpFpmProcessException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\Handler\LambdaEventHandlerInterface;
+use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
 use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\Http\BadGatewayHttpResponse;
 use Ymir\Runtime\Lambda\Response\Http\GatewayTimeoutHttpResponse;
@@ -32,6 +33,16 @@ class WebsiteRuntime extends AbstractRuntime
      * The function type that the runtime handles.
      */
     public const TYPE = 'website';
+
+    /**
+     * The file where the runtime records the errors the application never sees, one JSON object per line.
+     */
+    private const ERRORS_FILE = '/tmp/.ymir/runtime-errors.jsonl';
+
+    /**
+     * The file size at which the runtime stops recording errors because the application doesn't report them.
+     */
+    private const ERRORS_FILE_MAX_SIZE = 65536;
 
     /**
      * The current number of invocations.
@@ -98,6 +109,8 @@ class WebsiteRuntime extends AbstractRuntime
             }
         } catch (PhpFpmTimeoutException $exception) {
             $this->client->sendResponse($event, new GatewayTimeoutHttpResponse($exception->getMessage()));
+
+            $this->recordTimeout($event, $exception);
         } catch (PhpFpmProcessException $exception) {
             $this->logger->exception($exception);
 
@@ -113,5 +126,36 @@ class WebsiteRuntime extends AbstractRuntime
 
             $this->terminate(0);
         }
+    }
+
+    /**
+     * Record the PHP-FPM timeout so that the application reports it the next time it boots.
+     */
+    private function recordTimeout(InvocationEventInterface $event, PhpFpmTimeoutException $exception): void
+    {
+        if (!$event instanceof HttpRequestEvent) {
+            return;
+        }
+
+        clearstatcache(true, self::ERRORS_FILE);
+
+        if (is_file(self::ERRORS_FILE) && filesize(self::ERRORS_FILE) >= self::ERRORS_FILE_MAX_SIZE) {
+            return;
+        }
+
+        $record = json_encode([
+            'type' => 'timeout',
+            'message' => $exception->getMessage(),
+            'method' => $event->getMethod(),
+            'path' => $event->getPath(),
+            'requestId' => $event->getContext()->getRequestId(),
+            'timestamp' => time(),
+        ], JSON_INVALID_UTF8_SUBSTITUTE);
+
+        if (false === $record) {
+            return;
+        }
+
+        file_put_contents(self::ERRORS_FILE, $record.PHP_EOL, FILE_APPEND | LOCK_EX);
     }
 }

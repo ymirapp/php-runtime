@@ -17,6 +17,8 @@ use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Exception\InvalidConfigurationException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmProcessException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
+use Ymir\Runtime\Lambda\InvocationEvent\HttpRequestEvent;
+use Ymir\Runtime\Lambda\InvocationEvent\InvocationContext;
 use Ymir\Runtime\Lambda\Response\Http\BadGatewayHttpResponse;
 use Ymir\Runtime\Lambda\Response\Http\GatewayTimeoutHttpResponse;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
@@ -35,6 +37,22 @@ class WebsiteRuntimeTest extends TestCase
     use LoggerMockTrait;
     use PhpFpmProcessMockTrait;
     use ResponseInterfaceMockTrait;
+
+    private const ERRORS_FILE = '/tmp/.ymir/runtime-errors.jsonl';
+
+    protected function setUp(): void
+    {
+        if (!is_dir(dirname(self::ERRORS_FILE))) {
+            mkdir(dirname(self::ERRORS_FILE));
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        if (is_file(self::ERRORS_FILE)) {
+            unlink(self::ERRORS_FILE);
+        }
+    }
 
     public function testConstructorWithMaxInvocationLessThan1(): void
     {
@@ -187,6 +205,39 @@ class WebsiteRuntimeTest extends TestCase
                  ->method('terminate');
 
         $runtime->processNextEvent();
+
+        $this->assertFalse(is_file(self::ERRORS_FILE));
+    }
+
+    public function testProcessNextEventWithPhpFpmTimeoutExceptionDoesNotRecordTimeoutWhenErrorsFileIsFull(): void
+    {
+        file_put_contents(self::ERRORS_FILE, str_repeat('a', 65536));
+
+        $this->processNextEventWithPhpFpmTimeoutException(new HttpRequestEvent(new InvocationContext('request-id'), ['httpMethod' => 'GET', 'path' => '/slow']));
+
+        $this->assertSame(str_repeat('a', 65536), file_get_contents(self::ERRORS_FILE));
+    }
+
+    public function testProcessNextEventWithPhpFpmTimeoutExceptionRecordsTimeoutForHttpRequestEvent(): void
+    {
+        file_put_contents(self::ERRORS_FILE, "{\"type\":\"timeout\"}\n");
+
+        $this->processNextEventWithPhpFpmTimeoutException(new HttpRequestEvent(new InvocationContext('request-id'), ['httpMethod' => 'post', 'path' => '/slow', 'queryStringParameters' => ['token' => 'secret']]));
+
+        $lines = file(self::ERRORS_FILE, FILE_IGNORE_NEW_LINES);
+        $record = json_decode($lines[1], true);
+
+        $this->assertCount(2, $lines);
+        $this->assertSame('{"type":"timeout"}', $lines[0]);
+        $this->assertIsInt($record['timestamp']);
+        unset($record['timestamp']);
+        $this->assertSame([
+            'type' => 'timeout',
+            'message' => 'PHP-FPM request timed out after 28000ms',
+            'method' => 'POST',
+            'path' => '/slow',
+            'requestId' => 'request-id',
+        ], $record);
     }
 
     public function testStartWithNoException(): void
@@ -207,5 +258,28 @@ class WebsiteRuntimeTest extends TestCase
     public function testType(): void
     {
         $this->assertSame('website', WebsiteRuntime::TYPE);
+    }
+
+    private function processNextEventWithPhpFpmTimeoutException(HttpRequestEvent $event): void
+    {
+        $client = $this->getLambdaRuntimeApiClientMock();
+        $handler = $this->getLambdaEventHandlerInterfaceMock();
+
+        $client->expects($this->once())
+               ->method('getNextEvent')
+               ->willReturn($event);
+
+        $handler->expects($this->once())
+                ->method('canHandle')
+                ->willReturn(true);
+        $handler->expects($this->once())
+                ->method('handle')
+                ->willThrowException(new PhpFpmTimeoutException('PHP-FPM request timed out after 28000ms'));
+
+        $client->expects($this->once())
+               ->method('sendResponse')
+               ->with($this->identicalTo($event), $this->isInstanceOf(GatewayTimeoutHttpResponse::class));
+
+        (new WebsiteRuntime($client, $handler, $this->getLoggerMock(), $this->getPhpFpmProcessMock()))->processNextEvent();
     }
 }
