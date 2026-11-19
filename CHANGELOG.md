@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.24.0](https://github.com/ymirapp/php-runtime/compare/v1.23.0...v1.24.0) (2026-11-19)
+
+
+### Features
+
+* Record php-fpm crashes for the application to report ([5d0d75a](https://github.com/ymirapp/php-runtime/commit/5d0d75a304d3caaab9deab311a991f79decee216))
+* Record php-fpm request timeouts for the application to report ([acd49ae](https://github.com/ymirapp/php-runtime/commit/acd49ae23a77d86b263f4f1b60089b1305f387e5))
+
+
+### Dependency Changes
+
+* Upgrade PHP runtimes for November security releases ([29389bf](https://github.com/ymirapp/php-runtime/commit/29389bfa313f41d62477771bda500605b9bdf570))
+
 ## [1.23.0](https://github.com/ymirapp/php-runtime/compare/v1.22.2...v1.23.0) (2026-11-17)
 
 
