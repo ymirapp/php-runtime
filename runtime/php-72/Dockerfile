@@ -12,19 +12,19 @@ ARG DOCKER_PLATFORM
 # Sury PHP 7.2 source package
 # Vendor-maintained security backports. dpkg-source applies the complete vendor patch series.
 # Sury's pool does not guarantee retention; if a pinned file disappears, review a pinned vendor replacement and never loosen the digest guards.
-FROM --platform=${DOCKER_PLATFORM} debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad as php-source
+FROM --platform=${DOCKER_PLATFORM} debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 as php-source
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl dpkg-dev xz-utils
 COPY <<EOF /tmp/sury/SHA256SUMS
-a06c4b5deeeed7ac81be430c95b74a9f456d21e19ca8d1aae8a2f319d4b1dcfe  php7.2_7.2.34-66+0~20261021.122+debian13~1.gbpe0bcd4.dsc
+f9a39c11a802bd48b7624eaa2a8405706e0a818d26ccc4d82acda11ea9595fee  php7.2_7.2.34-70+debsuryorg13.1+php+1.dsc
 409e11bc6a2c18707dfc44bc61c820ddfd81e17481470f3405ee7822d8379903  php7.2_7.2.34.orig.tar.xz
-4a5a49d808a4d0cd4d32709fbf471519e8c04d81fbc8f237baae073a87454ee9  php7.2_7.2.34-66+0~20261021.122+debian13~1.gbpe0bcd4.debian.tar.xz
+b881ec14df50053e1b1229ca9f73d1aba0a6e86231ddb1d41d1b9707dc162889  php7.2_7.2.34-70+debsuryorg13.1+php+1.debian.tar.xz
 EOF
 WORKDIR /tmp/sury
 RUN set -e; for file in $(awk '{print $2}' SHA256SUMS); do \
         curl --location --silent --show-error --fail -o "$file" "https://packages.sury.org/php/pool/main/p/php7.2/$(echo "$file" | sed 's/+/%2B/g')"; \
     done; \
     sha256sum --check --strict SHA256SUMS && \
-    dpkg-source --require-strong-checksums -x php7.2_7.2.34-66+0~20261021.122+debian13~1.gbpe0bcd4.dsc /tmp/php && \
+    dpkg-source --require-strong-checksums -x php7.2_7.2.34-70+debsuryorg13.1+php+1.dsc /tmp/php && \
     awk 'NF && $1 !~ /^#/ {print $1}' /tmp/php/debian/patches/series | cmp - /tmp/php/.pc/applied-patches
 
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE} as build-environment
@@ -74,7 +74,7 @@ RUN mv ext/ext_skel ext/ext_skel.in && \
         --enable-exif --enable-ftp --with-gettext --enable-mbstring --enable-opcache=shared --with-pdo-pgsql=shared --with-pgsql=shared --with-pdo-mysql=shared,mysqlnd --with-mysqli --enable-pcntl \
         --enable-zip --enable-bcmath --enable-intl=shared --enable-soap --with-xsl --with-pear
 RUN make -j $(nproc)
-RUN make install PEAR_INSTALLDIR=${INSTALL_DIR}/lib/php PEAR_INSTALLER_URL='https://github.com/pear/pearweb_phars/raw/master/install-pear-nozlib.phar'
+RUN make install PEAR_INSTALLDIR=${INSTALL_DIR}/lib/php
 RUN cp php.ini-production ${INSTALL_DIR}/etc/php/php.ini
 
 # Vendor phpize copies Debian's shtool, libtool aux and aclocal paths. Its dpkg probe only picks the aux

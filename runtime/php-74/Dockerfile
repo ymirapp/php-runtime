@@ -8,6 +8,25 @@
 ARG CPU_ARCHITECTURE
 ARG DOCKER_PLATFORM
 
+# Sury PHP 7.4 source package
+# Vendor-maintained security backports. dpkg-source applies the complete vendor patch series.
+# Sury's pool does not guarantee retention; if a pinned file disappears, review a pinned vendor replacement and never loosen the digest guards.
+FROM --platform=${DOCKER_PLATFORM} debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 as php-source
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl dpkg-dev xz-utils
+COPY <<EOF /tmp/sury/SHA256SUMS
+b617fb1410bb7df39123794d8102b14e17d122f7970ea4e834ebdcb6426c50ad  php7.4_7.4.33-37+debsuryorg13.1+php+1.dsc
+924846abf93bc613815c55dd3f5809377813ac62a9ec4eb3778675b82a27b927  php7.4_7.4.33.orig.tar.xz
+569a01c7c605a4571fdf7dfadfff4215cc4a63ea5d474c7ec92bd7b4fecfffcb  php7.4_7.4.33.orig.tar.xz.asc
+73e1cdc96d71cd2791fbf9540f4e241cfd3803a6e17259e870ac146086281b04  php7.4_7.4.33-37+debsuryorg13.1+php+1.debian.tar.xz
+EOF
+WORKDIR /tmp/sury
+RUN set -e; for file in $(awk '{print $2}' SHA256SUMS); do \
+        curl --location --silent --show-error --fail -o "$file" "https://packages.sury.org/php/pool/main/p/php7.4/$(echo "$file" | sed 's/+/%2B/g')"; \
+    done; \
+    sha256sum --check --strict SHA256SUMS && \
+    dpkg-source --require-strong-checksums -x php7.4_7.4.33-37+debsuryorg13.1+php+1.dsc /tmp/php && \
+    awk 'NF && $1 !~ /^#/ {print $1}' /tmp/php/debian/patches/series | cmp - /tmp/php/.pc/applied-patches
+
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE} as build-environment
 
 ENV BUILD_DIR="/tmp/build" INSTALL_DIR="/opt/ymir"
@@ -18,8 +37,9 @@ ENV PKG_CONFIG_PATH="${INSTALL_DIR}/lib64/pkgconfig:${INSTALL_DIR}/lib/pkgconfig
     CMAKE_BUILD_PARALLEL_LEVEL=4 \
     MAKEFLAGS='-j4'
 
+# Vendor patches change re2c scanner sources without their generated C; without re2c, make keeps the unpatched scanners.
 RUN dnf makecache && dnf install -y make gcc gcc-c++ autoconf automake libtool git \
-    libcurl-devel zlib-devel readline-devel gettext-devel libicu-devel libxslt-devel libzip-devel libpq-devel oniguruma-devel openssl-devel libsodium-devel libffi-devel libpng-devel libjpeg-devel freetype-devel libwebp-devel libzstd-devel lz4-devel tar xz file bison re2c \
+    libcurl-devel zlib-devel readline-devel gettext-devel libicu-devel libxslt-devel libzip-devel libpq-devel oniguruma-devel openssl-devel libsodium-devel libffi-devel libpng-devel libjpeg-devel freetype-devel libwebp-devel libzstd-devel lz4-devel tar xz file re2c \
     perl-FindBin perl-IPC-Cmd
 
 RUN mkdir -p ${BUILD_DIR} ${INSTALL_DIR}/bin ${INSTALL_DIR}/etc/php ${INSTALL_DIR}/etc/php/conf.d ${INSTALL_DIR}/lib ${INSTALL_DIR}/lib64 ${INSTALL_DIR}/sbin
@@ -37,15 +57,11 @@ WORKDIR ${BUILD_DIR}/openssl11
 RUN ./config --prefix=${INSTALL_DIR}/openssl11 --openssldir=${INSTALL_DIR}/openssl11/ssl shared zlib && make -j $(nproc) && make install_sw \
     && cp ${INSTALL_DIR}/openssl11/lib/libssl.so.1.1 ${INSTALL_DIR}/lib/ && cp ${INSTALL_DIR}/openssl11/lib/libcrypto.so.1.1 ${INSTALL_DIR}/lib/
 
-# PHP 7.4 official PHP-7.4-CVE-2026-109618-109619 security branch (builds as 7.4.34-dev)
-# The checksum pins GitHub's archive bytes; on mismatch, investigate and reapprove rather than update it.
-ENV PHP_SOURCE_COMMIT=712e60f9edfd03f0960fc4fc3c2c375f42b90aa2 \
-    PHP_SOURCE_SHA256=c85c8cae6cd97c8688eb0bb2385d2341b74606153d19c3c8688183c3bc760d47
-RUN mkdir -p ${BUILD_DIR}/php
+# PHP 7.4.33
+COPY --from=php-source /tmp/php ${BUILD_DIR}/php
 WORKDIR ${BUILD_DIR}/php
-RUN curl --location --silent --show-error --fail -o /tmp/php-src.tar.gz https://github.com/php/php-src/archive/${PHP_SOURCE_COMMIT}.tar.gz \
-    && echo "${PHP_SOURCE_SHA256}  /tmp/php-src.tar.gz" | sha256sum --check --strict \
-    && tar xzf /tmp/php-src.tar.gz -C . --strip-components=1 && rm /tmp/php-src.tar.gz
+# Vendor build preparation from debian/rules.
+# Defining TELEMETRY_HOST enables Sury DNS telemetry; keep it out of compiler flags.
 RUN ./buildconf --force && \
     export PKG_CONFIG_PATH="${INSTALL_DIR}/openssl11/lib/pkgconfig:$PKG_CONFIG_PATH" && \
     CFLAGS="-fstack-protector-strong -fpic -fpie -Os -I${INSTALL_DIR}/include -I${INSTALL_DIR}/openssl11/include -I/usr/include -ffunction-sections -fdata-sections" \
@@ -58,14 +74,13 @@ RUN ./buildconf --force && \
         --enable-exif --enable-ftp --with-gettext --enable-mbstring --enable-opcache=shared --with-pdo-pgsql=shared --with-pgsql=shared --with-pdo-mysql=shared,mysqlnd --with-mysqli --enable-pcntl \
         --with-zip --enable-bcmath --enable-intl=shared --enable-soap --with-xsl --with-pear
 RUN make -j $(nproc)
-# Git snapshots lack the release-bundled PEAR installer; place a pinned vendor copy where make install expects it.
-ENV PEAR_INSTALLER_URL=https://raw.githubusercontent.com/pear/pearweb_phars/72aa5f771f56aaf826641b21159453f993e44450/install-pear-nozlib.phar \
-    PEAR_INSTALLER_SHA256=a71349da29f1a6e3f0792695b167e582375a93c70c0e9d35e7c4675697c5f039
-RUN curl --location --silent --show-error --fail -o /tmp/install-pear-nozlib.phar ${PEAR_INSTALLER_URL} \
-    && echo "${PEAR_INSTALLER_SHA256}  /tmp/install-pear-nozlib.phar" | sha256sum --check --strict \
-    && mv /tmp/install-pear-nozlib.phar pear/install-pear-nozlib.phar
-RUN make install PEAR_INSTALLER_URL="${PEAR_INSTALLER_URL}"
+RUN make install PEAR_INSTALLDIR=${INSTALL_DIR}/lib/php
 RUN cp php.ini-production ${INSTALL_DIR}/etc/php/php.ini
+
+# Vendor phpize copies Debian's shtool, libtool aux and aclocal paths. Its dpkg probe only picks the aux
+# directory name and falls back to libtool/config here; reevaluate any other dpkg use rather than stubbing it.
+RUN cp ${BUILD_DIR}/php/build/shtool /usr/bin/shtool && mkdir -p ${INSTALL_DIR}/share /usr/share/libtool && \
+    ln -s /usr/share/aclocal ${INSTALL_DIR}/share/aclocal && ln -s /usr/share/libtool/build-aux /usr/share/libtool/config
 
 # PECL
 RUN set -xe; cd ${BUILD_DIR}; \
@@ -109,6 +124,7 @@ COPY runtime/shared/copy-dependencies.php /tmp/copy-dependencies.php
 RUN ${INSTALL_DIR}/bin/php /tmp/copy-dependencies.php /tmp/layer/ymir/bin /tmp/layer/lib && ${INSTALL_DIR}/bin/php /tmp/copy-dependencies.php /tmp/layer/lib/php/extensions /tmp/layer/lib
 RUN find /tmp/layer/ymir/bin -type f -exec strip --strip-all {} + || true && find /tmp/layer/lib -type f -name "*.so*" -exec strip --strip-unneeded {} + || true && find /tmp/layer/lib -type f -name "*.a" -delete && find /tmp/layer/lib -type f -name "*.la" -delete
 COPY runtime/shared/php.ini /tmp/layer/ymir/etc/php/php.ini
+COPY runtime/shared/sury-defaults.ini /tmp/layer/ymir/etc/php/conf.d/sury-defaults.ini
 COPY runtime/shared/99-openssl-ca-legacy.ini /tmp/layer/ymir/etc/php/conf.d/99-openssl-ca-legacy.ini
 COPY runtime/shared/php-fpm.conf /tmp/layer/ymir/etc/php-fpm.d/php-fpm.conf
 

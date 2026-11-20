@@ -12,20 +12,20 @@ ARG DOCKER_PLATFORM
 # Sury PHP 7.3 source package
 # Vendor-maintained security backports. dpkg-source applies the complete vendor patch series.
 # Sury's pool does not guarantee retention; if a pinned file disappears, review a pinned vendor replacement and never loosen the digest guards.
-FROM --platform=${DOCKER_PLATFORM} debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad as php-source
+FROM --platform=${DOCKER_PLATFORM} debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 as php-source
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl dpkg-dev xz-utils
 COPY <<EOF /tmp/sury/SHA256SUMS
-fcc9adfbcc1f75745a24416ed8a142463176dfdbb7a452e0b51cc5469dc5be63  php7.3_7.3.33-37+0~deb.sury.org.1+debian13.dsc
+8a03e7d15e5f879a2d0837ede8b80a81a1079cb750e09f588740904f8db1b8a5  php7.3_7.3.33-41+debsuryorg13.1+php+1.dsc
 166eaccde933381da9516a2b70ad0f447d7cec4b603d07b9a916032b215b90cc  php7.3_7.3.33.orig.tar.xz
 3d15cc09b4c35343ad15fd80b681f126a8efec8efde757e21c04fd54a56ba8d4  php7.3_7.3.33.orig.tar.xz.asc
-24b42e55a631dcff84da440534c0060ca4c2cc81029fac59cc006558210302af  php7.3_7.3.33-37+0~deb.sury.org.1+debian13.debian.tar.xz
+e37ae24047ebb973ceb23e9e535923b905aa6903c446145d831bb1e2e997b4b7  php7.3_7.3.33-41+debsuryorg13.1+php+1.debian.tar.xz
 EOF
 WORKDIR /tmp/sury
 RUN set -e; for file in $(awk '{print $2}' SHA256SUMS); do \
         curl --location --silent --show-error --fail -o "$file" "https://packages.sury.org/php/pool/main/p/php7.3/$(echo "$file" | sed 's/+/%2B/g')"; \
     done; \
     sha256sum --check --strict SHA256SUMS && \
-    dpkg-source --require-strong-checksums -x php7.3_7.3.33-37+0~deb.sury.org.1+debian13.dsc /tmp/php && \
+    dpkg-source --require-strong-checksums -x php7.3_7.3.33-41+debsuryorg13.1+php+1.dsc /tmp/php && \
     awk 'NF && $1 !~ /^#/ {print $1}' /tmp/php/debian/patches/series | cmp - /tmp/php/.pc/applied-patches
 
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE} as build-environment
@@ -74,7 +74,7 @@ RUN make -f build/build.mk generated_lists && make -B -f build/build2.mk aclocal
         --enable-exif --enable-ftp --with-gettext --enable-mbstring --enable-opcache=shared --with-pdo-pgsql=shared --with-pgsql=shared --with-pdo-mysql=shared,mysqlnd --with-mysqli --enable-pcntl \
         --enable-zip --enable-bcmath --enable-intl=shared --enable-soap --with-xsl --with-pear
 RUN make -j $(nproc)
-RUN make install PEAR_INSTALLDIR=${INSTALL_DIR}/lib/php PEAR_INSTALLER_URL='https://github.com/pear/pearweb_phars/raw/master/install-pear-nozlib.phar'
+RUN make install PEAR_INSTALLDIR=${INSTALL_DIR}/lib/php
 RUN cp php.ini-production ${INSTALL_DIR}/etc/php/php.ini
 
 # Vendor phpize copies Debian's shtool, libtool aux and aclocal paths. Its dpkg probe only picks the aux
