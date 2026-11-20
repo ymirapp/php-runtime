@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.1](https://github.com/ymirapp/php-runtime/compare/v1.24.0...v1.24.1) (2026-11-20)
+
+
+### Bug Fixes
+
+* Build every unsupported php runtime from sury security backports ([24207d0](https://github.com/ymirapp/php-runtime/commit/24207d0e2a50d47023f3a455050218a1075bdaea))
+
 ## [1.24.0](https://github.com/ymirapp/php-runtime/compare/v1.23.0...v1.24.0) (2026-11-19)
 
 
