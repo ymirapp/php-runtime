@@ -58,3 +58,15 @@ function probe_exhaust_memory(): void
         $chunks[] = str_repeat((string) count($chunks), 8 * 1024 * 1024);
     }
 }
+
+/**
+ * Write a JSON object line, a line in the Laravel bridge format and a raw line, each tagged with the given ID, to stderr.
+ */
+function probe_log(string $id): void
+{
+    $bridgeMessage = "ymir-integration-bridge-{$id}";
+
+    file_put_contents('php://stderr', json_encode(['event' => 'ymir-integration-log', 'id' => $id])."\n");
+    file_put_contents('php://stderr', "bridge-request-id\tWARNING\t{$bridgeMessage}\t".json_encode(['message' => $bridgeMessage, 'level' => 'WARNING'])."\n");
+    file_put_contents('php://stderr', "ymir-integration-raw-{$id}\n");
+}

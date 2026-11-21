@@ -96,6 +96,11 @@ switch (trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '
         sleep(60);
 
         break;
+    case 'log':
+        probe_log((string) ($_GET['id'] ?? ''));
+        $data = ['logged' => true];
+
+        break;
     default:
         http_response_code(404);
         $data = ['error' => 'Unknown probe'];

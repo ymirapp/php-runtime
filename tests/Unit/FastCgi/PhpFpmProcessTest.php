@@ -15,9 +15,11 @@ namespace Ymir\Runtime\Tests\Unit\FastCgi;
 
 use hollodotme\FastCGI\Exceptions\ConnectException;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Process\Process;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmProcessException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\FastCgi\PhpFpmProcess;
+use Ymir\Runtime\Logger;
 use Ymir\Runtime\Tests\Mock\FastCgiServerClientMockTrait;
 use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
@@ -383,5 +385,52 @@ class PhpFpmProcessTest extends TestCase
                       ->method('start');
 
         $phpFpmProcess->handle($request, 1000);
+    }
+
+    public function testStartLogsProcessOutputLineByLineAndStopLogsTheIncompleteLine(): void
+    {
+        $callback = null;
+        $isRunning = true;
+        $process = $this->getProcessMock();
+        $stream = fopen('php://memory', 'w+');
+
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'file_exists')
+             ->expects($this->any())
+             ->willReturn(true);
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'is_dir')
+             ->expects($this->once())
+             ->willReturn(true);
+
+        $process->method('isRunning')
+                ->willReturnCallback(function () use (&$isRunning): bool {
+                    return $isRunning;
+                });
+        $process->expects($this->once())
+                ->method('start')
+                ->willReturnCallback(function (callable $processCallback) use (&$callback): void {
+                    $callback = $processCallback;
+                });
+
+        $phpFpmProcess = new PhpFpmProcess($this->getFastCgiServerClientMock(), new Logger(Logger::INFO, $stream), $process);
+        $phpFpmProcess->start();
+
+        $callback(Process::ERR, '{"event":"http_request",');
+        $callback(Process::ERR, "\"http.status\":200}\nNOTICE: ready to handle connections\nPHP Fatal error:  Allowed memory size exhausted");
+
+        $isRunning = false;
+        $phpFpmProcess->stop();
+
+        rewind($stream);
+        $lines = explode("\n", (string) stream_get_contents($stream));
+
+        $this->assertSame([
+            "INFO\tStarting PHP-FPM process\t{\"message\":\"Starting PHP-FPM process\",\"level\":\"INFO\"}",
+            '{"event":"http_request","http.status":200}',
+            "INFO\tNOTICE: ready to handle connections\t{\"message\":\"NOTICE: ready to handle connections\",\"level\":\"INFO\"}",
+            "INFO\tPHP Fatal error:  Allowed memory size exhausted\t{\"message\":\"PHP Fatal error:  Allowed memory size exhausted\",\"level\":\"INFO\"}",
+            '',
+        ], array_values(array_filter($lines, function (string $line): bool {
+            return !str_starts_with($line, "INFO\tPHP-FPM process started in");
+        })));
     }
 }

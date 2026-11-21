@@ -14,9 +14,11 @@ declare(strict_types=1);
 namespace Ymir\Runtime\Tests\Unit\Lambda\Handler;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Ymir\Runtime\Exception\InvalidHandlerEventException;
 use Ymir\Runtime\Lambda\Handler\ConsoleCommandLambdaEventHandler;
 use Ymir\Runtime\Lambda\Response\ProcessResponse;
+use Ymir\Runtime\Logger;
 use Ymir\Runtime\Tests\Mock\ConsoleCommandEventMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationContextMockTrait;
 use Ymir\Runtime\Tests\Mock\InvocationEventInterfaceMockTrait;
@@ -28,6 +30,11 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
     use InvocationContextMockTrait;
     use InvocationEventInterfaceMockTrait;
     use LoggerMockTrait;
+
+    protected function tearDown(): void
+    {
+        unset($_SERVER['AWS_REQUEST_ID']);
+    }
 
     public static function provideTimeouts(): \Iterator
     {
@@ -46,6 +53,33 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
     public function testCanHandleWrongEventType(): void
     {
         $this->assertFalse((new ConsoleCommandLambdaEventHandler($this->getLoggerMock()))->canHandle($this->getInvocationEventInterfaceMock()));
+    }
+
+    public function testHandleLogsIncompleteLastLineWhenCommandTimesOut(): void
+    {
+        $context = $this->getInvocationContextMock();
+        $event = $this->getConsoleCommandEventMock();
+        $stream = fopen('php://memory', 'w+');
+
+        $event->method('getCommand')->willReturn("printf 'step 1 done\\nmigrating users table'; sleep 5");
+        $event->method('getContext')->willReturn($context);
+
+        $context->method('getRemainingTimeInMs')->willReturn(2000);
+
+        try {
+            (new ConsoleCommandLambdaEventHandler(new Logger(Logger::INFO, $stream)))->handle($event);
+
+            $this->fail('The command should have timed out');
+        } catch (ProcessTimedOutException $exception) {
+        }
+
+        rewind($stream);
+
+        $this->assertSame(
+            "INFO\tstep 1 done\t{\"message\":\"step 1 done\",\"level\":\"INFO\"}\n"
+            ."INFO\tmigrating users table\t{\"message\":\"migrating users table\",\"level\":\"INFO\"}\n",
+            stream_get_contents($stream)
+        );
     }
 
     public function testHandlePassesRequestIdToCommand(): void
@@ -117,7 +151,7 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
                 ->method('getRemainingTimeInMs')
                 ->willReturn(60000);
 
-        $logger->expects($this->once())
+        $logger->expects($this->atLeastOnce())
                ->method('info');
 
         $response = (new ConsoleCommandLambdaEventHandler($logger))->handle($event);
@@ -163,5 +197,30 @@ class ConsoleCommandLambdaEventHandlerTest extends TestCase
         $this->expectExceptionMessageMatches('/ConsoleCommandLambdaEventHandler cannot handle Mock_InvocationEventInterface[^\s]* event/');
 
         (new ConsoleCommandLambdaEventHandler($this->getLoggerMock()))->handle($this->getInvocationEventInterfaceMock());
+    }
+
+    public function testHandleWritesFormattedOutputLinesUnchanged(): void
+    {
+        $context = $this->getInvocationContextMock();
+        $event = $this->getConsoleCommandEventMock();
+        $stream = fopen('php://memory', 'w+');
+
+        $_SERVER['AWS_REQUEST_ID'] = 'lambda-request-id';
+
+        $event->method('getCommand')->willReturn("printf '%s\\n' '{\"event\":\"console_command\"}' 'raw line'; printf 'PHP Fatal error' >&2");
+        $event->method('getContext')->willReturn($context);
+
+        $context->method('getRemainingTimeInMs')->willReturn(60000);
+
+        (new ConsoleCommandLambdaEventHandler(new Logger(Logger::INFO, $stream)))->handle($event);
+
+        rewind($stream);
+
+        $this->assertSame(
+            "{\"event\":\"console_command\"}\n"
+            ."lambda-request-id\tINFO\traw line\t{\"message\":\"raw line\",\"level\":\"INFO\"}\n"
+            ."lambda-request-id\tINFO\tPHP Fatal error\t{\"message\":\"PHP Fatal error\",\"level\":\"INFO\"}\n",
+            stream_get_contents($stream)
+        );
     }
 }

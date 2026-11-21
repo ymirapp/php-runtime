@@ -20,6 +20,7 @@ use Ymir\Runtime\Lambda\InvocationEvent\InvocationEventInterface;
 use Ymir\Runtime\Lambda\Response\ProcessResponse;
 use Ymir\Runtime\Lambda\Response\ResponseInterface;
 use Ymir\Runtime\Logger;
+use Ymir\Runtime\ProcessOutputLogger;
 
 /**
  * Lambda invocation event handler for console commands.
@@ -59,12 +60,18 @@ class ConsoleCommandLambdaEventHandler implements LambdaEventHandlerInterface
         }
 
         $context = $event->getContext();
+        $processOutput = new ProcessOutputLogger($this->logger);
 
         $process = Process::fromShellCommandline("{$event->getCommand()} 2>&1", null, ['AWS_REQUEST_ID' => $context->getRequestId()]);
         $process->setTimeout(max(1, $context->getRemainingTimeInMs() / 1000 - 1));
-        $process->run(function ($type, $output): void {
-            $this->logger->info($output);
-        });
+
+        try {
+            $process->run(function ($type, $output) use ($processOutput): void {
+                $processOutput->log($output);
+            });
+        } finally {
+            $processOutput->flush();
+        }
 
         return new ProcessResponse($process);
     }

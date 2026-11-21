@@ -35,6 +35,9 @@ MAX_MULTIPART_BODY_PARTS = 10
 # See docs/research/php-official-backport-source-feasibility.md.
 MEMORY_LIMIT_EXITS_PROCESS_BEFORE = 80200
 
+# PHP-FPM added decorate_workers_output in 7.3. Before it, PHP-FPM wraps every worker line, so none arrives formatted.
+UNDECORATED_WORKER_OUTPUT_SINCE = 70300
+
 IMAGE = ''
 PLATFORM = ''
 CONTAINERS = {}
@@ -200,6 +203,12 @@ class LambdaContainer:
                 processes['fpm_master'].append(pid)
 
         return processes
+
+    def log_lines(self, text):
+        """Return the lines of the container's Lambda log that contain the given text."""
+        logs = docker('logs', self.name)
+
+        return [line for line in (logs.stdout + logs.stderr).decode(errors='replace').splitlines() if text in line]
 
     def remove(self):
         try:
@@ -389,6 +398,25 @@ class LambdaTestCase(unittest.TestCase):
             'max_multipart_body_parts must be registered and configurable',
         )
 
+    def assertProbeLogLines(self, log_id):
+        """Assert the lines written by the log probe reach the Lambda log, formatted only when they weren't already."""
+        deadline = time.monotonic() + 5
+        lines = self.container.log_lines(log_id)
+
+        while len(lines) < 3 and time.monotonic() < deadline:
+            time.sleep(0.1)
+            lines = self.container.log_lines(log_id)
+
+        bridge_message = 'ymir-integration-bridge-%s' % log_id
+
+        self.assertEqual(3, len(lines), lines)
+        self.assertEqual('{"event":"ymir-integration-log","id":"%s"}' % log_id, lines[0])
+        self.assertEqual(
+            'bridge-request-id\tWARNING\t%s\t{"message":"%s","level":"WARNING"}' % (bridge_message, bridge_message),
+            lines[1],
+        )
+        self.assertRegex(lines[2], r'^[0-9a-f-]{36}\tINFO\tymir-integration-raw-%s\t\{' % log_id)
+
     def assertWorker(self, identity, processes):
         self.assertTrue(processes['runtime'], processes)
         self.assertEqual(1, len(processes['fpm_master']), processes)
@@ -424,6 +452,17 @@ class WebsiteFunctionTest(LambdaTestCase):
 
         for version in ['1.0', '2.0', '1.0', '2.0', '2.0']:
             self.assertWorker(self.identity(version), self.baseline)
+
+    def test_log_lines_reach_the_lambda_log(self):
+        if self.cold_start.json()['php_version_id'] < UNDECORATED_WORKER_OUTPUT_SINCE:
+            self.skipTest('PHP-FPM wraps worker output before PHP 7.3')
+
+        log_id = uuid.uuid4().hex
+
+        self.assertEqual(200, self.http('/log', query={'id': log_id}).status)
+        # The runtime reads PHP-FPM output only during invocations, so a line can arrive with the next one.
+        self.identity()
+        self.assertProbeLogLines(log_id)
 
     def test_fpm_uses_lambda_paths_and_customer_ini(self):
         identity = self.identity()
@@ -700,6 +739,12 @@ class ConsoleFunctionTest(LambdaTestCase):
         self.assertEqual('cli', identity['sapi'])
         self.assertLambdaPaths(identity)
         self.assertEqual('1', identity['opcache_file_cache_only'])
+
+    def test_log_lines_reach_the_lambda_log(self):
+        log_id = uuid.uuid4().hex
+
+        self.assertEqual(0, self.command({'php': 'console.php log %s' % log_id})['exitCode'])
+        self.assertProbeLogLines(log_id)
 
     def test_shell_command_output_is_returned(self):
         self.assertEqual({'exitCode': 0, 'output': 'ymir-command'}, self.command({'command': 'printf ymir-command'}))

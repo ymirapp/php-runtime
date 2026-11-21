@@ -22,6 +22,7 @@ use Symfony\Component\Process\Process;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmProcessException;
 use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
 use Ymir\Runtime\Logger;
+use Ymir\Runtime\ProcessOutputLogger;
 
 /**
  * The PHP-FPM process that handles Lambda requests using FastCGI.
@@ -64,6 +65,13 @@ class PhpFpmProcess
     private $process;
 
     /**
+     * The logger for the output of the PHP-FPM process.
+     *
+     * @var ProcessOutputLogger
+     */
+    private $processOutput;
+
+    /**
      * Constructor.
      */
     public function __construct(FastCgiServerClient $client, Logger $logger, Process $process)
@@ -71,6 +79,7 @@ class PhpFpmProcess
         $this->client = $client;
         $this->logger = $logger;
         $this->process = $process;
+        $this->processOutput = new ProcessOutputLogger($logger);
     }
 
     /**
@@ -141,7 +150,7 @@ class PhpFpmProcess
 
         $this->process->setTimeout(null);
         $this->process->start(function ($type, $output): void {
-            $this->logger->info($output);
+            $this->processOutput->log($output);
         });
 
         $this->wait(function () {
@@ -160,13 +169,13 @@ class PhpFpmProcess
      */
     public function stop(): void
     {
-        if (!$this->process->isRunning()) {
-            return;
+        if ($this->process->isRunning()) {
+            $this->logger->info('Stopping PHP-FPM process');
+
+            $this->process->stop();
         }
 
-        $this->logger->info('Stopping PHP-FPM process');
-
-        $this->process->stop();
+        $this->processOutput->flush();
     }
 
     /**

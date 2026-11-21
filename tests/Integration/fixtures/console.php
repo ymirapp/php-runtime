@@ -22,6 +22,10 @@ switch ($argv[1] ?? '') {
         echo 'ymir-integration-exit';
 
         exit((int) ($argv[2] ?? 1));
+    case 'log':
+        probe_log($argv[2] ?? '');
+
+        exit(0);
     case 'memory-limit':
         probe_exhaust_memory();
 }

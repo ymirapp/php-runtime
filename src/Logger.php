@@ -33,7 +33,7 @@ class Logger extends MonologLogger
     /**
      * The stream to use with the logger.
      *
-     * @var resource|string
+     * @var resource
      */
     private $stream;
 
@@ -83,6 +83,14 @@ class Logger extends MonologLogger
             $exception->getLine(),
             $exception->getTraceAsString()
         ));
+    }
+
+    /**
+     * Write the given output to the log stream without formatting it.
+     */
+    public function write(string $output): void
+    {
+        fwrite($this->stream, $output);
     }
 
     /**
