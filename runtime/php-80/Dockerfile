@@ -14,17 +14,17 @@ ARG DOCKER_PLATFORM
 FROM --platform=${DOCKER_PLATFORM} debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 as php-source
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl dpkg-dev xz-utils
 COPY <<EOF /tmp/sury/SHA256SUMS
-2e24864faef95608dfc0f09e1ed4d40bb6121860936b8e9a5516f58e739d17d8  php8.0_8.0.30-31+debsuryorg13.1+php+1.dsc
+7e778f42a0c051a4571aa644ba718db5ad43c1a77cfc958d90ee3bcce7533dca  php8.0_8.0.30-32+debsuryorg13.1+1.dsc
 216ab305737a5d392107112d618a755dc5df42058226f1670e9db90e77d777d9  php8.0_8.0.30.orig.tar.xz
 e344925525577dede041e33636c842b8a8b0b84b3e8f40535e3d25dfc8a1313a  php8.0_8.0.30.orig.tar.xz.asc
-93895ea50a8a85f9098bb5b863ea17b7701f786811edcc173cd8dddbe81fea8d  php8.0_8.0.30-31+debsuryorg13.1+php+1.debian.tar.xz
+4290efcfb589a394e9be4e46fae0183398566ed456f6106e4726e00c892376e4  php8.0_8.0.30-32+debsuryorg13.1+1.debian.tar.xz
 EOF
 WORKDIR /tmp/sury
 RUN set -e; for file in $(awk '{print $2}' SHA256SUMS); do \
         curl --location --silent --show-error --fail -o "$file" "https://packages.sury.org/php/pool/main/p/php8.0/$(echo "$file" | sed 's/+/%2B/g')"; \
     done; \
     sha256sum --check --strict SHA256SUMS && \
-    dpkg-source --require-strong-checksums -x php8.0_8.0.30-31+debsuryorg13.1+php+1.dsc /tmp/php && \
+    dpkg-source --require-strong-checksums -x php8.0_8.0.30-32+debsuryorg13.1+1.dsc /tmp/php && \
     awk 'NF && $1 !~ /^#/ {print $1}' /tmp/php/debian/patches/series | cmp - /tmp/php/.pc/applied-patches
 
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE} as build-environment

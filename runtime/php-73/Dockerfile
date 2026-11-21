@@ -15,17 +15,17 @@ ARG DOCKER_PLATFORM
 FROM --platform=${DOCKER_PLATFORM} debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 as php-source
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl dpkg-dev xz-utils
 COPY <<EOF /tmp/sury/SHA256SUMS
-8a03e7d15e5f879a2d0837ede8b80a81a1079cb750e09f588740904f8db1b8a5  php7.3_7.3.33-41+debsuryorg13.1+php+1.dsc
+61d1a59ef1fceaf8e041c3c3c4e19c473878cd9785b7bae8573c8a410865bd13  php7.3_7.3.33-42+debsuryorg13.1+1.dsc
 166eaccde933381da9516a2b70ad0f447d7cec4b603d07b9a916032b215b90cc  php7.3_7.3.33.orig.tar.xz
 3d15cc09b4c35343ad15fd80b681f126a8efec8efde757e21c04fd54a56ba8d4  php7.3_7.3.33.orig.tar.xz.asc
-e37ae24047ebb973ceb23e9e535923b905aa6903c446145d831bb1e2e997b4b7  php7.3_7.3.33-41+debsuryorg13.1+php+1.debian.tar.xz
+bdf1e46dff0ced32e5f3f684ccdc9b369259855155fb15e49e823ec68e9e7412  php7.3_7.3.33-42+debsuryorg13.1+1.debian.tar.xz
 EOF
 WORKDIR /tmp/sury
 RUN set -e; for file in $(awk '{print $2}' SHA256SUMS); do \
         curl --location --silent --show-error --fail -o "$file" "https://packages.sury.org/php/pool/main/p/php7.3/$(echo "$file" | sed 's/+/%2B/g')"; \
     done; \
     sha256sum --check --strict SHA256SUMS && \
-    dpkg-source --require-strong-checksums -x php7.3_7.3.33-41+debsuryorg13.1+php+1.dsc /tmp/php && \
+    dpkg-source --require-strong-checksums -x php7.3_7.3.33-42+debsuryorg13.1+1.dsc /tmp/php && \
     awk 'NF && $1 !~ /^#/ {print $1}' /tmp/php/debian/patches/series | cmp - /tmp/php/.pc/applied-patches
 
 FROM --platform=${DOCKER_PLATFORM} public.ecr.aws/lambda/provided:al2023-${CPU_ARCHITECTURE} as build-environment
