@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.24.2](https://github.com/ymirapp/php-runtime/compare/v1.24.1...v1.24.2) (2026-11-22)
+
+
+### Bug Fixes
+
+* Build php 7.2 to 8.1 from the latest sury source revisions ([7b9553a](https://github.com/ymirapp/php-runtime/commit/7b9553a90a70add612570056983b0e6a08312f95))
+* Pass through php-fpm and console output lines that are already formatted ([ac8d6f5](https://github.com/ymirapp/php-runtime/commit/ac8d6f5c0fc1f639d008fa5173013b14ffca9f59))
+
 ## [1.24.1](https://github.com/ymirapp/php-runtime/compare/v1.24.0...v1.24.1) (2026-11-20)
 
 
