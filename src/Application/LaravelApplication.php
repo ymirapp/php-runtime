@@ -27,6 +27,7 @@ use Ymir\Runtime\Lambda\Handler\Sqs\LaravelSqsHandler;
  */
 class LaravelApplication extends AbstractApplication
 {
+    use CreatesConfigurationCacheWithPhpFpmTrait;
     use CreatesLaravelStorageDirectoriesTrait;
 
     /**
@@ -85,10 +86,12 @@ class LaravelApplication extends AbstractApplication
         $logger = $this->context->getLogger();
         $cacheStart = microtime(true);
 
-        try {
-            $this->runArtisanCommand(['config:cache', '--no-ansi']);
-        } catch (ProcessFailedException $exception) {
-            throw new ApplicationInitializationException($this->getProcessFailureMessage('Failed to create Laravel cache', $exception->getProcess()));
+        if (!$this->createConfigurationCacheWithPhpFpm('laravel-config-cache.php')) {
+            try {
+                $this->runArtisanCommand(['config:cache', '--no-ansi']);
+            } catch (ProcessFailedException $exception) {
+                throw new ApplicationInitializationException($this->getProcessFailureMessage('Failed to create Laravel cache', $exception->getProcess()));
+            }
         }
 
         $logger->debug(sprintf('Laravel cache created in %dms', (microtime(true) - $cacheStart) * 1000));

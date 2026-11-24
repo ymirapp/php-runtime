@@ -24,6 +24,7 @@ use Ymir\Runtime\Lambda\Handler\Sqs\AcornSqsHandler;
  */
 class RadicleApplication extends AbstractApplication
 {
+    use CreatesConfigurationCacheWithPhpFpmTrait;
     use CreatesLaravelStorageDirectoriesTrait;
 
     /**
@@ -66,12 +67,14 @@ class RadicleApplication extends AbstractApplication
 
         $logger->debug('Creating Acorn cache');
 
-        $process = new Process(['/opt/bin/php', $this->context->getRootDirectory().'/bin/wp', 'acorn', 'config:cache']);
-        $process->setEnv(['APP_RUNNING_IN_CONSOLE' => 'true']);
-        $process->run();
+        if (!$this->createConfigurationCacheWithPhpFpm('acorn-config-cache.php')) {
+            $process = new Process(['/opt/bin/php', $this->context->getRootDirectory().'/bin/wp', 'acorn', 'config:cache']);
+            $process->setEnv(['APP_RUNNING_IN_CONSOLE' => 'true']);
+            $process->run();
 
-        if (!$process->isSuccessful()) {
-            throw new ApplicationInitializationException(sprintf('Failed to create Acorn cache: %s', $process->getErrorOutput()));
+            if (!$process->isSuccessful()) {
+                throw new ApplicationInitializationException(sprintf('Failed to create Acorn cache: %s', $process->getErrorOutput()));
+            }
         }
 
         $logger->debug('Acorn cache created');

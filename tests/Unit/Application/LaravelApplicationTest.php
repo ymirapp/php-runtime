@@ -18,6 +18,9 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use Ymir\Runtime\Application\LaravelApplication;
 use Ymir\Runtime\Exception\ApplicationInitializationException;
+use Ymir\Runtime\Exception\PhpFpm\PhpFpmTimeoutException;
+use Ymir\Runtime\FastCgi\FastCgiRequest;
+use Ymir\Runtime\FastCgi\PhpFpmProcess;
 use Ymir\Runtime\Lambda\Handler\Http\LaravelHttpEventHandler;
 use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\Sqs\LaravelSqsHandler;
@@ -28,6 +31,7 @@ use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaRuntimeApiClientMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
+use Ymir\Runtime\Tests\Mock\ProvidesResponseDataMockTrait;
 
 class LaravelApplicationTest extends TestCase
 {
@@ -35,6 +39,7 @@ class LaravelApplicationTest extends TestCase
     use LambdaRuntimeApiClientMockTrait;
     use LoggerMockTrait;
     use PhpFpmProcessMockTrait;
+    use ProvidesResponseDataMockTrait;
 
     private const ENVIRONMENT_VARIABLES = [
         'APP_ENV',
@@ -42,6 +47,7 @@ class LaravelApplicationTest extends TestCase
         'DECRYPTED_ENV_VALUE',
         'LARAVEL_ENV_ENCRYPTION_KEY',
         'YMIR_ENVIRONMENT',
+        'YMIR_FUNCTION_TYPE',
     ];
 
     private $originalEnvironmentVariables = [];
@@ -86,6 +92,13 @@ class LaravelApplicationTest extends TestCase
         });
     }
 
+    public static function provideFailedPhpFpmConfigurationCaches(): \Iterator
+    {
+        yield 'command failed' => ['1', null];
+        yield 'missing exit code' => ['', null];
+        yield 'request timed out' => ['0', new PhpFpmTimeoutException('PHP-FPM request timed out after 60000ms')];
+    }
+
     public function testGetQueueHandlers(): void
     {
         $logger = $this->getLoggerMock();
@@ -121,6 +134,63 @@ class LaravelApplicationTest extends TestCase
         $this->assertInstanceOf(PingLambdaEventHandler::class, $handlers[0]);
         $this->assertInstanceOf(WarmUpEventHandler::class, $handlers[1]);
         $this->assertInstanceOf(LaravelHttpEventHandler::class, $handlers[2]);
+    }
+
+    public function testInitializeCreatesCacheWithoutPhpFpmForNonWebsiteFunction(): void
+    {
+        $this->setEnvironmentVariable('YMIR_FUNCTION_TYPE', 'queue');
+
+        $phpFpmProcess = $this->getPhpFpmProcessMock();
+
+        $phpFpmProcess->expects($this->never())->method('start');
+        $phpFpmProcess->expects($this->never())->method('handle');
+
+        $this->getLaravelApplication([
+            ['config:cache', '--no-ansi'],
+        ], [], [], null, $phpFpmProcess)->initialize();
+    }
+
+    public function testInitializeCreatesCacheWithPhpFpmAfterLoadingDecryptedEnvironmentForWebsiteFunction(): void
+    {
+        $this->setEnvironmentVariable('APP_ENV', 'testing');
+        $this->setEnvironmentVariable('LARAVEL_ENV_ENCRYPTION_KEY', 'secret');
+        $this->setEnvironmentVariable('YMIR_FUNCTION_TYPE', 'website');
+
+        touch($this->tempDir.'/.env.testing.encrypted');
+
+        $phpFpmProcess = $this->getPhpFpmProcessMock();
+        $response = $this->getProvidesResponseDataMock();
+
+        $response->method('getHeaderLine')->with('X-Ymir-Exit-Code')->willReturn('0');
+
+        $phpFpmProcess->expects($this->once())
+                      ->method('start')
+                      ->willReturnCallback(function (): void {
+                          $this->assertSame('loaded', getenv('DECRYPTED_ENV_VALUE'));
+                      });
+        $phpFpmProcess->expects($this->once())
+                      ->method('handle')
+                      ->with($this->callback(function (FastCgiRequest $request): bool {
+                          $parameters = $request->getParams();
+
+                          $this->assertFileExists($parameters['SCRIPT_FILENAME']);
+                          $this->assertStringEndsWith('/laravel-config-cache.php', $parameters['SCRIPT_FILENAME']);
+                          $this->assertSame($this->tempDir, $parameters['YMIR_ROOT_DIRECTORY']);
+                          $this->assertSame('true', $parameters['APP_RUNNING_IN_CONSOLE']);
+
+                          return true;
+                      }), 60000)
+                      ->willReturn($response);
+
+        $application = $this->getLaravelApplication([
+            ['env:decrypt', '--env=testing', '--path=/tmp', '--force', '--no-ansi', '--no-interaction'],
+        ], [
+            function (): void {
+                $this->writeTemporaryFile('/tmp/.env.testing', "DECRYPTED_ENV_VALUE=loaded\n");
+            },
+        ], [], null, $phpFpmProcess);
+
+        $application->initialize();
     }
 
     public function testInitializeCreatesStorageDirectoriesAndCache(): void
@@ -199,6 +269,32 @@ class LaravelApplicationTest extends TestCase
         ]);
 
         $application->initialize();
+    }
+
+    /**
+     * @dataProvider provideFailedPhpFpmConfigurationCaches
+     */
+    public function testInitializeFallsBackToCliWhenPhpFpmCannotCreateCache(string $exitCode, ?\Throwable $exception): void
+    {
+        $this->setEnvironmentVariable('YMIR_FUNCTION_TYPE', 'website');
+
+        $phpFpmProcess = $this->getPhpFpmProcessMock();
+        $response = $this->getProvidesResponseDataMock();
+
+        $response->method('getHeaderLine')->willReturn($exitCode);
+        $response->method('getBody')->willReturn('Unable to cache configuration');
+
+        $phpFpmProcess->expects($this->once())->method('start');
+
+        if ($exception instanceof \Throwable) {
+            $phpFpmProcess->method('handle')->willThrowException($exception);
+        } else {
+            $phpFpmProcess->method('handle')->willReturn($response);
+        }
+
+        $this->getLaravelApplication([
+            ['config:cache', '--no-ansi'],
+        ], [], [], null, $phpFpmProcess)->initialize();
     }
 
     public function testInitializeFallsBackToYmirEnvironmentWhenApplicationEnvironmentIsMissing(): void
@@ -355,9 +451,9 @@ class LaravelApplicationTest extends TestCase
         return is_string($value) ? $value : null;
     }
 
-    private function getLaravelApplication(array $commands = [], array $callbacks = [], array $exceptions = [], ?Logger $logger = null): LaravelApplication
+    private function getLaravelApplication(array $commands = [], array $callbacks = [], array $exceptions = [], ?Logger $logger = null, ?PhpFpmProcess $phpFpmProcess = null): LaravelApplication
     {
-        $context = new RuntimeContext($logger ?: $this->getLoggerMock(), $this->getLambdaRuntimeApiClientMock(), 'us-east-1', $this->tempDir);
+        $context = new RuntimeContext($logger ?: $this->getLoggerMock(), $this->getLambdaRuntimeApiClientMock(), 'us-east-1', $this->tempDir, null, $phpFpmProcess);
 
         $application = $this->getMockBuilder(LaravelApplication::class)
                             ->setConstructorArgs([$context])

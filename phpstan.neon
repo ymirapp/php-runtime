@@ -6,6 +6,8 @@ parameters:
         - src
     reportUnmatchedIgnoredErrors: false
     excludePaths:
+        - src/acorn-config-cache.php
+        - src/laravel-config-cache.php
         - templates/*
         - tests/*
     ignoreErrors:

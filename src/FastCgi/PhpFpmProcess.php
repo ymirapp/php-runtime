@@ -148,6 +148,10 @@ class PhpFpmProcess
      */
     public function start(): void
     {
+        if ($this->process->isRunning()) {
+            return;
+        }
+
         $start = microtime(true);
         $socketDirectory = dirname(self::SOCKET_PATH);
 

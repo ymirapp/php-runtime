@@ -426,10 +426,21 @@ class PhpFpmProcessTest extends TestCase
         $phpFpmProcess->handle($request, 1000);
     }
 
+    public function testStartDoesNothingWhenProcessIsRunning(): void
+    {
+        $process = $this->getProcessMock();
+
+        $process->method('isRunning')->willReturn(true);
+        $process->expects($this->never())
+                ->method('start');
+
+        (new PhpFpmProcess($this->getFastCgiServerClientMock(), $this->getLoggerMock(), $process))->start();
+    }
+
     public function testStartLogsProcessOutputLineByLineAndStopLogsTheIncompleteLine(): void
     {
         $callback = null;
-        $isRunning = true;
+        $isRunning = false;
         $process = $this->getProcessMock();
         $stream = fopen('php://memory', 'w+');
 
@@ -446,8 +457,9 @@ class PhpFpmProcessTest extends TestCase
                 });
         $process->expects($this->once())
                 ->method('start')
-                ->willReturnCallback(function (callable $processCallback) use (&$callback): void {
+                ->willReturnCallback(function (callable $processCallback) use (&$callback, &$isRunning): void {
                     $callback = $processCallback;
+                    $isRunning = true;
                 });
 
         $phpFpmProcess = new PhpFpmProcess($this->getFastCgiServerClientMock(), new Logger(Logger::INFO, $stream), $process);
@@ -490,9 +502,17 @@ class PhpFpmProcessTest extends TestCase
              ->expects($this->exactly(2000))
              ->with(5000);
 
-        $process->method('isRunning')->willReturn(true);
+        $isRunning = false;
+
+        $process->method('isRunning')
+                ->willReturnCallback(function () use (&$isRunning): bool {
+                    return $isRunning;
+                });
         $process->expects($this->once())
-                ->method('start');
+                ->method('start')
+                ->willReturnCallback(function () use (&$isRunning): void {
+                    $isRunning = true;
+                });
 
         (new PhpFpmProcess($this->getFastCgiServerClientMock(), $this->getLoggerMock(), $process))->start();
     }

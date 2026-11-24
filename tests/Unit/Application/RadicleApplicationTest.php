@@ -15,6 +15,8 @@ namespace Ymir\Runtime\Tests\Unit\Application;
 
 use PHPUnit\Framework\TestCase;
 use Ymir\Runtime\Application\RadicleApplication;
+use Ymir\Runtime\Exception\ApplicationInitializationException;
+use Ymir\Runtime\FastCgi\FastCgiRequest;
 use Ymir\Runtime\Lambda\Handler\Http\RadicleHttpEventHandler;
 use Ymir\Runtime\Lambda\Handler\PingLambdaEventHandler;
 use Ymir\Runtime\Lambda\Handler\Sqs\AcornSqsHandler;
@@ -24,6 +26,7 @@ use Ymir\Runtime\Tests\Mock\FunctionMockTrait;
 use Ymir\Runtime\Tests\Mock\LambdaRuntimeApiClientMockTrait;
 use Ymir\Runtime\Tests\Mock\LoggerMockTrait;
 use Ymir\Runtime\Tests\Mock\PhpFpmProcessMockTrait;
+use Ymir\Runtime\Tests\Mock\ProvidesResponseDataMockTrait;
 
 class RadicleApplicationTest extends TestCase
 {
@@ -31,6 +34,7 @@ class RadicleApplicationTest extends TestCase
     use LambdaRuntimeApiClientMockTrait;
     use LoggerMockTrait;
     use PhpFpmProcessMockTrait;
+    use ProvidesResponseDataMockTrait;
 
     private $tempDir;
 
@@ -42,6 +46,8 @@ class RadicleApplicationTest extends TestCase
 
     protected function tearDown(): void
     {
+        putenv('YMIR_FUNCTION_TYPE');
+
         $this->removeDirectory($this->tempDir);
     }
 
@@ -82,6 +88,36 @@ class RadicleApplicationTest extends TestCase
         $this->assertInstanceOf(RadicleHttpEventHandler::class, $handlers[2]);
     }
 
+    public function testInitializeCreatesCacheWithPhpFpmForWebsiteFunction(): void
+    {
+        putenv('YMIR_FUNCTION_TYPE=website');
+
+        $phpFpmProcess = $this->getPhpFpmProcessMock();
+        $response = $this->getProvidesResponseDataMock();
+
+        $response->method('getHeaderLine')->with('X-Ymir-Exit-Code')->willReturn('0');
+
+        $phpFpmProcess->expects($this->once())->method('start');
+        $phpFpmProcess->expects($this->once())
+                      ->method('handle')
+                      ->with($this->callback(function (FastCgiRequest $request): bool {
+                          $parameters = $request->getParams();
+
+                          $this->assertFileExists($parameters['SCRIPT_FILENAME']);
+                          $this->assertStringEndsWith('/acorn-config-cache.php', $parameters['SCRIPT_FILENAME']);
+                          $this->assertSame($this->tempDir, $parameters['YMIR_ROOT_DIRECTORY']);
+                          $this->assertSame('true', $parameters['APP_RUNNING_IN_CONSOLE']);
+
+                          return true;
+                      }), 60000)
+                      ->willReturn($response);
+
+        $application = new RadicleApplication(new RuntimeContext($this->getLoggerMock(), $this->getLambdaRuntimeApiClientMock(), 'us-east-1', $this->tempDir, null, $phpFpmProcess));
+        $application->initialize();
+
+        $this->removeDirectory('/tmp/storage');
+    }
+
     public function testInitializeCreatesStorageDirectoriesAndCache(): void
     {
         mkdir($this->tempDir.'/public', 0777, true);
@@ -105,6 +141,23 @@ class RadicleApplicationTest extends TestCase
         $this->assertDirectoryExists('/tmp/storage/framework/views');
 
         $this->removeDirectory('/tmp/storage');
+    }
+
+    public function testInitializeFallsBackToCliWhenPhpFpmCannotCreateCache(): void
+    {
+        putenv('YMIR_FUNCTION_TYPE=website');
+
+        $phpFpmProcess = $this->getPhpFpmProcessMock();
+        $response = $this->getProvidesResponseDataMock();
+
+        $response->method('getHeaderLine')->willReturn('1');
+        $phpFpmProcess->method('handle')->willReturn($response);
+
+        $this->expectException(ApplicationInitializationException::class);
+        $this->expectExceptionMessage('Failed to create Acorn cache');
+
+        $application = new RadicleApplication(new RuntimeContext($this->getLoggerMock(), $this->getLambdaRuntimeApiClientMock(), 'us-east-1', $this->tempDir, null, $phpFpmProcess));
+        $application->initialize();
     }
 
     public function testInitializeThrowsExceptionWhenProcessFails(): void
