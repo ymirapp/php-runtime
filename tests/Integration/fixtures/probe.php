@@ -28,6 +28,7 @@ function probe_identity(): array
         'include_path' => ini_get('include_path'),
         'max_multipart_body_parts' => ini_get('max_multipart_body_parts'),
         'memory_limit' => ini_get('memory_limit'),
+        'opcache_file_cache' => ini_get('opcache.file_cache'),
         'opcache_file_cache_only' => ini_get('opcache.file_cache_only'),
         'pid' => getmypid(),
         'php_version_id' => PHP_VERSION_ID,

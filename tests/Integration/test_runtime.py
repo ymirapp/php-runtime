@@ -470,6 +470,7 @@ class WebsiteFunctionTest(LambdaTestCase):
         self.assertEqual('fpm-fcgi', identity['sapi'])
         self.assertLambdaPaths(identity)
         self.assertEqual('0', identity['opcache_file_cache_only'], 'PHP-FPM command-line override must win')
+        self.assertEqual('', identity['opcache_file_cache'], 'PHP-FPM must not use the default file cache')
         self.assertEqual('2M', identity['upload_max_filesize'])
         self.assertEqual('8M', identity['post_max_size'])
 
@@ -739,6 +740,7 @@ class ConsoleFunctionTest(LambdaTestCase):
         self.assertEqual('cli', identity['sapi'])
         self.assertLambdaPaths(identity)
         self.assertEqual('1', identity['opcache_file_cache_only'])
+        self.assertEqual('/tmp', identity['opcache_file_cache'])
 
     def test_log_lines_reach_the_lambda_log(self):
         log_id = uuid.uuid4().hex

@@ -37,6 +37,13 @@ class PhpFpmProcess
     private const DEFAULT_CONFIG_PATH = '/opt/ymir/etc/php-fpm.d/php-fpm.conf';
 
     /**
+     * Default directory of the opcache file cache.
+     *
+     * @var string
+     */
+    private const DEFAULT_OPCACHE_FILE_CACHE = '/tmp';
+
+    /**
      * Path to the PHP-FPM socket file.
      *
      * @var string
@@ -95,11 +102,13 @@ class PhpFpmProcess
      */
     public static function createForConfig(Logger $logger, string $configPath = self::DEFAULT_CONFIG_PATH): self
     {
-        return new self(
-            FastCgiServerClient::createFromSocketPath(self::SOCKET_PATH),
-            $logger,
-            new Process(['php-fpm', '--nodaemonize', '--force-stderr', '--fpm-config', $configPath, '-d', 'opcache.file_cache_only=0'])
-        );
+        $command = ['php-fpm', '--nodaemonize', '--force-stderr', '--fpm-config', $configPath, '-d', 'opcache.file_cache_only=0'];
+
+        if (self::DEFAULT_OPCACHE_FILE_CACHE === ini_get('opcache.file_cache')) {
+            $command = array_merge($command, ['-d', 'opcache.file_cache=']);
+        }
+
+        return new self(FastCgiServerClient::createFromSocketPath(self::SOCKET_PATH), $logger, new Process($command));
     }
 
     /**

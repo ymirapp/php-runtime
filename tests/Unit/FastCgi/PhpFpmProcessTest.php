@@ -36,6 +36,45 @@ class PhpFpmProcessTest extends TestCase
     use ProvidesRequestDataMockTrait;
     use ProvidesResponseDataMockTrait;
 
+    public static function setUpBeforeClass(): void
+    {
+        self::defineFunctionMock('Ymir\\Runtime\\FastCgi', 'ini_get');
+    }
+
+    public function testCreateForConfigDisablesDefaultOpcacheFileCache(): void
+    {
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'ini_get')
+             ->expects($this->once())
+             ->with('opcache.file_cache')
+             ->willReturn('/tmp');
+
+        $phpFpmProcess = PhpFpmProcess::createForConfig($this->getLoggerMock());
+        $reflection = new \ReflectionObject($phpFpmProcess);
+
+        $processProperty = $reflection->getProperty('process');
+        $processProperty->setAccessible(true);
+        $process = $processProperty->getValue($phpFpmProcess);
+
+        $this->assertSame("'php-fpm' '--nodaemonize' '--force-stderr' '--fpm-config' '/opt/ymir/etc/php-fpm.d/php-fpm.conf' '-d' 'opcache.file_cache_only=0' '-d' 'opcache.file_cache='", $process->getCommandLine());
+    }
+
+    public function testCreateForConfigKeepsCustomOpcacheFileCache(): void
+    {
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'ini_get')
+             ->expects($this->once())
+             ->with('opcache.file_cache')
+             ->willReturn('/var/task/.opcache');
+
+        $phpFpmProcess = PhpFpmProcess::createForConfig($this->getLoggerMock());
+        $reflection = new \ReflectionObject($phpFpmProcess);
+
+        $processProperty = $reflection->getProperty('process');
+        $processProperty->setAccessible(true);
+        $process = $processProperty->getValue($phpFpmProcess);
+
+        $this->assertSame("'php-fpm' '--nodaemonize' '--force-stderr' '--fpm-config' '/opt/ymir/etc/php-fpm.d/php-fpm.conf' '-d' 'opcache.file_cache_only=0'", $process->getCommandLine());
+    }
+
     public function testCreateForConfigWithCustomValue(): void
     {
         $logger = $this->getLoggerMock();
