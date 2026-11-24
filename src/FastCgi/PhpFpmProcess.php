@@ -153,13 +153,13 @@ class PhpFpmProcess
             $this->processOutput->log($output);
         });
 
-        $this->wait(function () {
+        while (!$this->isStarted()) {
             if (!$this->process->isRunning()) {
                 throw new PhpFpmProcessException('PHP-FPM process failed to start');
             }
 
-            return !$this->isStarted();
-        }, 5000000);
+            usleep(5000);
+        }
 
         $this->logger->info(sprintf('PHP-FPM process started in %dms', (microtime(true) - $start) * 1000));
     }
@@ -251,25 +251,6 @@ class PhpFpmProcess
             $this->restart();
         } catch (\Throwable $exception) {
             $this->logger->info(sprintf('Failed to restart PHP-FPM process after timeout: %s', $exception->getMessage()));
-        }
-    }
-
-    /**
-     * Wait for the given callback to finish.
-     */
-    private function wait(callable $callback, int $timeoutUs): void
-    {
-        $elapsed = 0;
-        $wait = 5000; // 5ms
-
-        while ($callback()) {
-            usleep($wait);
-
-            $elapsed += $wait;
-
-            if ($elapsed > $timeoutUs) {
-                throw new PhpFpmProcessException(sprintf('PHP-FPM failed to start within %dms', $timeoutUs / 1000));
-            }
         }
     }
 }

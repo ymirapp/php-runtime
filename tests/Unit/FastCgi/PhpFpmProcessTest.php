@@ -433,4 +433,28 @@ class PhpFpmProcessTest extends TestCase
             return !str_starts_with($line, "INFO\tPHP-FPM process started in");
         })));
     }
+
+    public function testStartWaitsForSocketLongerThanFiveSeconds(): void
+    {
+        $checks = 0;
+        $process = $this->getProcessMock();
+
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'file_exists')
+             ->expects($this->any())
+             ->willReturnCallback(function () use (&$checks): bool {
+                 return ++$checks > 2000;
+             });
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'is_dir')
+             ->expects($this->once())
+             ->willReturn(true);
+        $this->getFunctionMock($this->getNamespace(PhpFpmProcess::class), 'usleep')
+             ->expects($this->exactly(2000))
+             ->with(5000);
+
+        $process->method('isRunning')->willReturn(true);
+        $process->expects($this->once())
+                ->method('start');
+
+        (new PhpFpmProcess($this->getFastCgiServerClientMock(), $this->getLoggerMock(), $process))->start();
+    }
 }
