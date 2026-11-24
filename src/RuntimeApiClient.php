@@ -27,6 +27,13 @@ use Ymir\Runtime\Lambda\Response\ResponseInterface;
 class RuntimeApiClient
 {
     /**
+     * JSON encoding flags for error data sent to the Lambda runtime API.
+     *
+     * @var int
+     */
+    private const ERROR_JSON_FLAGS = JSON_INVALID_UTF8_SUBSTITUTE;
+
+    /**
      * The URL of the Lambda runtime API.
      *
      * @var string
@@ -91,7 +98,7 @@ class RuntimeApiClient
      */
     public function sendError(InvocationContext $context, \Throwable $error): void
     {
-        $this->sendData($this->getErrorData($error), sprintf('invocation/%s/error', $context->getRequestId()));
+        $this->sendData($this->getErrorData($error), sprintf('invocation/%s/error', $context->getRequestId()), self::ERROR_JSON_FLAGS);
     }
 
     /**
@@ -99,7 +106,7 @@ class RuntimeApiClient
      */
     public function sendInitializationError(\Throwable $error): void
     {
-        $this->sendData($this->getErrorData($error), 'init/error');
+        $this->sendData($this->getErrorData($error), 'init/error', self::ERROR_JSON_FLAGS);
     }
 
     /**
@@ -144,9 +151,9 @@ class RuntimeApiClient
     /**
      * Send data back to the Lambda runtime API.
      */
-    private function sendData($data, string $uri): void
+    private function sendData($data, string $uri, int $jsonFlags = 0): void
     {
-        $json = json_encode($data);
+        $json = json_encode($data, $jsonFlags);
 
         if (false === $json) {
             throw new RuntimeApiException('Error encoding JSON data: '.json_last_error_msg());

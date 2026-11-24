@@ -39,4 +39,19 @@ class ProcessResponseTest extends TestCase
             'output' => 'foo',
         ], $response->getResponseData());
     }
+
+    public function testGetResponseDataReplacesInvalidUtf8InOutput(): void
+    {
+        $process = $this->getProcessMock();
+
+        $process->method('getExitCode')->willReturn(0);
+        $process->method('getOutput')->willReturn("Invalid UTF-8: \xB1\x31");
+
+        $response = new ProcessResponse($process);
+
+        $this->assertSame([
+            'exitCode' => 0,
+            'output' => 'Invalid UTF-8: ?1',
+        ], $response->getResponseData());
+    }
 }

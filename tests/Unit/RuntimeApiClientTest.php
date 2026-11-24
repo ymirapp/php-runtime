@@ -118,12 +118,18 @@ class RuntimeApiClientTest extends TestCase
         $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_close')->expects($this->any());
 
         $client = new RuntimeApiClient('api-url', $this->getLoggerMock());
+        $event = $this->getInvocationEventInterfaceMock();
+        $context = $this->getInvocationContextMock();
+        $response = $this->getResponseInterfaceMock();
+
+        $event->method('getContext')->willReturn($context);
+        $context->method('getRequestId')->willReturn('request-id');
+        $response->method('getResponseData')->willReturn(['body' => "\xB1\x31"]);
 
         $this->expectException(RuntimeApiException::class);
         $this->expectExceptionMessage('Error encoding JSON data');
 
-        // Invalid UTF-8 sequence causes json_encode to fail
-        $client->sendInitializationError(new \Exception("\xB1\x31"));
+        $client->sendResponse($event, $response);
 
         \curl_close($handle);
     }
@@ -186,6 +192,41 @@ class RuntimeApiClientTest extends TestCase
 
         $this->assertSame('foo', $data['errorMessage']);
         $this->assertSame('Exception', $data['errorType']);
+
+        \curl_close($handle);
+    }
+
+    public function testSendErrorReplacesInvalidUtf8InErrorMessage(): void
+    {
+        $handle = \curl_init();
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_init')->expects($this->exactly(2))->willReturn($handle);
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_error')->expects($this->any())->willReturn('');
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_exec')->expects($this->once())->willReturn(true);
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_getinfo')->expects($this->any())->willReturn(202);
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_close')->expects($this->any());
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_reset')->expects($this->any());
+
+        $capturedData = [];
+        $this->getFunctionMock($this->getNamespace(RuntimeApiClient::class), 'curl_setopt')
+             ->expects($this->any())
+             ->willReturnCallback(function ($handle, $option, $value) use (&$capturedData) {
+                 if (defined('CURLOPT_POSTFIELDS') && CURLOPT_POSTFIELDS === $option) {
+                     $capturedData['postfields'] = $value;
+                 }
+
+                 return true;
+             });
+
+        $client = new RuntimeApiClient('api-url', $this->getLoggerMock());
+        $context = $this->getInvocationContextMock();
+        $context->method('getRequestId')->willReturn('request-id');
+
+        $client->sendError($context, new \Exception("Invalid UTF-8: \xB1\x31"));
+
+        $this->assertArrayHasKey('postfields', $capturedData);
+        $data = json_decode($capturedData['postfields'], true);
+
+        $this->assertSame("Invalid UTF-8: \u{FFFD}1", $data['errorMessage']);
 
         \curl_close($handle);
     }

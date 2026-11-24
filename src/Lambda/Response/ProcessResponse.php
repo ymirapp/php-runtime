@@ -42,7 +42,7 @@ class ProcessResponse implements ResponseInterface
     {
         return [
             'exitCode' => $this->process->getExitCode(),
-            'output' => $this->process->getOutput(),
+            'output' => mb_scrub($this->process->getOutput(), 'UTF-8'),
         ];
     }
 }
