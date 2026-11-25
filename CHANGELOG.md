@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.24.3](https://github.com/ymirapp/php-runtime/compare/v1.24.2...v1.24.3) (2026-11-25)
+
+
+### Bug Fixes
+
+* Create the laravel and radicle configuration cache in php-fpm ([85dc07f](https://github.com/ymirapp/php-runtime/commit/85dc07f3e3dbd9fe04e255da273eef102757ddfe))
+* Drop request headers with underscores in their name ([bbd3c48](https://github.com/ymirapp/php-runtime/commit/bbd3c48de282301aae567ada82b7b8309b51ffa4))
+* Keep query strings intact so laravel signed urls verify ([8ce0c60](https://github.com/ymirapp/php-runtime/commit/8ce0c6053b0389f80a179ff5bfe827fbfba1eed6))
+* Remove php-fpm's 30 second cpu time limit ([2fbc98c](https://github.com/ymirapp/php-runtime/commit/2fbc98c1b6e00116afd48d0cd5ca3f834e2c98d6))
+* Remove the 5 second limit on php-fpm startup ([e933f7c](https://github.com/ymirapp/php-runtime/commit/e933f7c53b3dfdb93242b63fc7f63aec760f828a))
+* Stop invalid utf-8 from breaking error reports and console output ([6fd265a](https://github.com/ymirapp/php-runtime/commit/6fd265aedd94e47396d33c09ac2b08e091aeff32))
+
 ## [1.24.2](https://github.com/ymirapp/php-runtime/compare/v1.24.1...v1.24.2) (2026-11-22)
 
 
