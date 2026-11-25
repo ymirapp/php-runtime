@@ -26,6 +26,7 @@ function probe_identity(): array
     return [
         'cwd' => getcwd(),
         'include_path' => ini_get('include_path'),
+        'max_execution_time' => ini_get('max_execution_time'),
         'max_multipart_body_parts' => ini_get('max_multipart_body_parts'),
         'memory_limit' => ini_get('memory_limit'),
         'opcache_file_cache' => ini_get('opcache.file_cache'),

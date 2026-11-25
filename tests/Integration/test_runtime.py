@@ -471,6 +471,7 @@ class WebsiteFunctionTest(LambdaTestCase):
         self.assertLambdaPaths(identity)
         self.assertEqual('0', identity['opcache_file_cache_only'], 'PHP-FPM command-line override must win')
         self.assertEqual('', identity['opcache_file_cache'], 'PHP-FPM must not use the default file cache')
+        self.assertEqual('0', identity['max_execution_time'], 'PHP-FPM must not have a CPU time limit')
         self.assertEqual('2M', identity['upload_max_filesize'])
         self.assertEqual('8M', identity['post_max_size'])
 
