@@ -145,22 +145,18 @@ class HttpRequestEvent extends AbstractEvent
      */
     public function getQueryString(): string
     {
-        $payloadVersion = $this->getPayloadVersion();
-        $queryString = '';
-
-        if ('1.0' === $payloadVersion) {
-            collect($this->event['multiValueQueryStringParameters'] ?? $this->event['queryStringParameters'] ?? [])->each(function ($values, $key) use (&$queryString): void {
-                $queryString .= array_reduce((array) $values, function ($carry, $value) use ($key) {
-                    return $carry.$key.'='.urlencode($value).'&';
-                });
-            });
-        } elseif ('2.0' === $payloadVersion) {
-            $queryString = $this->event['rawQueryString'] ?? '';
+        switch ($this->getPayloadVersion()) {
+            case '1.0':
+                return collect($this->event['multiValueQueryStringParameters'] ?? $this->event['queryStringParameters'] ?? [])->flatMap(function ($values, $key): array {
+                    return array_map(function ($value) use ($key): string {
+                        return rawurlencode((string) $key).'='.rawurlencode((string) $value);
+                    }, (array) $values);
+                })->implode('&');
+            case '2.0':
+                return (string) ($this->event['rawQueryString'] ?? '');
+            default:
+                return '';
         }
-
-        parse_str($queryString, $decodedQueryParameters);
-
-        return http_build_query($decodedQueryParameters);
     }
 
     /**

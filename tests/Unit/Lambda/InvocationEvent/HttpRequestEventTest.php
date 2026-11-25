@@ -200,12 +200,12 @@ class HttpRequestEventTest extends TestCase
 
     public function testGetQueryStringWithPayloadVersion1AndMultiValueQueryStringParameters(): void
     {
-        $this->assertSame('foo%5B0%5D=bar&foo%5B1%5D=baz%25', (new HttpRequestEvent($this->getInvocationContextMock(), ['multiValueQueryStringParameters' => ['foo[]' => ['bar', 'baz%']]]))->getQueryString());
+        $this->assertSame('foo%5B%5D=bar&foo%5B%5D=baz%25', (new HttpRequestEvent($this->getInvocationContextMock(), ['multiValueQueryStringParameters' => ['foo[]' => ['bar', 'baz%']]]))->getQueryString());
     }
 
     public function testGetQueryStringWithPayloadVersion1AndMultiValueQueryStringParametersAndQueryStringParameter(): void
     {
-        $this->assertSame('foo%5B0%5D=bar&foo%5B1%5D=baz', (new HttpRequestEvent($this->getInvocationContextMock(), [
+        $this->assertSame('foo%5B%5D=bar&foo%5B%5D=baz', (new HttpRequestEvent($this->getInvocationContextMock(), [
             'queryStringParameters' => ['foo[]' => 'bar'],
             'multiValueQueryStringParameters' => ['foo[]' => ['bar', 'baz']],
         ]))->getQueryString());
@@ -216,9 +216,16 @@ class HttpRequestEventTest extends TestCase
         $this->assertSame('foo=bar', (new HttpRequestEvent($this->getInvocationContextMock(), ['queryStringParameters' => ['foo' => 'bar']]))->getQueryString());
     }
 
-    public function testGetQueryStringWithPayloadVersion2UsesRawQueryString(): void
+    public function testGetQueryStringWithPayloadVersion1EncodesParametersLikeLaravelUrlGenerator(): void
     {
-        $this->assertSame('foo%5B0%5D=bar&foo%5B1%5D=baz', (new HttpRequestEvent($this->getInvocationContextMock(), ['rawQueryString' => 'foo[]=bar&foo[]=baz', 'version' => '2.0']))->getQueryString());
+        $this->assertSame('a.b=1&file=my%20report.pdf&q=%C3%A9%26%3D%2B&tags%5B0%5D=x', (new HttpRequestEvent($this->getInvocationContextMock(), [
+            'multiValueQueryStringParameters' => ['a.b' => ['1'], 'file' => ['my report.pdf'], 'q' => ['é&=+'], 'tags[0]' => ['x']],
+        ]))->getQueryString());
+    }
+
+    public function testGetQueryStringWithPayloadVersion2ReturnsRawQueryStringUnchanged(): void
+    {
+        $this->assertSame('a.b=1&file=my%20report.pdf&foo[]=bar&flag&dup=1&dup=2', (new HttpRequestEvent($this->getInvocationContextMock(), ['rawQueryString' => 'a.b=1&file=my%20report.pdf&foo[]=bar&flag&dup=1&dup=2', 'version' => '2.0']))->getQueryString());
     }
 
     public function testGetSourceIpDefaultValue(): void
