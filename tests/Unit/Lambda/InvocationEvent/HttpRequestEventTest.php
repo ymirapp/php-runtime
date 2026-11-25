@@ -50,6 +50,16 @@ class HttpRequestEventTest extends TestCase
         yield 'no forwarded host' => [$domains, [], null];
     }
 
+    public static function provideHeadersWithUnderscores(): \Iterator
+    {
+        yield 'underscore header before' => [['headers' => ['x_foo' => 'client', 'x-foo' => 'proxy']]];
+        yield 'underscore header after' => [['headers' => ['x-foo' => 'proxy', 'x_foo' => 'client']]];
+        yield 'underscore header alone' => [['headers' => ['x-foo' => 'proxy', 'api_key' => 'client']]];
+        yield 'multi-value headers' => [['multiValueHeaders' => ['x-foo' => ['proxy'], 'x_foo' => ['client']]]];
+        yield 'payload version 2' => [['version' => '2.0', 'headers' => ['x-foo' => 'proxy', 'x_foo' => 'client']]];
+        yield 'uppercase' => [['headers' => ['X-Foo' => 'proxy', 'X_FOO' => 'client']]];
+    }
+
     public static function provideNonBooleanTrueHealthCheckValues(): \Iterator
     {
         yield 'array' => [[true]];
@@ -111,6 +121,14 @@ class HttpRequestEventTest extends TestCase
     public function testGetHeadersDoesntAddCookieHeaderWithPayloadVersion1(): void
     {
         $this->assertEmpty((new HttpRequestEvent($this->getInvocationContextMock(), ['cookies' => ['cookie1', 'cookie2']]))->getHeaders());
+    }
+
+    /**
+     * @dataProvider provideHeadersWithUnderscores
+     */
+    public function testGetHeadersDropsHeadersWithUnderscores(array $event): void
+    {
+        $this->assertSame(['x-foo' => ['proxy']], (new HttpRequestEvent($this->getInvocationContextMock(), $event))->getHeaders());
     }
 
     public function testGetHeadersWithHeaders(): void

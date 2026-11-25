@@ -103,7 +103,9 @@ class HttpRequestEvent extends AbstractEvent
             $headers['cookie'] = [implode('; ', $this->event['cookies'])];
         }
 
-        return array_change_key_case($headers, CASE_LOWER);
+        return array_filter(array_change_key_case($headers, CASE_LOWER), function ($name): bool {
+            return !str_contains((string) $name, '_');
+        }, ARRAY_FILTER_USE_KEY);
     }
 
     /**

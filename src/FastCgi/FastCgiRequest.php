@@ -120,7 +120,7 @@ class FastCgiRequest implements ProvidesRequestData
             $parameters['HTTP_'.strtoupper(str_replace('-', '_', $header))] = $value[0];
         }
 
-        // Header names like "x_forwarded_host" also map to "HTTP_X_FORWARDED_HOST", so only the validated host can remain.
+        // Remove the client's header even when validation fails, so an unvalidated host never reaches PHP.
         unset($parameters['HTTP_X_FORWARDED_HOST']);
 
         if (null !== $forwardedHost) {
